@@ -41,6 +41,32 @@ We do not recommend letting the LLMs insert data or modify columns by itself, as
 LLMs to only allow 'SELECT' statements in the `cratedb_sql` tool, you can jailbreak this against
 our recommendation.
 
+# Install
+```shell
+uv pip install --upgrade git+https://github.com/crate/cratedb-mcp
+```
+
+# Configure
+```shell
+export CRATEDB_MCP_HTTP_URL=https://example.aks1.westeurope.azure.cratedb.net:4200
+```
+
+# Usage
+Start MCP server with `stdio` transport (default).
+```shell
+CRATEDB_MCP_TRANSPORT=stdio uv run cratedb-mcp
+```
+Start MCP server with `sse` transport.
+```shell
+CRATEDB_MCP_TRANSPORT=sse uv run cratedb-mcp
+```
+
+NB: You can use `uv tool install` to install the program "system"-wide,
+so you can use it across your terminal or Claude sessions. In this case,
+omit the `uv run` prefix displayed above.
+
+
+
 [CrateDB]: https://cratedb.com/database
 [issue tracker]: https://github.com/crate/cratedb-mcp/issues
 
