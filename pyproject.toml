@@ -1,0 +1,8 @@
+[project]
+name = "cratedb-mcp"
+version = "0.0.1"
+description = "MCP server for CrateDB"
+requires-python = ">=3.13"
+dependencies = [
+    "mcp[cli]>=1.6.0"
+]
