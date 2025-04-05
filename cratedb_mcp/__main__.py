@@ -4,7 +4,7 @@ import httpx
 
 from mcp.server.fastmcp import FastMCP
 
-from constants import Queries
+from .constants import Queries
 
 mcp = FastMCP("cratedb-mcp")
 
