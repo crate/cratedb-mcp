@@ -21,7 +21,7 @@ CrateDB MCP server lets these LLMs operate directly on CrateDB enabling use case
 - Answer questions about your data and database state
 - Help you debug and optimize queries directly on the database
 
-To use a MCP server you need a [client that supports] the protocol, the most notable ones are: 
+To use a MCP server you need a [client that supports] the protocol, the most notable ones are:
 Claude Desktop, ChatGTP desktop, OPenAI agents SDK and Cursor.
 
 # Examples
@@ -60,6 +60,27 @@ Start MCP server with `sse` transport.
 ```shell
 CRATEDB_MCP_TRANSPORT=sse uv run cratedb-mcp
 ```
+
+# Simple Claude configuration
+To use the MCP version within Claude Desktop, you can use the following configuration:
+
+```json
+{
+  "mcpServers": {
+    "my_cratedb": {
+      "command": "uvx",
+      "args": ["--python", "3.10", "--from", "git+https://github.com/crate/cratedb-mcp", "cratedb-mcp"],
+      "env": {
+        "CRATEDB_MCP_HTTP_URL": "http://localhost:4200/",
+        "CRATEDB_MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}
+```
+
+You might have to change `CRATEDB_MCP_HTTP_URL` to match your CrateDB instance.
+
 
 NB: You can use `uv tool install` to install the program "system"-wide,
 so you can use it across your terminal or Claude sessions. In this case,
