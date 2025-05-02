@@ -79,7 +79,7 @@ To use the MCP version within Claude Desktop, you can use the following configur
 }
 ```
 
-You might have to change `CRATEDB_MCP_HTTP_URL` to match your CrateDB instance.
+You might have to change `CRATEDB_MCP_HTTP_URL` to match your CrateDB instance. For example, when connecting to CrateDB Cloud, use a value like https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/.
 
 
 NB: You can use `uv tool install` to install the program "system"-wide,
