@@ -69,7 +69,7 @@ To use the MCP version within Claude Desktop, you can use the following configur
   "mcpServers": {
     "my_cratedb": {
       "command": "uvx",
-      "args": ["--python", "3.10", "--from", "git+https://github.com/crate/cratedb-mcp", "cratedb-mcp"],
+      "args": ["--python", "3.13", "--from", "git+https://github.com/crate/cratedb-mcp", "cratedb-mcp"],
       "env": {
         "CRATEDB_MCP_HTTP_URL": "http://localhost:4200/",
         "CRATEDB_MCP_TRANSPORT": "stdio"
