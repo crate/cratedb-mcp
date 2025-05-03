@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/crate-cratedb-mcp-badge.png)](https://mseep.ai/app/crate-cratedb-mcp)
+
 # CrateDB MCP Server
 
 [![Bluesky][badge-bluesky]][target-bluesky]
