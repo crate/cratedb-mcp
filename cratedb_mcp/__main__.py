@@ -4,7 +4,7 @@ import httpx
 
 from mcp.server.fastmcp import FastMCP
 
-from .constants import Queries
+from .constants import Queries, DOCUMENTATION_INDEX
 
 mcp = FastMCP("cratedb-mcp")
 
@@ -23,16 +23,7 @@ def query_sql(query: str):
 @mcp.tool(description='Gets an index with CrateDB documentation links to fetch, should download docs'
                       ' before answering questions. Has documentation name, description and link.')
 def get_cratedb_documentation_index():
-    doc_index = [
-        {"name": "scalar functions",
-         "description": "documentation about specific scalar/methods/functions for CrateDB SQL",
-         "link": "https://raw.githubusercontent.com/crate/crate/refs/heads/5.10/docs/general/builtins/scalar-functions.rst"},
-        {"name": "optimize query 101",
-         "description": "documentation about optimizing CrateDB SQL statements",
-         "link": "https://raw.githubusercontent.com/crate/cratedb-guide/9ab661997d7704ecbb63af9c3ee33535957e24e6/docs/performance/optimization.rst"
-         }
-    ]
-    return doc_index
+    return DOCUMENTATION_INDEX
 
 @mcp.tool(description='Downloads the latest CrateDB documentation piece by link.'
                       ' Only used to download CrateDB docs.')

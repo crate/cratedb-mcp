@@ -85,6 +85,10 @@ WITH partitions_health AS (SELECT table_name,
 DOCUMENTATION_INDEX = [
     # TODO: Add all there are.
     {
+        "name": "about/overview",
+        "description": "The most important factual and technical information about CrateDB per medium-sized (~300kB) llms.txt context file.",
+        "link": "https://cdn.crate.io/about/v1/llms.txt"},
+    {
         "name": "scalar functions",
         "description": "documentation about specific scalar/methods/functions for CrateDB SQL",
         "link": "https://raw.githubusercontent.com/crate/crate/refs/heads/5.10/docs/general/builtins/scalar-functions.rst"},
