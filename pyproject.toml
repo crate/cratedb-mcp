@@ -31,7 +31,7 @@ optional-dependencies.develop = [
 ]
 optional-dependencies.test = [
   "pytest<9",
-  "pytest-cov<6",
+  "pytest-cov<7",
   "pytest-mock<4",
 ]
 
