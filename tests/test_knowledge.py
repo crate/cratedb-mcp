@@ -20,3 +20,5 @@ def test_queries():
     assert "sys.health" in Queries.TABLES_METADATA
     assert "WITH partitions_health" in Queries.TABLES_METADATA
     assert "LEFT JOIN" in Queries.TABLES_METADATA
+
+
