@@ -8,4 +8,11 @@ def test_documentation_index():
 
 
 def test_queries():
+
+    # Verify basic parts of the query.
     assert "information_schema.tables" in Queries.TABLES_METADATA
+
+    # Verify other critical parts of the query.
+    assert "sys.health" in Queries.TABLES_METADATA
+    assert "WITH partitions_health" in Queries.TABLES_METADATA
+    assert "LEFT JOIN" in Queries.TABLES_METADATA
