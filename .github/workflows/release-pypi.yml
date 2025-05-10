@@ -55,6 +55,13 @@ jobs:
         run: |
           uv build
 
+      - name: Publish package to TestPyPI
+        run: |
+          # `uv publish` does not understand `--skip-existing`.
+          # https://github.com/astral-sh/uv/issues/7917
+          # https://github.com/astral-sh/uv/issues/12369
+          uvx twine upload --non-interactive --repository-url https://test.pypi.org/legacy/ --skip-existing dist/*
+
       - name: Publish package to PyPI
         if: startsWith(github.event.ref, 'refs/tags')
         run: |
