@@ -15,12 +15,17 @@ def test_get_documentation_index():
 
 def test_fetch_docs_forbidden():
     with pytest.raises(ValueError) as ex:
-        fetch_cratedb_docs("https://cratedb.com/docs/crate/reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt")
-    assert ex.match("Only github cratedb links can be fetched")
+        fetch_cratedb_docs("https://example.com")
+    assert ex.match("Link is not permitted: https://example.com")
 
 
-def test_fetch_docs_permitted():
+def test_fetch_docs_permitted_github():
     response = fetch_cratedb_docs("https://raw.githubusercontent.com/crate/crate/refs/heads/5.10/docs/general/builtins/scalar-functions.rst")
+    assert "initcap" in response
+
+
+def test_fetch_docs_permitted_cratedb_com():
+    response = fetch_cratedb_docs("https://cratedb.com/docs/crate/reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt")
     assert "initcap" in response
 
 

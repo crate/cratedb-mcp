@@ -1,10 +1,14 @@
-from cratedb_mcp.knowledge import DOCUMENTATION_INDEX, Queries
+from cratedb_mcp.knowledge import DocumentationIndex, Queries
 
 
 def test_documentation_index():
-    assert len(DOCUMENTATION_INDEX) == 3
-    assert DOCUMENTATION_INDEX[1]["name"] == "scalar functions"
-    assert DOCUMENTATION_INDEX[2]["name"] == "optimize query 101"
+    documentation_index = DocumentationIndex()
+    titles = [item["title"] for item in documentation_index.items()]
+    assert len(titles) >= 50
+    assert "CrateDB database" in titles
+    assert "CrateDB features" in titles
+    assert "CrateDB SQL reference: Scalar functions" in titles
+    assert "Guide: CrateDB query optimization" in titles
 
 
 def test_queries():
