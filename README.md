@@ -95,7 +95,9 @@ To use the MCP version within Claude Desktop, you can use the following configur
 ```
 
 
+## Development
 
+To learn how to set up a development sandbox, see the [development documentation](./DEVELOP.md).
 
 
 [CrateDB]: https://cratedb.com/database
