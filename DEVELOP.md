@@ -21,7 +21,7 @@ will invoke both and is also used on CI/GHA.
 poe check
 ```
 
-In order to invoke individual software tests for working on the spot, use a
+To invoke individual software tests for working on the spot, use a
 traditional `pytest` invocation. Examples:
 ```shell
 pytest --no-cov tests/test_knowledge.py
@@ -32,8 +32,8 @@ pytest --no-cov -k query
 
 ## Release
 
-The project uses [versioningit], so you don't need to do any version bumping
-within files, because the version number will be derived from the Git tag.
+The project uses [versioningit] so you don't need to do any version bumping
+within files because the version number will be derived from the Git tag.
 
 However, you need to designate the new release within the [CHANGES.md](./CHANGES.md)
 file, and commit it. The release procedure currently looks like this:

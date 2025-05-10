@@ -1,6 +1,8 @@
 # CrateDB MCP Server
 
 [![Bluesky][badge-bluesky]][target-bluesky]
+[![Release Notes][badge-release-notes]][project-release-notes]
+
 [![Status][badge-status]][target-project]
 [![License][badge-license]][target-license]
 [![CI][badge-ci]][project-ci]
@@ -55,8 +57,8 @@ sessions like Claude.
 
 Configure the `CRATEDB_MCP_HTTP_URL` environment variable to match your CrateDB instance.
 For example, when connecting to CrateDB Cloud, use a value like
-https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/.
-When connecting to CrateDB on localhost, use http://localhost:4200/.
+`https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/`.
+When connecting to CrateDB on localhost, use `http://localhost:4200/`.
 ```shell
 export CRATEDB_MCP_HTTP_URL="http://localhost:4200/"
 ```
@@ -73,7 +75,7 @@ Start MCP server with `sse` transport.
 ```shell
 CRATEDB_MCP_TRANSPORT=sse cratedb-mcp
 ```
-Note: If you are not able to use `uv tool install`, please use
+Note: If you are unable to use `uv tool install`, please use
 `uv run cratedb-mcp` to acquire and run the package ephemerally.
 
 # Simple Claude configuration
@@ -114,12 +116,12 @@ To learn how to set up a development sandbox, see the [development documentation
 [badge-ci]: https://github.com/crate/cratedb-mcp/actions/workflows/tests.yml/badge.svg
 [badge-coverage]: https://codecov.io/gh/crate/cratedb-mcp/branch/main/graph/badge.svg
 [badge-bluesky]: https://img.shields.io/badge/Bluesky-0285FF?logo=bluesky&logoColor=fff&label=Follow%20%40CrateDB
-[badge-issues]: https://img.shields.io/github/issues/crate/cratedb-mcp
 [badge-license]: https://img.shields.io/github/license/crate/cratedb-mcp
-[badge-release-notes]: https://img.shields.io/badge/Release%20Notes-v0.0.0-blue
+[badge-release-notes]: https://img.shields.io/github/release/crate/cratedb-mcp?label=Release+Notes
 [badge-status]: https://img.shields.io/badge/status--alpha-orange
 [project-ci]: https://github.com/crate/cratedb-mcp/actions/workflows/tests.yml
 [project-coverage]: https://app.codecov.io/gh/crate/cratedb-mcp
+[project-release-notes]: https://github.com/crate/cratedb-mcp/releases
 [target-bluesky]: https://bsky.app/search?q=cratedb
 [target-license]: https://github.com/crate/cratedb-mcp/blob/main/LICENSE
 [target-project]: https://github.com/crate/cratedb-mcp

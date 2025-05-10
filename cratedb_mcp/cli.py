@@ -1,5 +1,6 @@
 import logging
 import os
+import typing as t
 
 from cratedb_mcp.__main__ import mcp
 
@@ -11,4 +12,4 @@ def main():
     if transport not in ("stdio", "sse"):
         raise ValueError(f"Unsupported transport: '{transport}'. Please use one of 'stdio', 'sse'.")
     logger.info(f"Starting CrateDB MCP server using transport '{transport}'")
-    mcp.run(transport=transport)  # type: ignore[arg-type]
+    mcp.run(transport=t.cast(t.Literal["stdio", "sse"], transport))
