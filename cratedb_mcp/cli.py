@@ -11,4 +11,4 @@ def main():
     if transport not in ("stdio", "sse"):
         raise ValueError(f"Unsupported transport: '{transport}'. Please use one of 'stdio', 'sse'.")
     logger.info(f"Starting CrateDB MCP server using transport '{transport}'")
-    mcp.run(transport=transport)
+    mcp.run(transport=transport)  # type: ignore[arg-type]

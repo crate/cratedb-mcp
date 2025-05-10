@@ -3,6 +3,8 @@
 [![Bluesky][badge-bluesky]][target-bluesky]
 [![Status][badge-status]][target-project]
 [![License][badge-license]][target-license]
+[![CI][badge-ci]][project-ci]
+[![Coverage][badge-coverage]][project-coverage]
 
 » [Documentation]
 | [Releases]
@@ -99,11 +101,15 @@ omit the `uv run` prefix displayed above.
 [Source code]: https://github.com/crate/cratedb-mcp
 [Releases]: https://github.com/surister/cratedb-mcp/releases
 
+[badge-ci]: https://github.com/crate/cratedb-mcp/actions/workflows/tests.yml/badge.svg
+[badge-coverage]: https://codecov.io/gh/crate/cratedb-mcp/branch/main/graph/badge.svg
 [badge-bluesky]: https://img.shields.io/badge/Bluesky-0285FF?logo=bluesky&logoColor=fff&label=Follow%20%40CrateDB
 [badge-issues]: https://img.shields.io/github/issues/crate/cratedb-mcp
 [badge-license]: https://img.shields.io/github/license/crate/cratedb-mcp
 [badge-release-notes]: https://img.shields.io/badge/Release%20Notes-v0.0.0-blue
 [badge-status]: https://img.shields.io/badge/status--alpha-orange
+[project-ci]: https://github.com/crate/cratedb-mcp/actions/workflows/tests.yml
+[project-coverage]: https://app.codecov.io/gh/crate/cratedb-mcp
 [target-bluesky]: https://bsky.app/search?q=cratedb
 [target-license]: https://github.com/crate/cratedb-mcp/blob/main/LICENSE
 [target-project]: https://github.com/crate/cratedb-mcp

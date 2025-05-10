@@ -1,3 +1,5 @@
+# ruff: noqa: E501
+
 class Queries:
     TABLES_METADATA = """
 WITH partitions_health AS (SELECT table_name,
