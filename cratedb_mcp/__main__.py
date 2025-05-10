@@ -1,22 +1,20 @@
-import os
-
 import httpx
-
 from mcp.server.fastmcp import FastMCP
 
-from .constants import Queries, DOCUMENTATION_INDEX
+from .knowledge import DOCUMENTATION_INDEX, Queries
+from .settings import HTTP_URL
 
 mcp = FastMCP("cratedb-mcp")
 
 
 def query_cratedb(query: str) -> list[dict]:
-    return httpx.post(f'{os.getenv("CRATEDB_MCP_HTTP_URL")}/_sql', json={'stmt': query}).json()
+    return httpx.post(f'{HTTP_URL}/_sql', json={'stmt': query}).json()
 
 
 @mcp.tool(description="Send a SQL query to CrateDB, only 'SELECT' queries are allows, queries that"
                       " modify data, columns or are otherwise deemed un-safe are rejected.")
 def query_sql(query: str):
-    if not 'select' in query.lower():
+    if 'select' not in query.lower():
         raise ValueError('Only queries that have a SELECT statement are allowed.')
     return query_cratedb(query)
 
@@ -29,7 +27,7 @@ def get_cratedb_documentation_index():
                       ' Only used to download CrateDB docs.')
 def fetch_cratedb_docs(link: str):
     """Fetches a CrateDB documentation link from GitHub raw content."""
-    if not 'https://raw.githubusercontent.com/crate/crate/' in link:
+    if 'https://raw.githubusercontent.com/crate/crate/' not in link:
         raise ValueError('Only github cratedb links can be fetched.')
     return httpx.get(link).text
 

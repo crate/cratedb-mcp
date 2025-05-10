@@ -1,0 +1,79 @@
+name: "Tests"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  test:
+    name: "
+    Python ${{ matrix.python-version }}
+    "
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-latest']
+        python-version: [
+          '3.10',
+          '3.13',
+        ]
+        cratedb-version: [
+          'nightly',
+        ]
+
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python-version }}
+      UV_SYSTEM_PYTHON: true
+
+    services:
+      cratedb:
+        image: crate/crate:${{ matrix.cratedb-version }}
+        ports:
+          - 4200:4200
+          - 5432:5432
+        env:
+          CRATE_HEAP_SIZE: 4g
+
+    steps:
+
+      - name: Acquire sources
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          cache-dependency-glob: |
+            pyproject.toml
+          cache-suffix: ${{ matrix.python-version }}
+          enable-cache: true
+          version: "latest"
+
+      - name: Set up project
+        run: |
+          uv pip install --editable='.[all,develop,test]'
+
+      - name: Run linter and software tests
+        run: poe check
+
+      # https://github.com/codecov/codecov-action
+      - name: Upload coverage results to Codecov
+        uses: codecov/codecov-action@v5
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          env_vars: OS,PYTHON
+          fail_ci_if_error: true

@@ -1,11 +1,159 @@
-[project]
-name = "cratedb-mcp"
-version = "0.0.1"
-description = "MCP server for CrateDB"
-requires-python = ">=3.10"
-dependencies = [
-    "mcp[cli]>=1.5.0"
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+  "setuptools>=42", # At least v42 of setuptools required.
+  "versioningit",
 ]
 
-[project.scripts]
-cratedb-mcp = "cratedb_mcp.cli:main"
+[project]
+name = "cratedb-mcp"
+description = "MCP server for CrateDB"
+requires-python = ">=3.10"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dynamic = [
+  "version",
+]
+dependencies = [
+  "mcp[cli]>=1.5.0",
+]
+optional-dependencies.develop = [
+  "mypy<1.16",
+  "poethepoet<1",
+  "pyproject-fmt<3",
+  "ruff<0.12",
+  "validate-pyproject<1",
+]
+optional-dependencies.test = [
+  "pytest<9",
+  "pytest-cov<6",
+  "pytest-mock<4",
+]
+
+scripts.cratedb-mcp = "cratedb_mcp.cli:main"
+
+[tool.ruff]
+line-length = 110
+
+extend-exclude = [
+]
+
+lint.select = [
+  # Builtins
+  "A",
+  # Bugbear
+  "B",
+  # comprehensions
+  "C4",
+  # Pycodestyle
+  "E",
+  # eradicate
+  "ERA",
+  # Pyflakes
+  "F",
+  # isort
+  "I",
+  # pandas-vet
+  "PD",
+  # return
+  "RET",
+  # Bandit
+  "S",
+  # print
+  "T20",
+  "W",
+  # flake8-2020
+  "YTT",
+]
+
+lint.per-file-ignores."tests/*" = [
+  "S101", # Allow use of `assert`.
+]
+
+[tool.pytest.ini_options]
+addopts = """
+  -rfEXs -p pytester --strict-markers --verbosity=3
+  --cov --cov-report=term-missing --cov-report=xml
+  """
+minversion = "2.0"
+log_level = "DEBUG"
+log_cli_level = "DEBUG"
+log_format = "%(asctime)-15s [%(name)-36s] %(levelname)-8s: %(message)s"
+pythonpath = [
+  "src",
+]
+xfail_strict = true
+markers = [
+]
+
+[tool.coverage.paths]
+source = [
+  "src/",
+]
+
+[tool.coverage.run]
+branch = false
+omit = [
+  "tests/*",
+]
+
+[tool.coverage.report]
+fail_under = 0
+show_missing = true
+exclude_lines = [
+  "# pragma: no cover",
+  "raise NotImplemented",
+]
+
+[tool.mypy]
+packages = [
+  "cratedb_mcp",
+]
+check_untyped_defs = true
+ignore_missing_imports = true
+implicit_optional = true
+install_types = true
+non_interactive = true
+
+[tool.versioningit.vcs]
+method = "git-archive"
+default-tag = "v0.0.0"
+describe-subst = "$Format:%(describe:tags,match=v*)$"
+
+# ===================
+# Tasks configuration
+# ===================
+
+[tool.poe.tasks]
+
+check = [
+  "lint",
+  "test",
+]
+
+format = [
+  #{ cmd = "ruff format ." },
+  # Configure Ruff not to auto-fix (remove!):
+  # unused imports (F401), unused variables (F841), `print` statements (T201), and commented-out code (ERA001).
+  #{ cmd = "ruff check --fix --ignore=ERA --ignore=F401 --ignore=F841 --ignore=T20 --ignore=ERA001 ." },
+  { cmd = "pyproject-fmt --keep-full-version pyproject.toml" },
+]
+
+lint = [
+  #{ cmd = "ruff format --check ." },
+  { cmd = "ruff check ." },
+  { cmd = "validate-pyproject pyproject.toml" },
+  { cmd = "mypy" },
+]
+
+release = [
+  { cmd = "python -m build" },
+  { cmd = "twine upload --skip-existing dist/*" },
+]
+
+test = { cmd = "pytest" }

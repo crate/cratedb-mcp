@@ -1,0 +1,61 @@
+# Use Trusted Publishing to stage Python packages through GitHub Actions (GHA) to the Python Package Index (PyPI).
+name: "Release: Python package"
+
+on:
+
+  # Build and publish packages when running a release.
+  push:
+    tags:
+      - '*'
+
+  # Build packages on each pull request for validation purposes.
+  pull_request:
+
+  # Build packages each night for validation purposes.
+  schedule:
+    - cron: '0 4 * * *'
+
+  # Allow the job to be triggered manually.
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    name: "Build and publish to PyPI"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        python-version: ["3.13"]
+    env:
+      OS_TYPE: ${{ matrix.os }}
+      PYTHON_VERSION: ${{ matrix.python-version }}
+
+    # Trusted publishing.
+    # Specifying a GitHub environment is optional, but strongly encouraged.
+    environment: pypi
+    # IMPORTANT: This permission is mandatory for Trusted Publishing.
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Acquire sources
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          cache-dependency-glob: |
+            pyproject.toml
+          cache-suffix: ${{ matrix.python-version }}
+          enable-cache: true
+          version: "latest"
+
+      - name: Build package
+        run: |
+          uv build
+
+      - name: Publish package to PyPI
+        if: startsWith(github.event.ref, 'refs/tags')
+        run: |
+          uv publish
