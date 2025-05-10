@@ -1,4 +1,12 @@
 # ruff: noqa: E501
+import logging
+
+import sqlparse
+
+from cratedb_mcp.settings import PERMIT_ALL_STATEMENTS
+
+logger = logging.getLogger(__name__)
+
 
 class Queries:
     TABLES_METADATA = """
@@ -100,3 +108,48 @@ DOCUMENTATION_INDEX = [
         "link": "https://raw.githubusercontent.com/crate/cratedb-guide/9ab661997d7704ecbb63af9c3ee33535957e24e6/docs/performance/optimization.rst"
     }
 ]
+
+
+def sql_expression_permitted(expression: str) -> bool:
+    """
+    Validate the SQL expression, only permit read queries by default.
+
+    When the `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set,
+    allow all types of statements.
+
+    FIXME: Revisit implementation, it might be too naive or weak.
+           Issue:    https://github.com/crate/cratedb-mcp/issues/10
+           Question: Does SQLAlchemy provide a solid read-only mode, or any other library?
+    """
+    outcome = _sql_expression_permitted(expression)
+    if outcome is True:
+        logger.info(f"Permitted SQL expression: {expression}")
+    else:
+        logger.warning(f"Denied SQL expression: {expression}")
+    return outcome
+
+
+def _sql_expression_permitted(expression: str) -> bool:
+
+    if not expression:
+        return False
+
+    if PERMIT_ALL_STATEMENTS:
+        return True
+
+    # Parse the SQL statement.
+    parsed = sqlparse.parse(expression.strip())
+    if not parsed:
+        return False
+
+    # Check for multiple statements (potential SQL injection).
+    if len(parsed) > 1:
+        return False
+
+    # Check if the expression is valid and if it's a SELECT statement,
+    # also trying to consider `SELECT ... INTO ...` statements.
+    operation = parsed[0].get_type().upper()
+    tokens = [str(item).upper() for item in parsed[0]]
+    if operation != 'SELECT' or (operation == 'SELECT' and 'INTO' in tokens):
+        return False
+    return True
