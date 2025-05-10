@@ -45,23 +45,36 @@ our recommendation.
 
 # Install
 ```shell
-uv pip install --upgrade git+https://github.com/crate/cratedb-mcp
+uv tool install --upgrade git+https://github.com/crate/cratedb-mcp
 ```
+Note: We recommend to use `uv tool install` to install the program "user"-wide
+into your environment so you can use it across your terminal or MCP client
+sessions like Claude.
 
 # Configure
+
+Configure the `CRATEDB_MCP_HTTP_URL` environment variable to match your CrateDB instance.
+For example, when connecting to CrateDB Cloud, use a value like
+https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/.
+When connecting to CrateDB on localhost, use http://localhost:4200/.
 ```shell
-export CRATEDB_MCP_HTTP_URL=https://example.aks1.westeurope.azure.cratedb.net:4200
+export CRATEDB_MCP_HTTP_URL="http://localhost:4200/"
+```
+```shell
+export CRATEDB_MCP_HTTP_URL="https://example.aks1.westeurope.azure.cratedb.net:4200"
 ```
 
 # Usage
 Start MCP server with `stdio` transport (default).
 ```shell
-CRATEDB_MCP_TRANSPORT=stdio uv run cratedb-mcp
+CRATEDB_MCP_TRANSPORT=stdio cratedb-mcp
 ```
 Start MCP server with `sse` transport.
 ```shell
-CRATEDB_MCP_TRANSPORT=sse uv run cratedb-mcp
+CRATEDB_MCP_TRANSPORT=sse cratedb-mcp
 ```
+Note: If you are not able to use `uv tool install`, please use
+`uv run cratedb-mcp` to acquire and run the package ephemerally.
 
 # Simple Claude configuration
 To use the MCP version within Claude Desktop, you can use the following configuration:
@@ -81,12 +94,7 @@ To use the MCP version within Claude Desktop, you can use the following configur
 }
 ```
 
-You might have to change `CRATEDB_MCP_HTTP_URL` to match your CrateDB instance. For example, when connecting to CrateDB Cloud, use a value like https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/.
 
-
-NB: You can use `uv tool install` to install the program "system"-wide,
-so you can use it across your terminal or Claude sessions. In this case,
-omit the `uv run` prefix displayed above.
 
 
 
