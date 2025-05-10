@@ -29,19 +29,20 @@ def test_fetch_docs_permitted_cratedb_com():
     assert "initcap" in response
 
 
-def test_query_sql_forbidden():
+def test_query_sql_permitted():
+    assert query_sql("SELECT 42")["rows"] == [[42]]
+
+
+def test_query_sql_forbidden_easy():
     with pytest.raises(ValueError) as ex:
         assert "RelationUnknown" in str(query_sql("INSERT INTO foobar (id) VALUES (42) RETURNING id"))
     assert ex.match("Only queries that have a SELECT statement are allowed")
 
 
-def test_query_sql_permitted():
-    assert query_sql("SELECT 42")["rows"] == [[42]]
-
-
-def test_query_sql_permitted_exploit():
-    # FIXME: Read-only protection must become stronger.
-    query_sql("INSERT INTO foobar (operation) VALUES ('select')")
+def test_query_sql_forbidden_sneak_value():
+    with pytest.raises(ValueError) as ex:
+        query_sql("INSERT INTO foobar (operation) VALUES ('select')")
+    assert ex.match("Only queries that have a SELECT statement are allowed")
 
 
 def test_get_table_metadata():

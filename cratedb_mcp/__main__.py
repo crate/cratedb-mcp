@@ -4,6 +4,7 @@ from mcp.server.fastmcp import FastMCP
 
 from .knowledge import DocumentationIndex, Queries, documentation_url_permitted
 from .settings import DOCS_CACHE_TTL, HTTP_TIMEOUT, HTTP_URL
+from .util.sql import sql_is_permitted
 
 # Configure Hishel, an httpx client with caching.
 # Define one hour of caching time.
@@ -25,7 +26,7 @@ def query_cratedb(query: str) -> list[dict]:
 @mcp.tool(description="Send a SQL query to CrateDB, only 'SELECT' queries are allows, queries that"
                       " modify data, columns or are otherwise deemed un-safe are rejected.")
 def query_sql(query: str):
-    if 'select' not in query.lower():
+    if not sql_is_permitted(query):
         raise ValueError('Only queries that have a SELECT statement are allowed.')
     return query_cratedb(query)
 
