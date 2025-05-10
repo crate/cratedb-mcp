@@ -12,3 +12,6 @@ except ValueError as e:  # pragma: no cover
     # TODO: Add software test after refactoring away from module scope.
     warnings.warn(f"Environment variable `CRATEDB_MCP_DOCS_CACHE_TTL` invalid: {e}. "
                   f"Using default value: {DOCS_CACHE_TTL}.", category=UserWarning, stacklevel=2)
+
+# Configure HTTP timeout for all conversations.
+HTTP_TIMEOUT = 10.0

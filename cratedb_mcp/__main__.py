@@ -2,8 +2,8 @@ import hishel
 import httpx
 from mcp.server.fastmcp import FastMCP
 
-from .knowledge import DOCUMENTATION_INDEX, Queries
-from .settings import DOCS_CACHE_TTL, HTTP_URL
+from .knowledge import DocumentationIndex, Queries, documentation_url_permitted
+from .settings import DOCS_CACHE_TTL, HTTP_TIMEOUT, HTTP_URL
 
 # Configure Hishel, an httpx client with caching.
 # Define one hour of caching time.
@@ -11,12 +11,15 @@ controller = hishel.Controller(allow_stale=True)
 storage = hishel.SQLiteStorage(ttl=DOCS_CACHE_TTL)
 client = hishel.CacheClient(controller=controller, storage=storage)
 
+# Load CrateDB documentation outline.
+documentation_index = DocumentationIndex()
+
 # Create FastMCP application object.
 mcp = FastMCP("cratedb-mcp")
 
 
 def query_cratedb(query: str) -> list[dict]:
-    return httpx.post(f'{HTTP_URL}/_sql', json={'stmt': query}).json()
+    return httpx.post(f'{HTTP_URL}/_sql', json={'stmt': query}, timeout=HTTP_TIMEOUT).json()
 
 
 @mcp.tool(description="Send a SQL query to CrateDB, only 'SELECT' queries are allows, queries that"
@@ -27,17 +30,17 @@ def query_sql(query: str):
     return query_cratedb(query)
 
 @mcp.tool(description='Gets an index with CrateDB documentation links to fetch, should download docs'
-                      ' before answering questions. Has documentation name, description and link.')
+                      ' before answering questions. Has documentation title, description, and link.')
 def get_cratedb_documentation_index():
-    return DOCUMENTATION_INDEX
+    return documentation_index.items()
 
 @mcp.tool(description='Downloads the latest CrateDB documentation piece by link.'
                       ' Only used to download CrateDB docs.')
 def fetch_cratedb_docs(link: str):
-    """Fetches a CrateDB documentation link from GitHub raw content."""
-    if 'https://raw.githubusercontent.com/crate/crate/' not in link:
-        raise ValueError('Only github cratedb links can be fetched.')
-    return client.get(link).text
+    """Fetches a CrateDB documentation link."""
+    if not documentation_url_permitted(link):
+        raise ValueError(f'Link is not permitted: {link}')
+    return client.get(link, timeout=HTTP_TIMEOUT).text
 
 @mcp.tool(description="Returns an aggregation of all CrateDB's schema, tables and their metadata")
 def get_table_metadata() -> list[dict]:

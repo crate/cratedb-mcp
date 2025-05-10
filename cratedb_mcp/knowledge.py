@@ -1,4 +1,7 @@
 # ruff: noqa: E501
+import cachetools
+from cratedb_about import CrateDbKnowledgeOutline
+
 
 class Queries:
     TABLES_METADATA = """
@@ -83,20 +86,38 @@ WITH partitions_health AS (SELECT table_name,
     ORDER BY severity DESC"""
 
 
-# 'description' is very important, it gives context to the LLMs to properly decide which one to use.
-DOCUMENTATION_INDEX = [
-    # TODO: Add all there are.
-    {
-        "name": "about/overview",
-        "description": "The most important factual and technical information about CrateDB per medium-sized (~300kB) llms.txt context file.",
-        "link": "https://cdn.crate.io/about/v1/llms.txt"},
-    {
-        "name": "scalar functions",
-        "description": "documentation about specific scalar/methods/functions for CrateDB SQL",
-        "link": "https://raw.githubusercontent.com/crate/crate/refs/heads/5.10/docs/general/builtins/scalar-functions.rst"},
-    {
-        "name": "optimize query 101",
-        "description": "documentation about optimizing CrateDB SQL statements",
-        "link": "https://raw.githubusercontent.com/crate/cratedb-guide/9ab661997d7704ecbb63af9c3ee33535957e24e6/docs/performance/optimization.rst"
-    }
-]
+class DocumentationIndex:
+    """
+    Define documentation sections supplied to the MCP server.
+    Load knowledge outline from YAML file and read all items.
+
+    The `description` attribute is very important, it gives context
+    to the LLM to properly decide which one to use.
+
+    Canonical source: https://github.com/crate/about/blob/main/src/cratedb_about/outline/cratedb-outline.yaml
+
+    Examples:
+    ```yaml
+    - title: "CrateDB SQL functions"
+      link: https://cratedb.com/docs/crate/reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt
+      description: The reference documentation about all SQL functions CrateDB provides.
+
+    - title: "Guide: CrateDB query optimization"
+      link: https://cratedb.com/docs/guide/_sources/performance/optimization.rst.txt
+      description: Essential principles for optimizing queries in CrateDB while avoiding the most common pitfalls.
+    ```
+    """
+
+    def __init__(self):
+        self.outline = CrateDbKnowledgeOutline.load()
+
+    @cachetools.cached(cache={})
+    def items(self):
+        return self.outline.find_items().to_dict()
+
+
+def documentation_url_permitted(url: str) -> bool:
+    return (
+            url.startswith("https://cratedb.com/") or
+            url.startswith("https://github.com/crate") or
+            url.startswith("https://raw.githubusercontent.com/crate"))
