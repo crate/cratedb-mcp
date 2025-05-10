@@ -14,3 +14,4 @@
 - MCP docs: Used Hishel for transparently caching documentation resources,
   by default for one hour. Use the `CRATEDB_MCP_DOCS_CACHE_TTL` environment
   variable to adjust (default: 3600)
+- SQL: Stronger read-only mode, using `sqlparse`

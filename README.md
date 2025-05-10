@@ -40,10 +40,12 @@ LLMs can still hallucinate and give incorrect answers.
 * What is the storage consumption of my tables, give it in a graph.
 * How can I format a timestamp column to '2019 Jan 21'.
 
-# Data integrity
-We do not recommend letting the LLMs insert data or modify columns by itself, as such we tell the
-LLMs to only allow 'SELECT' statements in the `cratedb_sql` tool, you can jailbreak this against
-our recommendation.
+# Read-only access
+We do not recommend letting LLM-based agents insert or modify data by itself.
+As such, only `SELECT` statements are permitted and forwarded to the database.
+All other operations will raise a `ValueError` exception, unless the
+`CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a
+truthy value.
 
 # Install
 ```shell
