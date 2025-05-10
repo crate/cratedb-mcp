@@ -10,3 +10,4 @@
 - Documentation: Show a simple Claude Desktop configuration
 - MCP documentation: Add reference to medium-sized llms.txt context file
 - Boilerplate: Added software tests and CI configuration
+- Documentation: Added development sandbox section
