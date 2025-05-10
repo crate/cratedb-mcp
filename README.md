@@ -66,6 +66,9 @@ export CRATEDB_MCP_HTTP_URL="http://localhost:4200/"
 export CRATEDB_MCP_HTTP_URL="https://example.aks1.westeurope.azure.cratedb.net:4200"
 ```
 
+The `CRATEDB_MCP_DOCS_CACHE_TTL` environment variable (default: 3600) defines
+the cache lifetime for documentation resources.
+
 # Usage
 Start MCP server with `stdio` transport (default).
 ```shell

@@ -1,9 +1,17 @@
+import hishel
 import httpx
 from mcp.server.fastmcp import FastMCP
 
 from .knowledge import DOCUMENTATION_INDEX, Queries
-from .settings import HTTP_URL
+from .settings import DOCS_CACHE_TTL, HTTP_URL
 
+# Configure Hishel, an httpx client with caching.
+# Define one hour of caching time.
+controller = hishel.Controller(allow_stale=True)
+storage = hishel.SQLiteStorage(ttl=DOCS_CACHE_TTL)
+client = hishel.CacheClient(controller=controller, storage=storage)
+
+# Create FastMCP application object.
 mcp = FastMCP("cratedb-mcp")
 
 
@@ -29,7 +37,7 @@ def fetch_cratedb_docs(link: str):
     """Fetches a CrateDB documentation link from GitHub raw content."""
     if 'https://raw.githubusercontent.com/crate/crate/' not in link:
         raise ValueError('Only github cratedb links can be fetched.')
-    return httpx.get(link).text
+    return client.get(link).text
 
 @mcp.tool(description="Returns an aggregation of all CrateDB's schema, tables and their metadata")
 def get_table_metadata() -> list[dict]:
