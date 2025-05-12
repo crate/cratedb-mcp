@@ -15,7 +15,7 @@ def sql_is_permitted(expression: str) -> bool:
     Validate the SQL expression, only permit read queries by default.
 
     When the `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set,
-    allow all types of statements.
+    allow all types of statements. This is **not** recommended.
 
     FIXME: Revisit implementation, it might be too naive or weak.
            Issue:    https://github.com/crate/cratedb-mcp/issues/10

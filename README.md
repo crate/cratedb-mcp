@@ -45,7 +45,7 @@ We do not recommend letting LLM-based agents insert or modify data by itself.
 As such, only `SELECT` statements are permitted and forwarded to the database.
 All other operations will raise a `ValueError` exception, unless the
 `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a
-truthy value.
+truthy value. This is **not** recommended.
 
 # Install
 ```shell
