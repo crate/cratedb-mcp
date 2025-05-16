@@ -11,18 +11,22 @@ description = "CrateDB MCP Server for Text-to-SQL and documentation retrieval."
 readme = "README.md"
 keywords = [
   "cratedb",
+  "documentation retrieval",
   "knowledge base",
+  "mcp",
   "mcp server",
+  "model context protocol",
+  "sql",
   "text-to-sql",
 ]
 license = "Apache-2.0"
 license-files = [ "LICENSE" ]
 authors = [
-  { name = "CrateDB Engineering" },
+  { name = "CrateDB engineering" },
 ]
 requires-python = ">=3.10"
 classifiers = [
-  "Development Status :: 1 - Planning",
+  "Development Status :: 3 - Alpha",
   "Environment :: Console",
   "Intended Audience :: Customer Service",
   "Intended Audience :: Developers",
@@ -53,7 +57,6 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Pre-processors",
-  "Topic :: System :: Archiving",
   "Topic :: System :: Clustering",
   "Topic :: System :: Distributed Computing",
   "Topic :: System :: Logging",
