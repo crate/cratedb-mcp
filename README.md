@@ -53,11 +53,15 @@ Please explore other [example questions] from a shared collection.
 
 ## What's inside
 
-The application includes two independent subsystems. One is to talk to a CrateDB
-database cluster, the other is to inquire documentation guidelines about CrateDB.
+The application includes two independent subsystems: The Text-to-SQL API talks
+to a CrateDB database cluster, the documentation server API inquires
+documentation guidelines specific to CrateDB based on user input.
 
-- Database: `get_health`, `get_table_metadata`, `query_sql`
-- Documentation: `get_cratedb_documentation_index`, `fetch_cratedb_docs`
+- Database / Text-to-SQL: `get_health`, `get_table_metadata`, `query_sql`
+
+  The MCP server provides relevant API entrypoints for "talking to your database".  
+
+- Documentation server: `get_cratedb_documentation_index`, `fetch_cratedb_docs`
 
   For tasks like optimizing queries using CrateDB-specific syntax/capabilities,
   the MCP server is able to fetch information from `https://cratedb.com/docs`
