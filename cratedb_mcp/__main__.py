@@ -2,7 +2,7 @@ import httpx
 from mcp.server.fastmcp import FastMCP
 
 from .knowledge import DocumentationIndex, Queries
-from .settings import HTTP_TIMEOUT, HTTP_URL
+from .settings import HTTP_URL, Settings
 from .util.sql import sql_is_permitted
 
 # Load CrateDB documentation outline.
@@ -13,7 +13,9 @@ mcp = FastMCP("cratedb-mcp")
 
 
 def query_cratedb(query: str) -> list[dict]:
-    return httpx.post(f"{HTTP_URL}/_sql", json={"stmt": query}, timeout=HTTP_TIMEOUT).json()
+    return httpx.post(
+        f"{HTTP_URL}/_sql", json={"stmt": query}, timeout=Settings.http_timeout()
+    ).json()
 
 
 @mcp.tool(
@@ -44,7 +46,7 @@ def fetch_cratedb_docs(link: str):
     """Fetch a CrateDB documentation link."""
     if not documentation_index.url_permitted(link):
         raise ValueError(f"Link is not permitted: {link}")
-    return documentation_index.client.get(link, timeout=HTTP_TIMEOUT).text
+    return documentation_index.client.get(link, timeout=Settings.http_timeout()).text
 
 
 @mcp.tool(description="Return an aggregation of all CrateDB's schema, tables and their metadata")

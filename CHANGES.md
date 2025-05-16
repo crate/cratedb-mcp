@@ -16,3 +16,4 @@
   variable to adjust (default: 3600)
 - SQL: Stronger read-only mode, using `sqlparse`
 - CLI: Added option `--version` to report the installed package version
+- Naming things: Started using `CRATEDB_MCP_HTTP_TIMEOUT` environment variable

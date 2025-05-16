@@ -102,8 +102,12 @@ export CRATEDB_MCP_HTTP_URL="https://example.aks1.westeurope.azure.cratedb.net:4
 export CRATEDB_MCP_HTTP_URL="http://localhost:4200/"
 ```
 
+The `CRATEDB_MCP_HTTP_TIMEOUT` environment variable (default: 30.0) defines
+the timeout for HTTP requests to CrateDB and its documentation resources
+in seconds.
+
 The `CRATEDB_MCP_DOCS_CACHE_TTL` environment variable (default: 3600) defines
-the cache lifetime for documentation resources.
+the cache lifetime for documentation resources in seconds.
 
 ## Usage
 Start MCP server with `stdio` transport (default).
