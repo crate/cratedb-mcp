@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- Options: Renamed `CRATEDB_MCP_HTTP_URL` to `CRATEDB_CLUSTER_URL`,
+  standardizing on common naming conventions
 
 ## v0.0.0 - 2025-05-16
 - Project: Established project layout
