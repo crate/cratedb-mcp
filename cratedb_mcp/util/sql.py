@@ -2,6 +2,7 @@ import dataclasses
 import logging
 import typing as t
 
+import cratedb_sqlparse
 import sqlparse
 from sqlparse.tokens import Keyword
 
@@ -43,6 +44,7 @@ class SqlStatementClassifier:
     expression: str
     permit_all: bool = False
 
+    _parsed_cratedb: t.Any = dataclasses.field(init=False, default=None)
     _parsed_sqlparse: t.Any = dataclasses.field(init=False, default=None)
 
     def __post_init__(self) -> None:
@@ -50,6 +52,14 @@ class SqlStatementClassifier:
             self.expression = ""
         if self.expression:
             self.expression = self.expression.strip()
+
+    def parse_cratedb(self):
+        """
+        Parse expression using `cratedb-sqlparse` library.
+        """
+        if self._parsed_cratedb is None:
+            self._parsed_cratedb = cratedb_sqlparse.sqlparse(self.expression)
+        return self._parsed_cratedb
 
     def parse_sqlparse(self) -> t.List[sqlparse.sql.Statement]:
         """
@@ -88,8 +98,8 @@ class SqlStatementClassifier:
         """
         The SQL operation: SELECT, INSERT, UPDATE, DELETE, CREATE, etc.
         """
-        parsed = self.parse_sqlparse()
-        return parsed[0].get_type().upper()
+        parsed = self.parse_cratedb()
+        return parsed[0].type.upper()
 
     @property
     def is_camouflage(self) -> bool:
