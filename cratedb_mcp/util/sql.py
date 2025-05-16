@@ -5,7 +5,7 @@ import typing as t
 import sqlparse
 from sqlparse.tokens import Keyword
 
-from cratedb_mcp.settings import PERMIT_ALL_STATEMENTS
+from cratedb_mcp.settings import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ def sql_is_permitted(expression: str) -> bool:
            Issue:    https://github.com/crate/cratedb-mcp/issues/10
            Question: Does SQLAlchemy provide a solid read-only mode, or any other library?
     """
-    is_dql = SqlStatementClassifier(expression=expression, permit_all=PERMIT_ALL_STATEMENTS).is_dql
+    is_dql = SqlStatementClassifier(expression=expression, permit_all=Settings.permit_all_statements()).is_dql
     if is_dql:
         logger.info(f"Permitted SQL expression: {expression and expression[:50]}...")
     else:

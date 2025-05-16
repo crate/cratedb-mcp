@@ -8,19 +8,30 @@ HTTP_URL: str = os.getenv("CRATEDB_MCP_HTTP_URL", "http://localhost:4200")
 # Configure HTTP timeout for all conversations.
 HTTP_TIMEOUT = 10.0
 
-# Whether to permit all statements. By default, only SELECT operations are permitted.
-PERMIT_ALL_STATEMENTS: bool = to_bool(os.getenv("CRATEDB_MCP_PERMIT_ALL_STATEMENTS", "false"))
-
-# TODO: Refactor into code which is not on the module level. Use OOM early.
-if PERMIT_ALL_STATEMENTS:  # pragma: no cover
-    warnings.warn("All types of SQL statements are permitted. This means the LLM "
-                  "agent can write and modify the connected database", category=UserWarning, stacklevel=2)
-
 
 class Settings:
     """
-    Bundle application settings.
+    Application settings bundle.
     """
+
+    @staticmethod
+    def permit_all_statements() -> bool:
+        """
+        Whether to permit all statements. By default, only SELECT operations are permitted.
+        """
+        permitted = False
+        try:
+            permitted = to_bool(os.getenv("CRATEDB_MCP_PERMIT_ALL_STATEMENTS", "false"))
+            if permitted:
+                warnings.warn("All types of SQL statements are permitted. "
+                              "This means the LLM agent can write and modify the connected database",
+                              category=UserWarning, stacklevel=2)
+        except (ValueError, TypeError) as e:
+            # If the environment variable is not a valid integer, use the default value, but warn about it.
+            # TODO: Add software test after refactoring away from module scope.
+            warnings.warn(f"Environment variable `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` invalid: {e}. ",
+                          category=UserWarning, stacklevel=2)
+        return permitted
 
     @staticmethod
     def docs_cache_ttl(ttl: int = 3600) -> int:

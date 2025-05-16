@@ -1,4 +1,7 @@
-import cratedb_mcp
+import os
+
+import pytest
+
 from cratedb_mcp.util.sql import sql_is_permitted
 
 
@@ -14,10 +17,20 @@ def test_sql_select_rejected():
     assert sql_is_permitted(r"--\; select 42") is False
 
 
-def test_sql_insert_allowed(mocker):
-    """When explicitly allowed, permit any kind of statement"""
-    mocker.patch.object(cratedb_mcp.util.sql, "PERMIT_ALL_STATEMENTS", True)
-    assert sql_is_permitted("INSERT INTO foobar") is True
+def test_sql_insert_permit_success(mocker):
+    """When explicitly allowed, permit any kind of statement, but verify there is a warning"""
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_PERMIT_ALL_STATEMENTS": "true"})
+    with pytest.warns(UserWarning) as record:
+        assert sql_is_permitted("INSERT INTO foobar") is True
+    assert "All types of SQL statements are permitted" in record[0].message.args[0]
+
+
+def test_sql_insert_permit_invalid(mocker):
+    """Verify invalid environment variable"""
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_PERMIT_ALL_STATEMENTS": "-555"})
+    with pytest.warns(UserWarning) as record:
+        assert sql_is_permitted("INSERT INTO foobar") is False
+    assert "Environment variable `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` invalid" in record[0].message.args[0]
 
 
 def test_sql_select_multiple_rejected():
