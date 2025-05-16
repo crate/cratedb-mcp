@@ -1,6 +1,11 @@
 # ruff: noqa: E501
+import typing as t
+
 import cachetools
+import hishel
 from cratedb_about import CrateDbKnowledgeOutline
+
+from cratedb_mcp.settings import Settings
 
 
 class Queries:
@@ -108,16 +113,46 @@ class DocumentationIndex:
     ```
     """
 
+    settings = Settings()
+
+    # List of permitted URL prefixes to acquire resources from on demand.
+    permitted_urls: t.List[str] = [
+        "https://cratedb.com/",
+        "https://github.com/crate",
+        "https://raw.githubusercontent.com/crate",
+    ]
+
     def __init__(self):
+
+        # Configure Hishel, an httpx client with caching.
+        # Define one hour of caching time.
+        controller = hishel.Controller(allow_stale=True)
+        storage = hishel.SQLiteStorage(ttl=self.settings.docs_cache_ttl())
+        self.client = hishel.CacheClient(controller=controller, storage=storage)
+
+        # Load documentation outline.
         self.outline = CrateDbKnowledgeOutline.load()
 
-    @cachetools.cached(cache={})
+    @cachetools.cached(cache=cachetools.TTLCache(maxsize=1, ttl=settings.docs_cache_ttl() - 5))
     def items(self):
+        """
+        Return outline items, cached for a little bit less than one hour.
+        """
         return self.outline.find_items().to_dict()
 
+    def url_permitted(self, url: str) -> bool:
+        """
+        Validate if a documentation URL is from a permitted domain.
 
-def documentation_url_permitted(url: str) -> bool:
-    return (
-            url.startswith("https://cratedb.com/") or
-            url.startswith("https://github.com/crate") or
-            url.startswith("https://raw.githubusercontent.com/crate"))
+        Only URLs from CrateDB domains and specific GitHub repositories are allowed.
+
+        Args:
+            url: The URL to validate
+
+        Returns:
+            bool: True if the URL is from a permitted domain, False otherwise
+        """
+        for permitted_url in self.permitted_urls:
+            if url.startswith(permitted_url):
+                return True
+        return False

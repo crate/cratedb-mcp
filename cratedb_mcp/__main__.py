@@ -1,16 +1,9 @@
-import hishel
 import httpx
 from mcp.server.fastmcp import FastMCP
 
-from .knowledge import DocumentationIndex, Queries, documentation_url_permitted
-from .settings import DOCS_CACHE_TTL, HTTP_TIMEOUT, HTTP_URL
+from .knowledge import DocumentationIndex, Queries
+from .settings import HTTP_TIMEOUT, HTTP_URL
 from .util.sql import sql_is_permitted
-
-# Configure Hishel, an httpx client with caching.
-# Define one hour of caching time.
-controller = hishel.Controller(allow_stale=True)
-storage = hishel.SQLiteStorage(ttl=DOCS_CACHE_TTL)
-client = hishel.CacheClient(controller=controller, storage=storage)
 
 # Load CrateDB documentation outline.
 documentation_index = DocumentationIndex()
@@ -39,9 +32,9 @@ def get_cratedb_documentation_index():
                       ' Only used to download CrateDB docs.')
 def fetch_cratedb_docs(link: str):
     """Fetches a CrateDB documentation link."""
-    if not documentation_url_permitted(link):
+    if not documentation_index.url_permitted(link):
         raise ValueError(f'Link is not permitted: {link}')
-    return client.get(link, timeout=HTTP_TIMEOUT).text
+    return documentation_index.client.get(link, timeout=HTTP_TIMEOUT).text
 
 @mcp.tool(description="Returns an aggregation of all CrateDB's schema, tables and their metadata")
 def get_table_metadata() -> list[dict]:
