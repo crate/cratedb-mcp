@@ -5,14 +5,30 @@ from attr.converters import to_bool
 
 HTTP_URL: str = os.getenv("CRATEDB_MCP_HTTP_URL", "http://localhost:4200")
 
-# Configure HTTP timeout for all conversations.
-HTTP_TIMEOUT = 10.0
-
 
 class Settings:
     """
     Application settings bundle.
     """
+
+    @staticmethod
+    def http_timeout(timeout: float = 30.0) -> float:
+        """
+        Return configured HTTP timeout in seconds.
+        """
+        try:
+            return float(os.getenv("CRATEDB_MCP_HTTP_TIMEOUT", timeout))
+        except ValueError as e:  # pragma: no cover
+            # If the environment variable is not a valid float,
+            # use the default value, but warn about it.
+            # TODO: Add software test after refactoring away from module scope.
+            warnings.warn(
+                f"Environment variable `CRATEDB_MCP_HTTP_TIMEOUT` invalid: {e}. "
+                f"Using default value: {timeout}.",
+                category=UserWarning,
+                stacklevel=2,
+            )
+            return timeout
 
     @staticmethod
     def permit_all_statements() -> bool:
