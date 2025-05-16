@@ -137,10 +137,11 @@ To use the MCP version within Claude Desktop, you can use the following configur
 }
 ```
 
-### Dry-dock
+### Dry-run
 
 You can use [mcptools], a Swiss Army Knife for MCP Servers, to talk to the
-CrateDB MCP Server from the command line.
+CrateDB MCP Server from the command line. The following operations do not
+require a language model.
 
 Install software packages.
 ```shell
