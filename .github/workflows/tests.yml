@@ -4,7 +4,13 @@ on:
   push:
     branches: [ main ]
   pull_request:
+
+  # Allow the job to be triggered manually.
   workflow_dispatch:
+
+  # Run the job as a nightly recurrent job.
+  schedule:
+    - cron: '0 4 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

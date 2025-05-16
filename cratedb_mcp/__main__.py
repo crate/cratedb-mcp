@@ -17,8 +17,10 @@ def query_cratedb(query: str) -> list[dict]:
 
 
 @mcp.tool(
-    description="Send an SQL query to CrateDB, only 'SELECT' queries are allows, queries that "
-    "modify data, columns or are otherwise deemed un-safe are rejected."
+    description=(
+        "Send an SQL query to CrateDB. Only 'SELECT' queries are allowed; "
+        "queries that modify data, columns, or are otherwise deemed unsafe are rejected."
+    )
 )
 def query_sql(query: str):
     if not sql_is_permitted(query):
