@@ -1,12 +1,14 @@
 # CrateDB MCP Server
 
-[![Bluesky][badge-bluesky]][target-bluesky]
-[![Release Notes][badge-release-notes]][project-release-notes]
-
-[![Status][badge-status]][target-project]
-[![License][badge-license]][target-license]
+[![Status][badge-status]][project-pypi]
 [![CI][badge-ci]][project-ci]
 [![Coverage][badge-coverage]][project-coverage]
+[![Downloads per month][badge-downloads-per-month]][project-downloads]
+
+[![License][badge-license]][project-license]
+[![Release Notes][badge-release-notes]][project-release-notes]
+[![PyPI Version][badge-package-version]][project-pypi]
+[![Python Versions][badge-python-versions]][project-pypi]
 
 » [Documentation]
 | [Releases]
@@ -15,63 +17,90 @@
 | [License]
 | [CrateDB]
 | [Community Forum]
+| [Bluesky]
 
-# About
-Model Context Protocol [MCP](https://modelcontextprotocol.io/introduction) is a protocol that standardizes providing
-context to LLMs like Claude, ChatGPT and MistralAI.
+## About
 
-CrateDB MCP server lets these LLMs operate directly on CrateDB enabling use cases like:
+The CrateDB MCP Server is suitable for Text-to-SQL and documentation retrieval,
+specializing on the CrateDB database.
 
-- Answer questions about your data and database state
-- Help you debug and optimize queries directly on the database
+The Model Context Protocol ([MCP]) is a protocol that standardizes providing
+context to LLMs like Claude, ChatGPT, and MistralAI.
 
-To use a MCP server you need a [client that supports] the protocol, the most notable ones are:
-Claude Desktop, ChatGTP desktop, OPenAI agents SDK and Cursor.
+## Details
 
-# Examples
-For questions like optimizing queries and CrateDB specific syntax/capabilities, we encourage the
-LLMs to fetch `https://cratedb.com/docs` to offer the most accurate possible information.
+The CrateDB MCP Server lets these LLMs operate directly on CrateDB, enabling
+use cases like:
 
-These are examples of questions that have been tested and validated by the team. Remember that
-LLMs can still hallucinate and give incorrect answers.
+- Answer questions about your data and database state.
+- Help you debug and optimize queries directly on the database.
+- Have general conversations about any details of CrateDB and CrateDB Cloud.
+
+To use an MCP server, you need a [client that supports] the protocol. The most
+notable ones are Claude Desktop, ChatGPT desktop, OpenAI agents SDK, and Cursor.
+
+## Examples
+
+These are examples of questions that have been tested and validated by the team.
+Remember that LLMs can still hallucinate and give incorrect answers.
 
 * Optimize this query: "SELECT * FROM movies WHERE release_date > '2012-12-1' AND revenue"
 * Tell me about the health of the cluster
 * What is the storage consumption of my tables, give it in a graph.
 * How can I format a timestamp column to '2019 Jan 21'.
 
-# Read-only access
+Please explore other [example questions] from a shared collection.
+
+## What's inside
+
+The application includes two independent subsystems. One is to talk to a CrateDB
+database cluster, the other is to inquire documentation guidelines about CrateDB.
+
+- Database: `get_health`, `get_table_metadata`, `query_sql`
+- Documentation: `get_cratedb_documentation_index`, `fetch_cratedb_docs`
+
+  For tasks like optimizing queries using CrateDB-specific syntax/capabilities,
+  the MCP server is able to fetch information from `https://cratedb.com/docs`
+  on demand, to provide the most accurate possible information.
+  More specifically, relevant information is relayed per [cratedb-outline.yaml]. 
+
+## Security considerations
+
+**By default, the application will access the database in read-only mode.**
+
 We do not recommend letting LLM-based agents insert or modify data by itself.
 As such, only `SELECT` statements are permitted and forwarded to the database.
 All other operations will raise a `ValueError` exception, unless the
 `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a
 truthy value. This is **not** recommended.
 
-# Install
+## Install
 ```shell
-uv tool install --upgrade git+https://github.com/crate/cratedb-mcp
+uv tool install --upgrade cratedb-mcp
 ```
-Note: We recommend to use `uv tool install` to install the program "user"-wide
-into your environment so you can use it across your terminal or MCP client
-sessions like Claude.
+Note: We recommend using the [uv] package manager to install the `cratedb-mcp`
+package, like many other MCP servers are doing it.
+We recommend to use `uv tool install` to install the program "user"-wide
+into your environment so you can invoke it from anywhere across your terminal
+sessions or MCP client programs like Claude.
 
-# Configure
+## Configure
 
 Configure the `CRATEDB_MCP_HTTP_URL` environment variable to match your CrateDB instance.
 For example, when connecting to CrateDB Cloud, use a value like
 `https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/`.
 When connecting to CrateDB on localhost, use `http://localhost:4200/`.
 ```shell
-export CRATEDB_MCP_HTTP_URL="http://localhost:4200/"
+export CRATEDB_MCP_HTTP_URL="https://example.aks1.westeurope.azure.cratedb.net:4200"
 ```
 ```shell
-export CRATEDB_MCP_HTTP_URL="https://example.aks1.westeurope.azure.cratedb.net:4200"
+export CRATEDB_MCP_HTTP_URL="http://localhost:4200/"
 ```
 
 The `CRATEDB_MCP_DOCS_CACHE_TTL` environment variable (default: 3600) defines
 the cache lifetime for documentation resources.
 
-# Usage
+## Usage
 Start MCP server with `stdio` transport (default).
 ```shell
 CRATEDB_MCP_TRANSPORT=stdio cratedb-mcp
@@ -83,7 +112,7 @@ CRATEDB_MCP_TRANSPORT=sse cratedb-mcp
 Note: If you are unable to use `uv tool install`, please use
 `uv run cratedb-mcp` to acquire and run the package ephemerally.
 
-# Simple Claude configuration
+### Anthropic Claude
 To use the MCP version within Claude Desktop, you can use the following configuration:
 
 ```json
@@ -91,7 +120,7 @@ To use the MCP version within Claude Desktop, you can use the following configur
   "mcpServers": {
     "my_cratedb": {
       "command": "uvx",
-      "args": ["--python", "3.13", "--from", "git+https://github.com/crate/cratedb-mcp", "cratedb-mcp"],
+      "args": ["cratedb-mcp"],
       "env": {
         "CRATEDB_MCP_HTTP_URL": "http://localhost:4200/",
         "CRATEDB_MCP_TRANSPORT": "stdio"
@@ -107,9 +136,15 @@ To use the MCP version within Claude Desktop, you can use the following configur
 To learn how to set up a development sandbox, see the [development documentation](./DEVELOP.md).
 
 
+[client that supports]: https://modelcontextprotocol.io/clients#feature-support-matrix
 [CrateDB]: https://cratedb.com/database
+[cratedb-outline.yaml]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/outline/cratedb-outline.yaml
 [issue tracker]: https://github.com/crate/cratedb-mcp/issues
+[example questions]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/query/model.py#L17-L44
+[MCP]: https://modelcontextprotocol.io/introduction
+[uv]: https://docs.astral.sh/uv/
 
+[Bluesky]: https://bsky.app/search?q=cratedb
 [Community Forum]: https://community.cratedb.com/
 [Documentation]: https://github.com/crate/cratedb-mcp
 [Issues]: https://github.com/crate/cratedb-mcp/issues
@@ -119,15 +154,17 @@ To learn how to set up a development sandbox, see the [development documentation
 [Releases]: https://github.com/surister/cratedb-mcp/releases
 
 [badge-ci]: https://github.com/crate/cratedb-mcp/actions/workflows/tests.yml/badge.svg
-[badge-coverage]: https://codecov.io/gh/crate/cratedb-mcp/branch/main/graph/badge.svg
 [badge-bluesky]: https://img.shields.io/badge/Bluesky-0285FF?logo=bluesky&logoColor=fff&label=Follow%20%40CrateDB
+[badge-coverage]: https://codecov.io/gh/crate/cratedb-mcp/branch/main/graph/badge.svg
+[badge-downloads-per-month]: https://pepy.tech/badge/cratedb-mcp/month
 [badge-license]: https://img.shields.io/github/license/crate/cratedb-mcp
+[badge-package-version]: https://img.shields.io/pypi/v/cratedb-mcp.svg
+[badge-python-versions]: https://img.shields.io/pypi/pyversions/cratedb-mcp.svg
 [badge-release-notes]: https://img.shields.io/github/release/crate/cratedb-mcp?label=Release+Notes
-[badge-status]: https://img.shields.io/badge/status--alpha-orange
+[badge-status]: https://img.shields.io/pypi/status/cratedb-mcp.svg
 [project-ci]: https://github.com/crate/cratedb-mcp/actions/workflows/tests.yml
 [project-coverage]: https://app.codecov.io/gh/crate/cratedb-mcp
+[project-downloads]: https://pepy.tech/project/cratedb-mcp/
+[project-license]: https://github.com/crate/cratedb-mcp/blob/main/LICENSE
+[project-pypi]: https://pypi.org/project/cratedb-mcp
 [project-release-notes]: https://github.com/crate/cratedb-mcp/releases
-[target-bluesky]: https://bsky.app/search?q=cratedb
-[target-license]: https://github.com/crate/cratedb-mcp/blob/main/LICENSE
-[target-project]: https://github.com/crate/cratedb-mcp
-[client that supports]: https://modelcontextprotocol.io/clients#feature-support-matrix
