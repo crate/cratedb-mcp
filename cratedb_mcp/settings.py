@@ -3,7 +3,7 @@ import warnings
 
 from attr.converters import to_bool
 
-HTTP_URL: str = os.getenv("CRATEDB_MCP_HTTP_URL", "http://localhost:4200")
+HTTP_URL: str = os.getenv("CRATEDB_CLUSTER_URL", "http://localhost:4200")
 
 
 class Settings:

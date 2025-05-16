@@ -91,15 +91,15 @@ Notes:
 
 ## Configure
 
-Configure the `CRATEDB_MCP_HTTP_URL` environment variable to match your CrateDB instance.
+Configure the `CRATEDB_CLUSTER_URL` environment variable to match your CrateDB instance.
 For example, when connecting to CrateDB Cloud, use a value like
 `https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/`.
 When connecting to CrateDB on localhost, use `http://localhost:4200/`.
 ```shell
-export CRATEDB_MCP_HTTP_URL="https://example.aks1.westeurope.azure.cratedb.net:4200"
+export CRATEDB_CLUSTER_URL="https://example.aks1.westeurope.azure.cratedb.net:4200"
 ```
 ```shell
-export CRATEDB_MCP_HTTP_URL="http://localhost:4200/"
+export CRATEDB_CLUSTER_URL="http://localhost:4200/"
 ```
 
 The `CRATEDB_MCP_HTTP_TIMEOUT` environment variable (default: 30.0) defines
@@ -129,7 +129,7 @@ To use the MCP version within Claude Desktop, you can use the following configur
       "command": "uvx",
       "args": ["cratedb-mcp"],
       "env": {
-        "CRATEDB_MCP_HTTP_URL": "http://localhost:4200/",
+        "CRATEDB_CLUSTER_URL": "http://localhost:4200/",
         "CRATEDB_MCP_TRANSPORT": "stdio"
       }
     }
