@@ -82,11 +82,17 @@ truthy value. This is **not** recommended.
 ```shell
 uv tool install --upgrade cratedb-mcp
 ```
-Note: We recommend using the [uv] package manager to install the `cratedb-mcp`
-package, like many other MCP servers are doing it.
-We recommend to use `uv tool install` to install the program "user"-wide
-into your environment so you can invoke it from anywhere across your terminal
-sessions or MCP client programs like Claude.
+Notes:
+- We recommend using the [uv] package manager to install the `cratedb-mcp`
+  package, like many other MCP servers are doing it.
+  ```shell
+  {apt,brew,pipx,zypper} install uv
+  ```
+- We recommend to use `uv tool install` to install the program "user"-wide
+  into your environment so you can invoke it from anywhere across your terminal
+  sessions or MCP client programs like Claude.
+- If you are unable to use `uv tool install`, you can use `uvx cratedb-mcp`
+  to acquire the package and run the application ephemerally.
 
 ## Configure
 
@@ -113,8 +119,6 @@ Start MCP server with `sse` transport.
 ```shell
 CRATEDB_MCP_TRANSPORT=sse cratedb-mcp
 ```
-Note: If you are unable to use `uv tool install`, please use
-`uv run cratedb-mcp` to acquire and run the package ephemerally.
 
 ### Anthropic Claude
 To use the MCP version within Claude Desktop, you can use the following configuration:
