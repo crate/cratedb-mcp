@@ -138,6 +138,37 @@ To use the MCP version within Claude Desktop, you can use the following configur
 }
 ```
 
+### Dry-dock
+
+You can use [mcptools], a Swiss Army Knife for MCP Servers, to talk to the
+CrateDB MCP Server from the command line.
+
+Install software packages.
+```shell
+brew tap f/mcptools
+brew install mcp uv
+```
+
+Explore the Text-to-SQL API.
+```shell
+mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' uvx cratedb-mcp
+```
+```shell
+mcpt call get_table_metadata uvx cratedb-mcp
+```
+```shell
+mcpt call get_health uvx cratedb-mcp
+```
+
+Exercise the documentation server API.
+```shell
+mcpt call get_cratedb_documentation_index uvx cratedb-mcp
+```
+```shell
+mcpt call \
+  fetch_cratedb_docs --params '{"link":"https://cratedb.com/docs/cloud/en/latest/_sources/cluster/integrations/mongo-cdc.md.txt"}' \
+  uvx cratedb-mcp
+```
 
 ## Development
 
@@ -150,6 +181,7 @@ To learn how to set up a development sandbox, see the [development documentation
 [issue tracker]: https://github.com/crate/cratedb-mcp/issues
 [example questions]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/query/model.py#L17-L44
 [MCP]: https://modelcontextprotocol.io/introduction
+[mcptools]: https://github.com/f/mcptools
 [uv]: https://docs.astral.sh/uv/
 
 [Bluesky]: https://bsky.app/search?q=cratedb
