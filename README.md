@@ -27,19 +27,31 @@ specializing on the CrateDB database.
 The Model Context Protocol ([MCP]) is a protocol that standardizes providing
 context to LLMs like Claude, ChatGPT, and MistralAI.
 
-## Details
+## Features
 
 The CrateDB MCP Server lets these LLMs operate directly on CrateDB, enabling
 use cases like:
 
 - Answer questions about your data and database state.
-- Help you debug and optimize queries directly on the database.
+- Help you debug and optimize queries directly on the database, for tasks
+  like optimizing queries using CrateDB-specific capabilities and syntax.
 - Have general conversations about any details of CrateDB and CrateDB Cloud.
 
 To use an MCP server, you need a [client that supports] the protocol. The most
 notable ones are Claude Desktop, ChatGPT desktop, OpenAI agents SDK, and Cursor.
 
-## Examples
+### Details
+
+The application includes two independent subsystems: The Text-to-SQL API talks
+to a CrateDB database cluster, while the documentation server looks up guidelines
+specific to CrateDB topics based on user input on demand, for example, from
+<https://cratedb.com/docs>, to provide the most accurate possible information.
+Relevant information is relayed per [cratedb-outline.yaml].
+
+- Database / Text-to-SQL: `get_health`, `get_table_metadata`, `query_sql`
+- Documentation server: `get_cratedb_documentation_index`, `fetch_cratedb_docs`
+
+### Examples
 
 These are examples of questions that have been tested and validated by the team.
 Remember that LLMs can still hallucinate and give incorrect answers.
@@ -50,23 +62,6 @@ Remember that LLMs can still hallucinate and give incorrect answers.
 * How can I format a timestamp column to '2019 Jan 21'.
 
 Please explore other [example questions] from a shared collection.
-
-## What's inside
-
-The application includes two independent subsystems: The Text-to-SQL API talks
-to a CrateDB database cluster, the documentation server API inquires
-documentation guidelines specific to CrateDB based on user input.
-
-- Database / Text-to-SQL: `get_health`, `get_table_metadata`, `query_sql`
-
-  The MCP server provides relevant API entrypoints for "talking to your database".  
-
-- Documentation server: `get_cratedb_documentation_index`, `fetch_cratedb_docs`
-
-  For tasks like optimizing queries using CrateDB-specific syntax/capabilities,
-  the MCP server is able to fetch information from `https://cratedb.com/docs`
-  on demand, to provide the most accurate possible information.
-  More specifically, relevant information is relayed per [cratedb-outline.yaml]. 
 
 ## Security considerations
 
@@ -178,7 +173,6 @@ To learn how to set up a development sandbox, see the [development documentation
 [client that supports]: https://modelcontextprotocol.io/clients#feature-support-matrix
 [CrateDB]: https://cratedb.com/database
 [cratedb-outline.yaml]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/outline/cratedb-outline.yaml
-[issue tracker]: https://github.com/crate/cratedb-mcp/issues
 [example questions]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/query/model.py#L17-L44
 [MCP]: https://modelcontextprotocol.io/introduction
 [mcptools]: https://github.com/f/mcptools
