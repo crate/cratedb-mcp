@@ -93,7 +93,7 @@ optional-dependencies.test = [
 scripts.cratedb-mcp = "cratedb_mcp.cli:main"
 
 [tool.ruff]
-line-length = 110
+line-length = 100
 
 extend-exclude = [
 ]
@@ -191,15 +191,15 @@ check = [
 ]
 
 format = [
-  #{ cmd = "ruff format ." },
+  { cmd = "ruff format ." },
   # Configure Ruff not to auto-fix (remove!):
   # unused imports (F401), unused variables (F841), `print` statements (T201), and commented-out code (ERA001).
-  #{ cmd = "ruff check --fix --ignore=ERA --ignore=F401 --ignore=F841 --ignore=T20 --ignore=ERA001 ." },
+  { cmd = "ruff check --fix --ignore=ERA --ignore=F401 --ignore=F841 --ignore=T20 --ignore=ERA001 ." },
   { cmd = "pyproject-fmt --keep-full-version pyproject.toml" },
 ]
 
 lint = [
-  #{ cmd = "ruff format --check ." },
+  { cmd = "ruff format --check ." },
   { cmd = "ruff check ." },
   { cmd = "validate-pyproject pyproject.toml" },
   { cmd = "mypy" },
