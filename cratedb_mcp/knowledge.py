@@ -123,7 +123,6 @@ class DocumentationIndex:
     ]
 
     def __init__(self):
-
         # Configure Hishel, an httpx client with caching.
         # Define one hour of caching time.
         controller = hishel.Controller(allow_stale=True)

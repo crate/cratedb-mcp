@@ -20,12 +20,16 @@ def test_fetch_docs_forbidden():
 
 
 def test_fetch_docs_permitted_github():
-    response = fetch_cratedb_docs("https://raw.githubusercontent.com/crate/crate/refs/heads/5.10/docs/general/builtins/scalar-functions.rst")
+    response = fetch_cratedb_docs(
+        "https://raw.githubusercontent.com/crate/crate/refs/heads/5.10/docs/general/builtins/scalar-functions.rst"
+    )
     assert "initcap" in response
 
 
 def test_fetch_docs_permitted_cratedb_com():
-    response = fetch_cratedb_docs("https://cratedb.com/docs/crate/reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt")
+    response = fetch_cratedb_docs(
+        "https://cratedb.com/docs/crate/reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt"
+    )
     assert "initcap" in response
 
 
@@ -35,7 +39,9 @@ def test_query_sql_permitted():
 
 def test_query_sql_forbidden_easy():
     with pytest.raises(ValueError) as ex:
-        assert "RelationUnknown" in str(query_sql("INSERT INTO foobar (id) VALUES (42) RETURNING id"))
+        assert "RelationUnknown" in str(
+            query_sql("INSERT INTO foobar (id) VALUES (42) RETURNING id")
+        )
     assert ex.match("Only queries that have a SELECT statement are allowed")
 
 

@@ -30,7 +30,10 @@ def test_sql_insert_permit_invalid(mocker):
     mocker.patch.dict(os.environ, {"CRATEDB_MCP_PERMIT_ALL_STATEMENTS": "-555"})
     with pytest.warns(UserWarning) as record:
         assert sql_is_permitted("INSERT INTO foobar") is False
-    assert "Environment variable `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` invalid" in record[0].message.args[0]
+    assert (
+        "Environment variable `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` invalid"
+        in record[0].message.args[0]
+    )
 
 
 def test_sql_select_multiple_rejected():
@@ -81,8 +84,10 @@ def test_sql_multiple_statements_rejected():
 
 
 def test_sql_with_comments_rejected():
-    assert sql_is_permitted(
-        "/* Sneaky comment */ INSERT /* another comment */ INTO foo VALUES (1)") is False
+    assert (
+        sql_is_permitted("/* Sneaky comment */ INSERT /* another comment */ INTO foo VALUES (1)")
+        is False
+    )
 
 
 def test_sql_update_rejected():
@@ -117,4 +122,4 @@ def test_sql_case_manipulation_rejected():
 
 def test_sql_unicode_evasion_rejected():
     """Statements with unicode characters to evade filters are rejected"""
-    assert sql_is_permitted("SELECT * FROM users; \uFF1B DROP TABLE users") is False
+    assert sql_is_permitted("SELECT * FROM users; \uff1b DROP TABLE users") is False

@@ -21,7 +21,9 @@ def sql_is_permitted(expression: str) -> bool:
            Issue:    https://github.com/crate/cratedb-mcp/issues/10
            Question: Does SQLAlchemy provide a solid read-only mode, or any other library?
     """
-    is_dql = SqlStatementClassifier(expression=expression, permit_all=Settings.permit_all_statements()).is_dql
+    is_dql = SqlStatementClassifier(
+        expression=expression, permit_all=Settings.permit_all_statements()
+    ).is_dql
     if is_dql:
         logger.info(f"Permitted SQL expression: {expression and expression[:50]}...")
     else:
@@ -37,6 +39,7 @@ class SqlStatementClassifier:
     Here, most importantly: Provide the `is_dql` property that
     signals truthfulness for read-only SQL SELECT statements only.
     """
+
     expression: str
     permit_all: bool = False
 
@@ -59,7 +62,7 @@ class SqlStatementClassifier:
     @property
     def is_dql(self) -> bool:
         """
-        Whether the statement is a DQL statement, which effectively invokes read-only operations only.
+        Is it a DQL statement, which effectively invokes read-only operations only?
         """
 
         if not self.expression:
@@ -78,7 +81,7 @@ class SqlStatementClassifier:
         """
         Whether the expression is an SQL SELECT statement.
         """
-        return self.operation == 'SELECT'
+        return self.operation == "SELECT"
 
     @property
     def operation(self) -> str:
