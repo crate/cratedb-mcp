@@ -1,40 +1,179 @@
-import os
-import sys
+from unittest import mock
 
-import pytest
-from mcp.server import FastMCP
+import anyio
+from click.testing import CliRunner
 
-from cratedb_mcp import __appname__, __version__
-from cratedb_mcp.cli import main
+from cratedb_mcp import __version__
+from cratedb_mcp.__main__ import mcp
+from cratedb_mcp.cli import cli
 
 
-def test_cli_version(mocker, capsys):
+def test_cli_version():
     """
     Verify `cratedb-mcp --version` works as expected.
     """
-    mocker.patch.object(sys, "argv", ["cratedb-mcp", "--version"])
-    main()
-    out, err = capsys.readouterr()
-    assert __appname__ in out
-    assert __version__ in out
+
+    # Invoke the program.
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        args="--version",
+        catch_exceptions=False,
+    )
+
+    # Verify the outcome.
+    assert result.exit_code == 0, result.output
+    assert f"version {__version__}" in result.output
 
 
-def test_cli_default(mocker, capsys):
+def test_cli_help():
     """
-    Verify `cratedb-mcp` works as expected.
+    Verify `cratedb-mcp --help` works as expected.
     """
-    mocker.patch.object(sys, "argv", ["cratedb-mcp"])
-    run_mock = mocker.patch.object(FastMCP, "run")
-    main()
+
+    # Invoke the program.
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        args="--help",
+        catch_exceptions=False,
+    )
+
+    # Verify the outcome.
+    assert result.exit_code == 0, result.output
+    assert "serve  Start MCP server" in result.output
+
+
+def test_cli_no_command_no_option():
+    """
+    Verify `cratedb-mcp` without subcommand displays help text but signals failure.
+    """
+
+    # Invoke the program.
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        catch_exceptions=False,
+    )
+
+    # Verify the outcome.
+    assert result.exit_code == 2, result.output
+    assert "serve  Start MCP server" in result.output
+
+
+def test_cli_valid_default(mocker, capsys):
+    """
+    Verify `cratedb-mcp serve` works as expected.
+
+    The test needs to mock `anyio.run`, otherwise the call would block forever.
+    """
+    run_mock = mocker.patch.object(anyio, "run")
+
+    # Invoke the program.
+    runner = CliRunner()
+    runner.invoke(
+        cli,
+        args="serve",
+        catch_exceptions=False,
+    )
+
+    # Verify the outcome.
     assert run_mock.call_count == 1
+    assert run_mock.call_args == mock.call(mcp.run_stdio_async)
+    assert mcp.settings.port == 8000
 
 
-def test_cli_invalid_transport(mocker, capsys):
+def test_cli_valid_custom(mocker, capsys):
     """
-    Verify `cratedb-mcp` fails when an invalid transport is specified.
+    Verify `cratedb-mcp serve --transport=streamable-http --port=65535` works as expected.
+
+    The test needs to mock `anyio.run`, otherwise the call would block forever.
     """
-    mocker.patch.object(sys, "argv", ["cratedb-mcp"])
-    mocker.patch.dict(os.environ, {"CRATEDB_MCP_TRANSPORT": "foo"})
-    with pytest.raises(ValueError) as excinfo:
-        main()
-    assert excinfo.match("Unsupported transport: 'foo'. Please use one of 'stdio', 'sse'.")
+    run_mock = mocker.patch.object(anyio, "run")
+
+    # Invoke the program.
+    runner = CliRunner()
+    runner.invoke(
+        cli,
+        args=["serve", "--transport=streamable-http", "--port=65535"],
+        catch_exceptions=False,
+    )
+
+    # Verify the outcome.
+    assert run_mock.call_count == 1
+    assert run_mock.call_args == mock.call(mcp.run_streamable_http_async)
+    assert mcp.settings.port == 65535
+
+
+def test_cli_invalid_transport_option(mocker, capsys):
+    """
+    Verify `cratedb-mcp serve` fails when an invalid transport is specified.
+    """
+
+    # Invoke the program.
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        args=["serve", "--transport", "foo"],
+        catch_exceptions=False,
+    )
+
+    # Verify the outcome.
+    assert result.exit_code == 2, result.output
+    assert "Error: Invalid value for '--transport'" in result.output
+
+
+def test_cli_invalid_transport_env(mocker, capsys):
+    """
+    Verify `cratedb-mcp serve` fails when an invalid transport is specified.
+    """
+
+    # Invoke the program.
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        args="serve",
+        env={"CRATEDB_MCP_TRANSPORT": "foo"},
+        catch_exceptions=False,
+    )
+
+    # Verify the outcome.
+    assert result.exit_code == 2, result.output
+    assert "Error: Invalid value for '--transport'" in result.output
+
+
+def test_cli_invalid_port_option(mocker, capsys):
+    """
+    Verify `cratedb-mcp serve` fails when an invalid port is specified.
+    """
+
+    # Invoke the program.
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        args=["serve", "--port", "foo"],
+        catch_exceptions=False,
+    )
+
+    # Verify the outcome.
+    assert result.exit_code == 2, result.output
+    assert "Error: Invalid value for '--port': 'foo' is not a valid integer." in result.output
+
+
+def test_cli_invalid_port_env(mocker, capsys):
+    """
+    Verify `cratedb-mcp serve` fails when an invalid port is specified.
+    """
+
+    # Invoke the program.
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        args="serve",
+        env={"CRATEDB_MCP_PORT": "foo"},
+        catch_exceptions=False,
+    )
+
+    # Verify the outcome.
+    assert result.exit_code == 2, result.output
+    assert "Error: Invalid value for '--port': 'foo' is not a valid integer." in result.output

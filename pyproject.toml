@@ -72,9 +72,11 @@ dynamic = [
 dependencies = [
   "attrs",
   "cachetools<6",
+  "click<9",
   "cratedb-about==0.0.4",
   "hishel<0.2",
   "mcp[cli]>=1.5.0",
+  "pueblo==0.0.11",
   "sqlparse<0.6",
 ]
 optional-dependencies.develop = [
@@ -90,7 +92,7 @@ optional-dependencies.test = [
   "pytest-mock<4",
 ]
 
-scripts.cratedb-mcp = "cratedb_mcp.cli:main"
+scripts.cratedb-mcp = "cratedb_mcp.cli:cli"
 
 [tool.ruff]
 line-length = 100
