@@ -21,32 +21,93 @@
 
 ## About
 
-The CrateDB MCP Server is suitable for Text-to-SQL and documentation retrieval,
-specializing on the CrateDB database.
+The CrateDB MCP Server for natural language Text-to-SQL and documentation
+retrieval specializes in CrateDB database clusters.
 
 The Model Context Protocol ([MCP]) is a protocol that standardizes providing
-context to LLMs like Claude, ChatGPT, and MistralAI.
+context to language models and AI assistants.
 
-## Features
+### Introduction
 
-The CrateDB MCP Server lets these LLMs operate directly on CrateDB, enabling
-use cases like:
+The CrateDB Model Context Protocol (MCP) Server connects AI assistants directly
+to your CrateDB clusters and the CrateDB knowledge base, enabling seamless
+interaction through natural language.
 
-- Answer questions about your data and database state.
-- Help you debug and optimize queries directly on the database, for tasks
-  like optimizing queries using CrateDB-specific capabilities and syntax.
-- Have general conversations about any details of CrateDB and CrateDB Cloud.
+It serves as a bridge between AI tools and your analytics database,
+allowing you to analyze data, the cluster state, troubleshoot issues, and
+perform operations using conversational prompts.
 
-To use an MCP server, you need a [client that supports] the protocol. The most
-notable ones are Claude Desktop, ChatGPT desktop, OpenAI agents SDK, and Cursor.
+**Experimental:** Please note that the CrateDB MCP Server is an experimental
+feature provided as-is without warranty or support guarantees. Enterprise
+customers should use this feature at their own discretion.
 
-### Details
+### Quickstart Guide
+
+The CrateDB MCP Server is compatible with AI assistants that support the Model
+Context Protocol (MCP), either using standard input/output (stdio),
+server-sent events (SSE), or HTTP Streams (streamable-http).
+
+To use the MCP server, you need a [client that supports] the protocol. The most
+notable ones are ChatGPT, Claude, Cursor, GitHub Copilot, Mistral AI,
+OpenAI Agents SDK, Windsurf, and others.
+
+The `uvx` launcher command is provided by the [uv] package manager.
+The [installation docs](#install) section includes guidelines how to
+install it on your machine.
+
+#### Claude, Cursor, Windsurf
+
+Add the following configuration to your AI assistant's settings to enable the
+CrateDB MCP Server:
+```json
+{
+  "mcpServers": {
+    "cratedb-mcp": {
+      "command": "uvx",
+      "args": ["cratedb-mcp", "serve"],
+      "env": {
+        "CRATEDB_CLUSTER_URL": "http://localhost:4200/",
+        "CRATEDB_MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}
+```
+
+#### VS Code Copilot Chat
+
+Add the following configuration to your VS Code settings:
+```json
+{
+  "mcp": {
+    "servers": {
+      "cratedb-mcp": {
+        "command": "uvx",
+        "args": ["cratedb-mcp", "serve"],
+        "env": {
+          "CRATEDB_CLUSTER_URL": "http://localhost:4200/",
+          "CRATEDB_MCP_TRANSPORT": "stdio"
+        }
+      }
+    }
+  },
+  "chat.mcp.enabled": true
+}
+```
+
+## Handbook
+
+This section includes detailed information about how to configure and
+operate the CrateDB MCP Server.
+
+### What's inside
 
 The application includes two independent subsystems: The Text-to-SQL API talks
 to a CrateDB database cluster, while the documentation server looks up guidelines
 specific to CrateDB topics based on user input on demand, for example, from
 <https://cratedb.com/docs>, to provide the most accurate possible information.
-Relevant information is relayed per [cratedb-outline.yaml].
+Relevant information is relayed per [cratedb-outline.yaml] through the
+[cratedb-about] package.
 
 - Database / Text-to-SQL: `get_health`, `get_table_metadata`, `query_sql`
 - Documentation server: `get_cratedb_documentation_index`, `fetch_cratedb_docs`
@@ -63,7 +124,7 @@ Remember that LLMs can still hallucinate and give incorrect answers.
 
 Please explore other [example questions] from a shared collection.
 
-## Security considerations
+### Security considerations
 
 **By default, the application will access the database in read-only mode.**
 
@@ -73,7 +134,12 @@ All other operations will raise a `ValueError` exception, unless the
 `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a
 truthy value. This is **not** recommended.
 
-## Install
+### Install
+
+The configuration snippets for AI assistants are using the `uvx` launcher
+of the [uv] package manager to start the application ephemerally.
+This section demonstrates how to install the application persistently.
+
 ```shell
 uv tool install --upgrade cratedb-mcp
 ```
@@ -85,11 +151,11 @@ Notes:
   ```
 - We recommend to use `uv tool install` to install the program "user"-wide
   into your environment so you can invoke it from anywhere across your terminal
-  sessions or MCP client programs like Claude.
+  sessions or MCP client programs / AI assistants.
 - If you are unable to use `uv tool install`, you can use `uvx cratedb-mcp`
   to acquire the package and run the application ephemerally.
 
-## Configure
+### Configure
 
 Configure the `CRATEDB_CLUSTER_URL` environment variable to match your CrateDB instance.
 For example, when connecting to CrateDB Cloud, use a value like
@@ -109,7 +175,8 @@ in seconds.
 The `CRATEDB_MCP_DOCS_CACHE_TTL` environment variable (default: 3600) defines
 the cache lifetime for documentation resources in seconds.
 
-## Usage
+### Usage
+
 Start MCP server with `stdio` transport (default).
 ```shell
 cratedb-mcp serve --transport=stdio
@@ -124,24 +191,6 @@ cratedb-mcp serve --transport=streamable-http
 ```
 Alternatively, use the `CRATEDB_MCP_TRANSPORT` environment variable instead of
 the `--transport` option.
-
-### Anthropic Claude
-To use the MCP version within Claude Desktop, you can use the following configuration:
-
-```json
-{
-  "mcpServers": {
-    "my_cratedb": {
-      "command": "uvx",
-      "args": ["cratedb-mcp", "serve"],
-      "env": {
-        "CRATEDB_CLUSTER_URL": "http://localhost:4200/",
-        "CRATEDB_MCP_TRANSPORT": "stdio"
-      }
-    }
-  }
-}
-```
 
 ### Dry-run
 
@@ -176,13 +225,14 @@ mcpt call \
   uvx cratedb-mcp serve
 ```
 
-## Development
+### Development
 
 To learn how to set up a development sandbox, see the [development documentation](./DEVELOP.md).
 
 
-[client that supports]: https://modelcontextprotocol.io/clients#feature-support-matrix
+[client that supports]: https://modelcontextprotocol.io/clients
 [CrateDB]: https://cratedb.com/database
+[cratedb-about]: https://pypi.org/project/cratedb-about/
 [cratedb-outline.yaml]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/outline/cratedb-outline.yaml
 [example questions]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/query/model.py#L17-L44
 [MCP]: https://modelcontextprotocol.io/introduction
