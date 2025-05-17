@@ -48,7 +48,7 @@ Context Protocol (MCP), either using standard input/output (stdio),
 server-sent events (SSE), or HTTP Streams (streamable-http).
 
 To use the MCP server, you need a [client that supports] the protocol. The most
-notable ones are ChatGPT, Claude, Cursor, GitHub Copilot, Mistral AI,
+notable ones are ChatGPT, Claude, Cline, Cursor, GitHub Copilot, Mistral AI,
 OpenAI Agents SDK, Windsurf, and others.
 
 The `uvx` launcher command is provided by the [uv] package manager.
@@ -98,31 +98,42 @@ Add the following configuration to your VS Code settings:
 ## Handbook
 
 This section includes detailed information about how to configure and
-operate the CrateDB MCP Server.
+operate the CrateDB MCP Server, and to learn about the [MCP tools] it
+provides.
+
+Tools are a powerful primitive in the Model Context Protocol (MCP) that enable
+servers to expose executable functionality to clients. Through tools, LLMs can
+interact with external systems, perform computations, and take actions in the
+real world.
 
 ### What's inside
 
-The application includes two independent subsystems: The Text-to-SQL API talks
-to a CrateDB database cluster, while the documentation server looks up guidelines
-specific to CrateDB topics based on user input on demand, for example, from
-<https://cratedb.com/docs>, to provide the most accurate possible information.
-Relevant information is relayed per [cratedb-outline.yaml] through the
-[cratedb-about] package.
+The CrateDB MCP Server provides two families of tools.
 
-- Database / Text-to-SQL: `get_health`, `get_table_metadata`, `query_sql`
-- Documentation server: `get_cratedb_documentation_index`, `fetch_cratedb_docs`
+The **Text-to-SQL API** talks to a CrateDB database cluster to inquire database
+and table metadata, and table content.
+<br>
+Tool names are: `get_health`, `get_table_metadata`, `query_sql`
+
+The **Documentation API** looks up guidelines specific to CrateDB topics,
+to provide the most accurate information possible.
+Relevant information is pulled from <https://cratedb.com/docs>, curated per
+[cratedb-outline.yaml] through the [cratedb-about] package.
+<br>
+Tool names are: `get_cratedb_documentation_index`, `fetch_cratedb_docs`
 
 ### Examples
 
-These are examples of questions that have been tested and validated by the team.
-Remember that LLMs can still hallucinate and give incorrect answers.
+We collected a few examples of questions that have been tested and validated by
+the team, so you may also want to try them. Please remember that LLMs can still
+hallucinate and give incorrect answers.
 
 * Optimize this query: "SELECT * FROM movies WHERE release_date > '2012-12-1' AND revenue"
 * Tell me about the health of the cluster
 * What is the storage consumption of my tables, give it in a graph.
 * How can I format a timestamp column to '2019 Jan 21'.
 
-Please explore other [example questions] from a shared collection.
+Please also explore the [example questions] from another shared collection.
 
 ### Security considerations
 
@@ -137,8 +148,9 @@ truthy value. This is **not** recommended.
 ### Install
 
 The configuration snippets for AI assistants are using the `uvx` launcher
-of the [uv] package manager to start the application ephemerally.
-This section demonstrates how to install the application persistently.
+of the [uv] package manager to start the application after installing it,
+like the `npx` launcher is doing it for JavaScript and TypeScript applications.
+This section uses `uv tool install` to install the application persistently.
 
 ```shell
 uv tool install --upgrade cratedb-mcp
@@ -227,15 +239,17 @@ mcpt call \
 
 ### Development
 
-To learn how to set up a development sandbox, see the [development documentation](./DEVELOP.md).
+To learn how to set up a development sandbox, see the [development documentation].
 
 
 [client that supports]: https://modelcontextprotocol.io/clients
 [CrateDB]: https://cratedb.com/database
 [cratedb-about]: https://pypi.org/project/cratedb-about/
 [cratedb-outline.yaml]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/outline/cratedb-outline.yaml
+[development documentation]: https://github.com/crate/cratedb-mcp/blob/main/DEVELOP.md
 [example questions]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/query/model.py#L17-L44
 [MCP]: https://modelcontextprotocol.io/introduction
+[MCP tools]: https://modelcontextprotocol.io/docs/concepts/tools
 [mcptools]: https://github.com/f/mcptools
 [uv]: https://docs.astral.sh/uv/
 
