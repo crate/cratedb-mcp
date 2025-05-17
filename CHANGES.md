@@ -5,6 +5,12 @@
   standardizing on common naming conventions
 - CLI: Added subcommand `cratedb-mcp serve` using Click, with
   dedicated options `--transport` and `--port`
+- Dependencies: Updated to FastMCP 2.0. It significantly expands on 1.0 by
+  introducing powerful client capabilities, server proxying & composition,
+  OpenAPI/FastAPI integration, and more advanced features.
+  See [FastMCP 2.0 and the Official MCP SDK].
+
+[FastMCP 2.0 and the Official MCP SDK]: https://gofastmcp.com/getting-started/welcome#fastmcp-2-0-and-the-official-mcp-sdk
 
 ## v0.0.0 - 2025-05-16
 - Project: Established project layout
