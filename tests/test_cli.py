@@ -2,7 +2,7 @@ import os
 import sys
 
 import pytest
-from mcp.server import FastMCP
+from fastmcp import FastMCP
 
 from cratedb_mcp import __appname__, __version__
 from cratedb_mcp.cli import main
