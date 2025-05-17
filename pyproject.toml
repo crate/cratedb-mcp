@@ -7,7 +7,7 @@ requires = [
 
 [project]
 name = "cratedb-mcp"
-description = "CrateDB MCP Server for Text-to-SQL and documentation retrieval."
+description = "CrateDB MCP Server for natural language Text-to-SQL and documentation retrieval."
 readme = "README.md"
 keywords = [
   "cratedb",
