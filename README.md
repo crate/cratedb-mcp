@@ -112,12 +112,18 @@ the cache lifetime for documentation resources in seconds.
 ## Usage
 Start MCP server with `stdio` transport (default).
 ```shell
-CRATEDB_MCP_TRANSPORT=stdio cratedb-mcp
+cratedb-mcp serve --transport=stdio
 ```
 Start MCP server with `sse` transport.
 ```shell
-CRATEDB_MCP_TRANSPORT=sse cratedb-mcp
+cratedb-mcp serve --transport=sse
 ```
+Start MCP server with `streamable-http` transport.
+```shell
+cratedb-mcp serve --transport=streamable-http
+```
+Alternatively, use the `CRATEDB_MCP_TRANSPORT` environment variable instead of
+the `--transport` option.
 
 ### Anthropic Claude
 To use the MCP version within Claude Desktop, you can use the following configuration:
@@ -127,7 +133,7 @@ To use the MCP version within Claude Desktop, you can use the following configur
   "mcpServers": {
     "my_cratedb": {
       "command": "uvx",
-      "args": ["cratedb-mcp"],
+      "args": ["cratedb-mcp", "serve"],
       "env": {
         "CRATEDB_CLUSTER_URL": "http://localhost:4200/",
         "CRATEDB_MCP_TRANSPORT": "stdio"
@@ -151,23 +157,23 @@ brew install mcp uv
 
 Explore the Text-to-SQL API.
 ```shell
-mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' uvx cratedb-mcp
+mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' uvx cratedb-mcp serve
 ```
 ```shell
-mcpt call get_table_metadata uvx cratedb-mcp
+mcpt call get_table_metadata uvx cratedb-mcp serve
 ```
 ```shell
-mcpt call get_health uvx cratedb-mcp
+mcpt call get_health uvx cratedb-mcp serve
 ```
 
 Exercise the documentation server API.
 ```shell
-mcpt call get_cratedb_documentation_index uvx cratedb-mcp
+mcpt call get_cratedb_documentation_index uvx cratedb-mcp serve
 ```
 ```shell
 mcpt call \
   fetch_cratedb_docs --params '{"link":"https://cratedb.com/docs/cloud/en/latest/_sources/cluster/integrations/mongo-cdc.md.txt"}' \
-  uvx cratedb-mcp
+  uvx cratedb-mcp serve
 ```
 
 ## Development
