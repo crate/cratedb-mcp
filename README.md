@@ -207,9 +207,21 @@ that LLMs can still hallucinate and give incorrect answers.
 
 Please also explore the [example questions] from another shared collection.
 
-### Development
+## Project information
 
-To learn how to set up a development sandbox, see the [development documentation].
+### Acknowledgements
+Kudos to the authors of all the many software components and technologies
+this project is building upon.
+
+### Contributing
+The `cratedb-mcp` package is an open source project, and is [managed on
+GitHub]. Contributions of any kind are welcome and appreciated.
+To learn how to set up a development sandbox, please refer to the
+[development documentation].
+
+### Status
+The software is in the alpha stage, please expect breaking changes.
+Version pinning is strongly recommended, especially if you use it as a library.
 
 
 [CrateDB]: https://cratedb.com/database
