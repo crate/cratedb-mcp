@@ -1,5 +1,5 @@
 import httpx
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 from .knowledge import DocumentationIndex, Queries
 from .settings import HTTP_URL, Settings
@@ -9,7 +9,7 @@ from .util.sql import sql_is_permitted
 documentation_index = DocumentationIndex()
 
 # Create FastMCP application object.
-mcp = FastMCP("cratedb-mcp")
+mcp: FastMCP = FastMCP("cratedb-mcp")
 
 
 def query_cratedb(query: str) -> list[dict]:
