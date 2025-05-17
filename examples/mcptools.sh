@@ -1,4 +1,6 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
+
+set -euo pipefail
 
 # CrateDB MCP Server example with `mcptools`
 #
@@ -12,6 +14,9 @@
 # brew tap f/mcptools
 # brew install mcp uv
 
+# Some systems do not provide the `mcpt` alias.
+alias mcpt=mcptools
+
 # Explore the Text-to-SQL tools.
 mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' uvx cratedb-mcp serve
 mcpt call get_table_metadata uvx cratedb-mcp serve
@@ -22,3 +27,5 @@ mcpt call get_cratedb_documentation_index uvx cratedb-mcp serve
 mcpt call \
   fetch_cratedb_docs --params '{"link":"https://cratedb.com/docs/cloud/en/latest/_sources/cluster/integrations/mongo-cdc.md.txt"}' \
   uvx cratedb-mcp serve
+
+echo "Ready."
