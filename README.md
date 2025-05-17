@@ -47,9 +47,9 @@ The CrateDB MCP Server is compatible with AI assistants that support the Model
 Context Protocol (MCP), either using standard input/output (stdio),
 server-sent events (SSE), or HTTP Streams (streamable-http).
 
-To use the MCP server, you need a [client that supports] the protocol. The most
-notable ones are ChatGPT, Claude, Cline, Cursor, GitHub Copilot, Mistral AI,
-OpenAI Agents SDK, Windsurf, and others.
+To use the MCP server, you need a [client that supports][MCP clients] the
+protocol. The most notable ones are ChatGPT, Claude, Cline, Cursor, GitHub
+Copilot, Mistral AI, OpenAI Agents SDK, Windsurf, and others.
 
 The `uvx` launcher command is provided by the [uv] package manager.
 The [installation docs](#install) section includes guidelines how to
@@ -110,30 +110,17 @@ real world.
 
 The CrateDB MCP Server provides two families of tools.
 
-The **Text-to-SQL API** talks to a CrateDB database cluster to inquire database
+The **Text-to-SQL tools** talk to a CrateDB database cluster to inquire database
 and table metadata, and table content.
 <br>
 Tool names are: `get_health`, `get_table_metadata`, `query_sql`
 
-The **Documentation API** looks up guidelines specific to CrateDB topics,
+The **documentation server tools** looks up guidelines specific to CrateDB topics,
 to provide the most accurate information possible.
 Relevant information is pulled from <https://cratedb.com/docs>, curated per
 [cratedb-outline.yaml] through the [cratedb-about] package.
 <br>
 Tool names are: `get_cratedb_documentation_index`, `fetch_cratedb_docs`
-
-### Examples
-
-We collected a few examples of questions that have been tested and validated by
-the team, so you may also want to try them. Please remember that LLMs can still
-hallucinate and give incorrect answers.
-
-* Optimize this query: "SELECT * FROM movies WHERE release_date > '2012-12-1' AND revenue"
-* Tell me about the health of the cluster
-* What is the storage consumption of my tables, give it in a graph.
-* How can I format a timestamp column to '2019 Jan 21'.
-
-Please also explore the [example questions] from another shared collection.
 
 ### Security considerations
 
@@ -187,7 +174,7 @@ in seconds.
 The `CRATEDB_MCP_DOCS_CACHE_TTL` environment variable (default: 3600) defines
 the cache lifetime for documentation resources in seconds.
 
-### Usage
+### Operate
 
 Start MCP server with `stdio` transport (default).
 ```shell
@@ -204,53 +191,36 @@ cratedb-mcp serve --transport=streamable-http
 Alternatively, use the `CRATEDB_MCP_TRANSPORT` environment variable instead of
 the `--transport` option.
 
-### Dry-run
+### Use
 
-You can use [mcptools], a Swiss Army Knife for MCP Servers, to talk to the
-CrateDB MCP Server from the command line. The following operations do not
-require a language model.
+To connect to the MCP server using any of the available [MCP clients], use one
+of the AI assistant applications, or refer to the programs in the [examples folder].
 
-Install software packages.
-```shell
-brew tap f/mcptools
-brew install mcp uv
-```
+We collected a few example questions that have been tested and validated by
+the team, so you may also want to try them to get started. Please remember
+that LLMs can still hallucinate and give incorrect answers.
 
-Explore the Text-to-SQL API.
-```shell
-mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' uvx cratedb-mcp serve
-```
-```shell
-mcpt call get_table_metadata uvx cratedb-mcp serve
-```
-```shell
-mcpt call get_health uvx cratedb-mcp serve
-```
+* Optimize this query: "SELECT * FROM movies WHERE release_date > '2012-12-1' AND revenue"
+* Tell me about the health of the cluster
+* What is the storage consumption of my tables, give it in a graph.
+* How can I format a timestamp column to '2019 Jan 21'.
 
-Exercise the documentation server API.
-```shell
-mcpt call get_cratedb_documentation_index uvx cratedb-mcp serve
-```
-```shell
-mcpt call \
-  fetch_cratedb_docs --params '{"link":"https://cratedb.com/docs/cloud/en/latest/_sources/cluster/integrations/mongo-cdc.md.txt"}' \
-  uvx cratedb-mcp serve
-```
+Please also explore the [example questions] from another shared collection.
 
 ### Development
 
 To learn how to set up a development sandbox, see the [development documentation].
 
 
-[client that supports]: https://modelcontextprotocol.io/clients
 [CrateDB]: https://cratedb.com/database
 [cratedb-about]: https://pypi.org/project/cratedb-about/
 [cratedb-outline.yaml]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/outline/cratedb-outline.yaml
 [development documentation]: https://github.com/crate/cratedb-mcp/blob/main/DEVELOP.md
 [example questions]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/query/model.py#L17-L44
+[examples folder]: https://github.com/crate/cratedb-mcp/tree/main/examples
 [MCP]: https://modelcontextprotocol.io/introduction
+[MCP clients]: https://modelcontextprotocol.io/clients
 [MCP tools]: https://modelcontextprotocol.io/docs/concepts/tools
-[mcptools]: https://github.com/f/mcptools
 [uv]: https://docs.astral.sh/uv/
 
 [Bluesky]: https://bsky.app/search?q=cratedb
