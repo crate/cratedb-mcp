@@ -21,7 +21,7 @@
 
 ## About
 
-The CrateDB MCP Server for natural language Text-to-SQL and documentation
+The CrateDB MCP Server for natural-language Text-to-SQL and documentation
 retrieval specializes in CrateDB database clusters.
 
 The Model Context Protocol ([MCP]) is a protocol that standardizes providing
@@ -48,11 +48,11 @@ Context Protocol (MCP), either using standard input/output (stdio),
 server-sent events (SSE), or HTTP Streams (streamable-http).
 
 To use the MCP server, you need a [client that supports][MCP clients] the
-protocol. The most notable ones are ChatGPT, Claude, Cline, Cursor, GitHub
-Copilot, Mistral AI, OpenAI Agents SDK, Windsurf, and others.
+protocol. The most notable ones are ChatGPT, Claude, Cline Bot, Cursor,
+GitHub Copilot, Mistral AI, OpenAI Agents SDK, Windsurf, and others.
 
 The `uvx` launcher command is provided by the [uv] package manager.
-The [installation docs](#install) section includes guidelines how to
+The [installation docs](#install) section includes guidelines on how to
 install it on your machine.
 
 #### Claude, Cursor, Windsurf
@@ -148,7 +148,7 @@ Notes:
   ```shell
   {apt,brew,pipx,zypper} install uv
   ```
-- We recommend to use `uv tool install` to install the program "user"-wide
+- We recommend using `uv tool install` to install the program "user"-wide
   into your environment so you can invoke it from anywhere across your terminal
   sessions or MCP client programs / AI assistants.
 - If you are unable to use `uv tool install`, you can use `uvx cratedb-mcp`
@@ -200,10 +200,10 @@ We collected a few example questions that have been tested and validated by
 the team, so you may also want to try them to get started. Please remember
 that LLMs can still hallucinate and give incorrect answers.
 
-* Optimize this query: "SELECT * FROM movies WHERE release_date > '2012-12-1' AND revenue"
-* Tell me about the health of the cluster
-* What is the storage consumption of my tables, give it in a graph.
-* How can I format a timestamp column to '2019 Jan 21'.
+- Optimize this query: "SELECT * FROM movies WHERE release_date > '2012-12-1' AND revenue"
+- Tell me about the health of the cluster
+- What is the storage consumption of my tables, give it in a graph.
+- How can I format a timestamp column to '2019 Jan 21'?
 
 Please also explore the [example questions] from another shared collection.
 
@@ -214,13 +214,13 @@ Kudos to the authors of all the many software components and technologies
 this project is building upon.
 
 ### Contributing
-The `cratedb-mcp` package is an open source project, and is [managed on
+The `cratedb-mcp` package is an open-source project, and is [managed on
 GitHub]. Contributions of any kind are welcome and appreciated.
 To learn how to set up a development sandbox, please refer to the
 [development documentation].
 
 ### Status
-The software is in the alpha stage, please expect breaking changes.
+The software is in the alpha stage, so breaking changes may happen.
 Version pinning is strongly recommended, especially if you use it as a library.
 
 
