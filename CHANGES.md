@@ -3,6 +3,8 @@
 ## Unreleased
 - Options: Renamed `CRATEDB_MCP_HTTP_URL` to `CRATEDB_CLUSTER_URL`,
   standardizing on common naming conventions
+- CLI: Added subcommand `cratedb-mcp serve` using Click, with
+  dedicated options `--transport` and `--port`
 
 ## v0.0.0 - 2025-05-16
 - Project: Established project layout
