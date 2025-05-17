@@ -1,6 +1,5 @@
 from unittest import mock
 
-import anyio
 from click.testing import CliRunner
 
 from cratedb_mcp import __version__
@@ -67,7 +66,7 @@ def test_cli_valid_default(mocker, capsys):
 
     The test needs to mock `anyio.run`, otherwise the call would block forever.
     """
-    run_mock = mocker.patch.object(anyio, "run")
+    run_mock = mocker.patch.object(mcp, "run_async")
 
     # Invoke the program.
     runner = CliRunner()
@@ -79,7 +78,7 @@ def test_cli_valid_default(mocker, capsys):
 
     # Verify the outcome.
     assert run_mock.call_count == 1
-    assert run_mock.call_args == mock.call(mcp.run_stdio_async)
+    assert run_mock.call_args == mock.call("stdio")
     assert mcp.settings.port == 8000
 
 
@@ -89,7 +88,7 @@ def test_cli_valid_custom(mocker, capsys):
 
     The test needs to mock `anyio.run`, otherwise the call would block forever.
     """
-    run_mock = mocker.patch.object(anyio, "run")
+    run_mock = mocker.patch.object(mcp, "run_async")
 
     # Invoke the program.
     runner = CliRunner()
@@ -101,7 +100,7 @@ def test_cli_valid_custom(mocker, capsys):
 
     # Verify the outcome.
     assert run_mock.call_count == 1
-    assert run_mock.call_args == mock.call(mcp.run_streamable_http_async)
+    assert run_mock.call_args == mock.call("streamable-http")
     assert mcp.settings.port == 65535
 
 
