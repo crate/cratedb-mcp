@@ -181,16 +181,6 @@ Relevant information is pulled from <https://cratedb.com/docs>, curated per
 <br>
 Tool names are: `get_cratedb_documentation_index`, `fetch_cratedb_docs`
 
-### Security considerations
-
-**By default, the application will access the database in read-only mode.**
-
-We do not recommend letting LLM-based agents insert or modify data by itself.
-As such, only `SELECT` statements are permitted and forwarded to the database.
-All other operations will raise a `ValueError` exception, unless the
-`CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a
-truthy value. This is **not** recommended.
-
 ### Install
 
 The configuration snippets for AI assistants are using the `uvx` launcher
@@ -232,6 +222,23 @@ in seconds.
 
 The `CRATEDB_MCP_DOCS_CACHE_TTL` environment variable (default: 3600) defines
 the cache lifetime for documentation resources in seconds.
+
+### Security considerations
+
+If you want to prevent agents from modifying data, i.e., permit `SELECT` statements
+only, it is recommended to [create a read-only database user by using "GRANT DQL"].
+```sql
+CREATE USER "read-only" WITH (password = 'YOUR_PASSWORD');
+GRANT DQL TO "read-only";
+```
+Then, include relevant access credentials in the cluster URL.
+```shell
+export CRATEDB_CLUSTER_URL="https://read-only:YOUR_PASSWORD@example.aks1.westeurope.azure.cratedb.net:4200"
+```
+The MCP Server also prohibits non-SELECT statements on the application level.
+All other operations will raise a `PermissionError` exception, unless the
+`CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a
+truthy value.
 
 ### Operate
 
@@ -289,6 +296,7 @@ Version pinning is strongly recommended, especially if you use it as a library.
 [CrateDB]: https://cratedb.com/database
 [cratedb-about]: https://pypi.org/project/cratedb-about/
 [cratedb-outline.yaml]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/outline/cratedb-outline.yaml
+[create a read-only database user by using "GRANT DQL"]: https://community.cratedb.com/t/create-read-only-database-user-by-using-grant-dql/2031
 [development documentation]: https://github.com/crate/cratedb-mcp/blob/main/DEVELOP.md
 [example questions]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/query/model.py#L17-L44
 [examples folder]: https://github.com/crate/cratedb-mcp/tree/main/examples
