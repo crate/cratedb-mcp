@@ -68,6 +68,10 @@ jobs:
           enable-cache: true
           version: "latest"
 
+      - name: Set up mcptools
+        run: |
+          go install github.com/f/mcptools/cmd/mcptools@latest
+
       - name: Set up project
         run: |
           uv pip install --editable='.[all,develop,test]'
