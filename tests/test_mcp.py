@@ -38,7 +38,7 @@ def test_query_sql_permitted():
 
 
 def test_query_sql_forbidden_easy():
-    with pytest.raises(ValueError) as ex:
+    with pytest.raises(PermissionError) as ex:
         assert "RelationUnknown" in str(
             query_sql("INSERT INTO foobar (id) VALUES (42) RETURNING id")
         )
@@ -46,7 +46,7 @@ def test_query_sql_forbidden_easy():
 
 
 def test_query_sql_forbidden_sneak_value():
-    with pytest.raises(ValueError) as ex:
+    with pytest.raises(PermissionError) as ex:
         query_sql("INSERT INTO foobar (operation) VALUES ('select')")
     assert ex.match("Only queries that have a SELECT statement are allowed")
 

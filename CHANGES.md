@@ -9,6 +9,8 @@
   introducing powerful client capabilities, server proxying & composition,
   OpenAPI/FastAPI integration, and more advanced features.
   See [FastMCP 2.0 and the Official MCP SDK].
+- README: Added recommendations to use a read-only database user
+  to prevent agents from modifying the database content
 
 [FastMCP 2.0 and the Official MCP SDK]: https://gofastmcp.com/getting-started/welcome#fastmcp-2-0-and-the-official-mcp-sdk
 

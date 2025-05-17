@@ -27,7 +27,7 @@ def query_cratedb(query: str) -> list[dict]:
 )
 def query_sql(query: str):
     if not sql_is_permitted(query):
-        raise ValueError("Only queries that have a SELECT statement are allowed.")
+        raise PermissionError("Only queries that have a SELECT statement are allowed.")
     return query_cratedb(query)
 
 
