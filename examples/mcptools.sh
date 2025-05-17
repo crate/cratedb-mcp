@@ -14,8 +14,17 @@ set -euo pipefail
 # brew tap f/mcptools
 # brew install mcp uv
 
+if ! command -v mcptools >/dev/null 2>&1; then
+  echo mcptools not installed, skipping.
+  echo "Skipped."
+  exit 0
+fi
+
 # Some systems do not provide the `mcpt` alias.
 alias mcpt=mcptools
+
+# Display available MCP tools.
+mcpt tools uvx cratedb-mcp serve
 
 # Explore the Text-to-SQL tools.
 mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' uvx cratedb-mcp serve

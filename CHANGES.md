@@ -5,6 +5,8 @@
   standardizing on common naming conventions
 - CLI: Added subcommand `cratedb-mcp serve` using Click, with
   dedicated options `--transport` and `--port`
+- README: Added recommendations to use a read-only database user
+  to prevent agents from modifying the database content
 
 ## v0.0.0 - 2025-05-16
 - Project: Established project layout
