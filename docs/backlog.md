@@ -29,7 +29,8 @@
   > For the best experience with the CrateDB MCP Server, it’s crucial to provide your
   > AI assistant with proper instructions on how to interact. [...] The CrateDB MCP Server
   > comes with a set of predefined instructions that you can copy from the `instructions.md` file.
-  - Blueprint:
+
+  Blueprint:
     - https://fluxcd.io/blog/2025/05/ai-assisted-gitops/
     - https://fluxcd.control-plane.io/mcp/prompt-engineering/
     - https://raw.githubusercontent.com/controlplaneio-fluxcd/distribution/refs/heads/main/docs/mcp/instructions.md
