@@ -55,10 +55,14 @@ The `uvx` launcher command is provided by the [uv] package manager.
 The [installation docs](#install) section includes guidelines on how to
 install it on your machine.
 
-#### Claude, Cursor, Windsurf
-
+#### Claude, Cline, Cursor, Roo Code, Windsurf
 Add the following configuration to your AI assistant's settings to enable the
-CrateDB MCP Server:
+CrateDB MCP Server.
+- Claude: [`claude_desktop_config.json`](https://modelcontextprotocol.io/quickstart/user)
+- Cline: [`cline_mcp_settings.json`](https://docs.cline.bot/mcp/configuring-mcp-servers)
+- Cursor: [`~/.cursor/mcp.json` or `.cursor/mcp.json`](https://docs.cursor.com/context/model-context-protocol)
+- Roo Code: [`mcp_settings.json` or `.roo/mcp.json`](https://docs.roocode.com/features/mcp/using-mcp-in-roo/)
+- Windsurf: [`~/.codeium/windsurf/mcp_config.json`](https://docs.windsurf.com/windsurf/cascade/mcp)
 ```json
 {
   "mcpServers": {
@@ -68,7 +72,15 @@ CrateDB MCP Server:
       "env": {
         "CRATEDB_CLUSTER_URL": "http://localhost:4200/",
         "CRATEDB_MCP_TRANSPORT": "stdio"
-      }
+      },
+      "alwaysAllow": [
+        "get_health", 
+        "get_table_metadata", 
+        "query_sql", 
+        "get_cratedb_documentation_index", 
+        "fetch_cratedb_docs"
+      ],
+      "disabled": false
     }
   }
 }
