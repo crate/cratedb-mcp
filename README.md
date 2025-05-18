@@ -95,6 +95,41 @@ Add the following configuration to your VS Code settings:
 }
 ```
 
+#### Goose
+Configure `extensions` in your `~/.config/goose/config.yaml`.
+See also [using Goose extensions].
+```yaml
+extensions:
+  cratedb-mcp:
+    name: CrateDB MCP
+    type: stdio
+    cmd: uvx
+    args:
+      - cratedb-mcp
+      - serve
+    enabled: true
+    envs:
+      CRATEDB_CLUSTER_URL: "http://localhost:4200/"
+      CRATEDB_MCP_TRANSPORT: "stdio"
+    timeout: 300
+```
+
+#### LibreChat
+Configure `mcpServers` in your `librechat.yaml`.
+See also [LibreChat and MCP] and [LibreChat MCP examples].
+```yaml
+mcpServers:
+  cratedb-mcp:
+    type: stdio
+    command: uvx
+    args:
+      - cratedb-mcp
+      - serve
+    env:
+      CRATEDB_CLUSTER_URL: "http://localhost:4200/"
+      CRATEDB_MCP_TRANSPORT: "stdio"
+```
+
 ## Handbook
 
 This section includes detailed information about how to configure and
@@ -230,9 +265,12 @@ Version pinning is strongly recommended, especially if you use it as a library.
 [development documentation]: https://github.com/crate/cratedb-mcp/blob/main/DEVELOP.md
 [example questions]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/query/model.py#L17-L44
 [examples folder]: https://github.com/crate/cratedb-mcp/tree/main/examples
+[LibreChat and MCP]: https://www.librechat.ai/docs/features/agents#model-context-protocol-mcp
+[LibreChat MCP examples]: https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/mcp_servers
 [MCP]: https://modelcontextprotocol.io/introduction
 [MCP clients]: https://modelcontextprotocol.io/clients
 [MCP tools]: https://modelcontextprotocol.io/docs/concepts/tools
+[using Goose extensions]: https://block.github.io/goose/docs/getting-started/using-extensions/
 [uv]: https://docs.astral.sh/uv/
 
 [Bluesky]: https://bsky.app/search?q=cratedb
