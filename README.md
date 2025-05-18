@@ -74,9 +74,9 @@ CrateDB MCP Server:
 }
 ```
 
-#### VS Code Copilot Chat
-
-Add the following configuration to your VS Code settings:
+#### VS Code
+[Add an MCP server to your VS Code user settings] to enable the MCP server
+across all workspaces in your `settings.json` file.
 ```json
 {
   "mcp": {
@@ -92,6 +92,18 @@ Add the following configuration to your VS Code settings:
     }
   },
   "chat.mcp.enabled": true
+}
+```
+[Add an MCP server to your VS Code workspace] to configure an MCP server for a
+specific workspace per `.vscode/mcp.json` file. In this case, omit the
+top-level `mcp` element, and start from `servers` instead.
+
+Alternatively, VS Code can automatically detect and reuse MCP servers that
+you defined in other tools, such as Claude Desktop.
+See also [Automatic discovery of MCP servers].
+```json
+{
+  "chat.mcp.discovery.enabled": true
 }
 ```
 
@@ -259,6 +271,9 @@ The software is in the alpha stage, so breaking changes may happen.
 Version pinning is strongly recommended, especially if you use it as a library.
 
 
+[Add an MCP server to your VS Code user settings]: https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server-to-your-user-settings
+[Add an MCP server to your VS Code workspace]: https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server-to-your-workspace
+[Automatic discovery of MCP servers]: https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_automatic-discovery-of-mcp-servers
 [CrateDB]: https://cratedb.com/database
 [cratedb-about]: https://pypi.org/project/cratedb-about/
 [cratedb-outline.yaml]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/outline/cratedb-outline.yaml
