@@ -11,7 +11,10 @@
   - https://gofastmcp.com/getting-started/welcome#fastmcp-2-0-and-the-official-mcp-sdk
   - https://gofastmcp.com/patterns/testing
 - README: Provide AI assistant snippets about configuring `sse` or `streamable-http`
-  transports, see LibreChat.
+  transports, see Cline and LibreChat, by adding a section about how to connect to
+  existing MCP servers via URL endpoints. 
+  - https://docs.cline.bot/mcp/connecting-to-a-remote-server
+  - https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/mcp_servers
 - Install: Others also just use `docker` right away? Others discourage using `uvx`.
   - https://github.com/ppl-ai/modelcontextprotocol/?tab=readme-ov-file#step-3-configure-claude-desktop
   - https://medium.com/@scalablecto/stop-running-your-mcp-tools-via-npx-uvx-right-now-380d1ab99d3f
