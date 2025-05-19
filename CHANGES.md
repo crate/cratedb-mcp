@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+
+## v0.0.1 - 2025-05-20
 - Options: Renamed `CRATEDB_MCP_HTTP_URL` to `CRATEDB_CLUSTER_URL`,
   standardizing on common naming conventions
 - CLI: Added subcommand `cratedb-mcp serve` using Click, with
