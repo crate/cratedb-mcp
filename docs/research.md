@@ -45,6 +45,7 @@ The [MCP specification](https://spec.modelcontextprotocol.io).
 - <https://www.pulsemcp.com/>
 - All: [MCP Registry Registry MCP Server](https://github.com/mastra-ai/mastra/blob/4af513ca1a8e94354c788e40e900d49fbf1c9f86/packages/mcp-registry-registry/src/registry/registry.ts)
 - https://github.com/chatmcp/mcpso
+- https://mcpservers.org/
 
 ## Clients
 
@@ -127,3 +128,12 @@ The [MCP specification](https://spec.modelcontextprotocol.io).
 - https://gitmcp.io/
 - https://github.com/heltonteixeira/ragdocs
 - https://github.com/microsoft/semanticworkbench/tree/main/mcp-servers
+- https://github.com/JetBrains/mcp-jetbrains
+
+## Composition
+- https://github.com/themanojdesai/python-a2a
+- https://github.com/Klavis-AI/klavis
+- https://github.com/activepieces/activepieces
+- https://github.com/mannaandpoem/OpenManus
+- https://github.com/OpenManus/OpenManus-RL
+- https://github.com/All-Hands-AI/OpenHands
