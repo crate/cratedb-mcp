@@ -1,6 +1,7 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- Bugfix: Removed trailing `/` on HTTP URL if it exists. Thanks, @surister.
 
 ## v0.0.1 - 2025-05-20
 - Options: Renamed `CRATEDB_MCP_HTTP_URL` to `CRATEDB_CLUSTER_URL`,
