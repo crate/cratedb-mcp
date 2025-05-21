@@ -14,9 +14,12 @@ mcp: FastMCP = FastMCP(__appname__)
 
 
 def query_cratedb(query: str) -> list[dict]:
-    return httpx.post(
-        f"{HTTP_URL}/_sql", json={"stmt": query}, timeout=Settings.http_timeout()
-    ).json()
+    """Sends a `query` to the set `$CRATEDB_CLUSTER_URL`"""
+    url = HTTP_URL
+    if url.endswith("/"):
+        url = url.removesuffix("/")
+
+    return httpx.post(f"{url}/_sql", json={"stmt": query}, timeout=Settings.http_timeout()).json()
 
 
 @mcp.tool(
