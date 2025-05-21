@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+
+## v0.0.2 - 2025-05-21
 - Bugfix: Removed trailing `/` on HTTP URL if it exists. Thanks, @surister.
 
 ## v0.0.1 - 2025-05-20
