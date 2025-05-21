@@ -37,6 +37,12 @@ def test_query_sql_permitted():
     assert query_sql("SELECT 42")["rows"] == [[42]]
 
 
+def test_query_sql_trailing_slash(mocker):
+    """Verify that query_sql works correctly when HTTP_URL has a trailing slash."""
+    mocker.patch("cratedb_mcp.__main__.HTTP_URL", "http://localhost:4200/")
+    assert query_sql("SELECT 42")["rows"] == [[42]]
+
+
 def test_query_sql_forbidden_easy():
     with pytest.raises(PermissionError) as ex:
         assert "RelationUnknown" in str(
