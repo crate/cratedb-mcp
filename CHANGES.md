@@ -1,6 +1,7 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- Dependencies: Downgraded to `fastmcp<2.7` to fix a breaking change
 
 ## v0.0.2 - 2025-05-21
 - Bugfix: Removed trailing `/` on HTTP URL if it exists. Thanks, @surister.
