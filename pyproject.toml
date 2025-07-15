@@ -80,7 +80,7 @@ dependencies = [
   "sqlparse<0.6",
 ]
 optional-dependencies.develop = [
-  "mypy<1.17",
+  "mypy<1.18",
   "poethepoet<1",
   "pyproject-fmt<3",
   "ruff<0.13",
