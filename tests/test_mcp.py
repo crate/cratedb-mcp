@@ -2,8 +2,8 @@ import pytest
 
 from cratedb_mcp.__main__ import (
     fetch_cratedb_docs,
+    get_cluster_health,
     get_cratedb_documentation_index,
-    get_health,
     get_table_metadata,
     query_sql,
 )
@@ -61,5 +61,5 @@ def test_get_table_metadata():
     assert "partitions_health" in str(get_table_metadata())
 
 
-def test_get_health():
-    assert "missing_shards" in str(get_health())
+def test_get_cluster_health():
+    assert "missing_shards" in str(get_cluster_health())
