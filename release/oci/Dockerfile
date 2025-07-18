@@ -17,7 +17,7 @@ COPY . ${BUILD}
 RUN python -m build --wheel ${BUILD}
 
 
-FROM python:3.13-slim-bookworm AS package
+FROM python:3.13-slim-bookworm AS standard
 
 # Configure operating system.
 ENV DEBIAN_FRONTEND=noninteractive
@@ -57,7 +57,17 @@ RUN \
     && uv pip install --upgrade "$(ls /tmp/*.whl)"
 
 # Copy `selftest.sh` to the image.
-COPY release/oci-standard/selftest.sh /usr/local/bin
+COPY release/oci/selftest.sh /usr/local/bin
 
-# Specify the command to run the MCP server
+# Standard MCP server.
+# Specify the command to run the MCP server.
 ENTRYPOINT ["cratedb-mcp", "serve", "--transport=stdio"]
+
+
+FROM standard AS mcpo
+# MCP support for Open WebUI.
+# https://docs.openwebui.com/openapi-servers/mcp/
+# https://github.com/open-webui/mcpo
+RUN uv pip install mcpo
+ENTRYPOINT []
+CMD ["mcpo", "--host", "0.0.0.0", "--port", "8000", "--", "cratedb-mcp", "serve", "--transport=stdio"]

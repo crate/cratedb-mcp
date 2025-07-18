@@ -203,7 +203,7 @@ Notes:
 - If you are unable to use `uv tool install`, you can use `uvx cratedb-mcp`
   to acquire the package and run the application ephemerally.
 
-### Install OCI
+### Use OCI Standard
 
 OCI images for Docker or Podman are available per `ghcr.io/crate/cratedb-mcp`.
 See also [Docker Hub MCP Server] and [mcp hub].
@@ -225,6 +225,15 @@ Your command/args configuration snippet for the agent client user interface:
       "ghcr.io/crate/cratedb-mcp:latest"
     ]
 }
+```
+
+### Use OCI MCPO
+
+For integrating Open WebUI, the project provides an OCI MCPO image which wraps
+the MCP server using the `mcpo` proxy. See also [MCP support for Open WebUI] and
+[MCP-to-OpenAPI proxy server (mcpo)].
+```shell
+docker run --rm --env=CRATEDB_CLUSTER_URL --publish 8000:8000 ghcr.io/crate/cratedb-mcpo
 ```
 
 ### Configure
@@ -355,6 +364,8 @@ Version pinning is strongly recommended, especially if you use it as a library.
 [MCP]: https://modelcontextprotocol.io/introduction
 [MCP clients]: https://modelcontextprotocol.io/clients
 [mcp hub]: https://hub.docker.com/mcp
+[MCP support for Open WebUI]: https://docs.openwebui.com/openapi-servers/mcp/
+[MCP-to-OpenAPI proxy server (mcpo)]: https://github.com/open-webui/mcpo
 [MCP tools]: https://modelcontextprotocol.io/docs/concepts/tools
 [using Goose extensions]: https://block.github.io/goose/docs/getting-started/using-extensions/
 [uv]: https://docs.astral.sh/uv/
