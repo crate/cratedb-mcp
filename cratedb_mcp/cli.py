@@ -34,6 +34,13 @@ transport_choices = t.get_args(transport_types)
     help="The transport protocol (stdio, sse, streamable-http)",
 )
 @click.option(
+    "--host",
+    envvar="CRATEDB_MCP_HOST",
+    type=str,
+    default="127.0.0.1",
+    help="The host to listen on (for sse and streamable-http)",
+)
+@click.option(
     "--port",
     envvar="CRATEDB_MCP_PORT",
     type=int,
@@ -41,10 +48,11 @@ transport_choices = t.get_args(transport_types)
     help="The port to listen on (for sse and streamable-http)",
 )
 @click.pass_context
-def serve(ctx: click.Context, transport: str, port: int) -> None:
+def serve(ctx: click.Context, transport: str, host: str, port: int) -> None:
     """
     Start MCP server.
     """
     logger.info(f"CrateDB MCP server starting with transport: {transport}")
+    mcp.settings.host = host
     mcp.settings.port = port
     mcp.run(transport=t.cast(transport_types, transport))
