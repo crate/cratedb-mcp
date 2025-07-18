@@ -13,7 +13,7 @@ documentation_index = DocumentationIndex()
 mcp: FastMCP = FastMCP(__appname__)
 
 
-def query_cratedb(query: str) -> list[dict]:
+def query_cratedb(query: str) -> dict:
     """Sends a `query` to the set `$CRATEDB_CLUSTER_URL`"""
     url = HTTP_URL
     if url.endswith("/"):
@@ -54,7 +54,7 @@ def fetch_cratedb_docs(link: str):
 
 
 @mcp.tool(description="Return an aggregation of all CrateDB's schema, tables and their metadata")
-def get_table_metadata() -> list[dict]:
+def get_table_metadata() -> dict:
     """
     Return an aggregation of schema:tables, e.g.: {'doc': [{name:'mytable', ...}, ...]}
 
@@ -65,6 +65,6 @@ def get_table_metadata() -> list[dict]:
 
 
 @mcp.tool(description="Returns the health of a CrateDB cluster.")
-def get_health() -> list[dict]:
+def get_health() -> dict:
     """Query sys.health ordered by severity."""
     return query_cratedb(Queries.HEALTH)
