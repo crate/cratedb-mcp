@@ -78,7 +78,7 @@ def test_cli_valid_default(mocker, capsys):
 
     # Verify the outcome.
     assert run_mock.call_count == 1
-    assert run_mock.call_args == mock.call("stdio", port=8000)
+    assert run_mock.call_args == mock.call("stdio")
 
 
 def test_cli_valid_custom(mocker, capsys):
