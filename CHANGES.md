@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- Parameters: Stopped propagating port number as global variable
+- Dependencies: Allowed updating to FastMCP 2.9
 
 ## v0.0.3 - 2025-06-18
 - Dependencies: Downgraded to `fastmcp<2.7` to fix a breaking change

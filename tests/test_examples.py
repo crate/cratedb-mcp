@@ -4,6 +4,7 @@ import subprocess
 import pytest
 
 
+@pytest.mark.timeout(15)
 def test_mcptools():
     proc = subprocess.run(["examples/mcptools.sh"], capture_output=True, timeout=15, check=True)
     assert proc.returncode == 0

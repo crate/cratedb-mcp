@@ -46,5 +46,7 @@ def serve(ctx: click.Context, transport: str, port: int) -> None:
     Start MCP server.
     """
     logger.info(f"CrateDB MCP server starting with transport: {transport}")
-    mcp.settings.port = port
-    mcp.run(transport=t.cast(transport_types, transport))
+    kwargs = {}
+    if transport in ["sse", "streamable-http"]:
+        kwargs = {"port": port}
+    mcp.run(transport=t.cast(transport_types, transport), **kwargs)
