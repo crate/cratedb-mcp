@@ -29,7 +29,7 @@ mcpt tools uvx cratedb-mcp serve
 # Explore the Text-to-SQL tools.
 mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' uvx cratedb-mcp serve
 mcpt call get_table_metadata uvx cratedb-mcp serve
-mcpt call get_health uvx cratedb-mcp serve
+mcpt call get_cluster_health uvx cratedb-mcp serve
 
 # Exercise the documentation server tools.
 mcpt call get_cratedb_documentation_index uvx cratedb-mcp serve

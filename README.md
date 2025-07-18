@@ -74,10 +74,10 @@ CrateDB MCP Server.
         "CRATEDB_MCP_TRANSPORT": "stdio"
       },
       "alwaysAllow": [
-        "get_health", 
-        "get_table_metadata", 
-        "query_sql", 
-        "get_cratedb_documentation_index", 
+        "get_cluster_health",
+        "get_table_metadata",
+        "query_sql",
+        "get_cratedb_documentation_index",
         "fetch_cratedb_docs"
       ],
       "disabled": false
@@ -172,7 +172,7 @@ The CrateDB MCP Server provides two families of tools.
 The **Text-to-SQL tools** talk to a CrateDB database cluster to inquire database
 and table metadata, and table content.
 <br>
-Tool names are: `get_health`, `get_table_metadata`, `query_sql`
+Tool names are: `get_cluster_health`, `get_table_metadata`, `query_sql`
 
 The **documentation server tools** looks up guidelines specific to CrateDB topics,
 to provide the most accurate information possible.
