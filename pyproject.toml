@@ -132,6 +132,9 @@ lint.per-file-ignores."tests/*" = [
   "S101", # Allow use of `assert`.
 ]
 
+[tool.setuptools.packages.find]
+namespaces = false
+
 [tool.pytest.ini_options]
 addopts = """
   -rfEXs -p pytester --strict-markers --verbosity=3

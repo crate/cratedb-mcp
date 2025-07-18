@@ -1,6 +1,7 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- OCI: Added building OCI standard image `cratedb-mcp`
 
 ## v0.0.3 - 2025-06-18
 - Dependencies: Downgraded to `fastmcp<2.7` to fix a breaking change
