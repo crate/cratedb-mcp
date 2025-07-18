@@ -3,6 +3,11 @@
 ## Unreleased
 - Parameters: Stopped propagating port number as global variable
 - Dependencies: Allowed updating to FastMCP 2.9
+- Dependencies: Updated to [FastMCP 2.10], including a specification update
+  to [MCP spec 2025-06-18].
+
+[FastMCP 2.10]: https://github.com/jlowin/fastmcp/releases/tag/v2.10.0
+[MCP spec 2025-06-18]: https://modelcontextprotocol.io/specification/2025-06-18/changelog
 
 ## v0.0.3 - 2025-06-18
 - Dependencies: Downgraded to `fastmcp<2.7` to fix a breaking change

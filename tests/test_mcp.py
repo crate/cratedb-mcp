@@ -15,7 +15,7 @@ client = Client(transport=transport)
 async def query_sql_async(sql: str) -> dict:
     async with client:
         response = await client.call_tool("query_sql", {"query": sql})
-        return json.loads(response[0].text)
+        return json.loads(response.content[0].text)
 
 
 def query_sql(sql: str) -> dict:
@@ -25,9 +25,10 @@ def query_sql(sql: str) -> dict:
 async def call_tool_async(name: str, args: dict = None, decode_json: bool = False):
     async with client:
         response = await client.call_tool(name, args)
+        content = response.content[0].text
         if decode_json:
-            return json.loads(response[0].text)
-        return response[0].text
+            return json.loads(content)
+        return content
 
 
 def call_tool(name: str, args: dict = None, decode_json: bool = False):

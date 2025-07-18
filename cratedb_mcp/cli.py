@@ -49,4 +49,4 @@ def serve(ctx: click.Context, transport: str, port: int) -> None:
     kwargs = {}
     if transport in ["sse", "streamable-http"]:
         kwargs = {"port": port}
-    mcp.run(transport=t.cast(transport_types, transport), **kwargs)
+    mcp.run(transport=t.cast(transport_types, transport), **kwargs)  # type: ignore[arg-type]
