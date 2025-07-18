@@ -73,7 +73,7 @@ dependencies = [
   "attrs",
   "cachetools<7",
   "click<9",
-  "cratedb-about==0.0.5",
+  "cratedb-about @ git+https://github.com/crate/about.git@instructions",
   "fastmcp>=2.7,<2.10",
   "hishel<0.2",
   "pueblo==0.0.11",
@@ -93,6 +93,12 @@ optional-dependencies.test = [
 ]
 
 scripts.cratedb-mcp = "cratedb_mcp.cli:cli"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+cratedb_mcp = [ "*.md" ]
 
 [tool.ruff]
 line-length = 100
