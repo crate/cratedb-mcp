@@ -1,0 +1,14 @@
+*
+
+!.git
+!docs
+!release
+!cratedb_mcp
+
+!*.cfg
+!*.md
+!*.py
+!*.rst
+!*.toml
+!*.txt
+!LICENSE

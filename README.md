@@ -181,7 +181,7 @@ Relevant information is pulled from <https://cratedb.com/docs>, curated per
 <br>
 Tool names are: `get_cratedb_documentation_index`, `fetch_cratedb_docs`
 
-### Install
+### Install package
 
 The configuration snippets for AI assistants are using the `uvx` launcher
 of the [uv] package manager to start the application after installing it,
@@ -202,6 +202,39 @@ Notes:
   sessions or MCP client programs / AI assistants.
 - If you are unable to use `uv tool install`, you can use `uvx cratedb-mcp`
   to acquire the package and run the application ephemerally.
+
+### Use OCI Standard
+
+OCI images for Docker or Podman are available per `ghcr.io/crate/cratedb-mcp`.
+See also [Docker Hub MCP Server] and [mcp hub].
+
+Probe invocation:
+```shell
+docker run --rm -it --entrypoint="" ghcr.io/crate/cratedb-mcp cratedb-mcp --version
+```
+
+Your command/args configuration snippet for the agent client user interface:
+```json
+{
+    "command": "docker",
+    "args": [
+      "run",
+      "--rm",
+      "-i",
+      "--env=CRATEDB_CLUSTER_URL",
+      "ghcr.io/crate/cratedb-mcp:latest"
+    ]
+}
+```
+
+### Use OCI MCPO
+
+For integrating Open WebUI, the project provides an OCI MCPO image which wraps
+the MCP server using the `mcpo` proxy. See also [MCP support for Open WebUI] and
+[MCP-to-OpenAPI proxy server (mcpo)].
+```shell
+docker run --rm --env=CRATEDB_CLUSTER_URL --publish 8000:8000 ghcr.io/crate/cratedb-mcpo
+```
 
 ### Configure
 
@@ -298,12 +331,16 @@ Version pinning is strongly recommended, especially if you use it as a library.
 [cratedb-outline.yaml]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/outline/cratedb-outline.yaml
 [create a read-only database user by using "GRANT DQL"]: https://community.cratedb.com/t/create-read-only-database-user-by-using-grant-dql/2031
 [development documentation]: https://github.com/crate/cratedb-mcp/blob/main/DEVELOP.md
+[Docker Hub MCP Server]: https://www.docker.com/blog/introducing-docker-hub-mcp-server/
 [example questions]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/query/model.py#L17-L44
 [examples folder]: https://github.com/crate/cratedb-mcp/tree/main/examples
 [LibreChat and MCP]: https://www.librechat.ai/docs/features/agents#model-context-protocol-mcp
 [LibreChat MCP examples]: https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/mcp_servers
 [MCP]: https://modelcontextprotocol.io/introduction
 [MCP clients]: https://modelcontextprotocol.io/clients
+[mcp hub]: https://hub.docker.com/mcp
+[MCP support for Open WebUI]: https://docs.openwebui.com/openapi-servers/mcp/
+[MCP-to-OpenAPI proxy server (mcpo)]: https://github.com/open-webui/mcpo
 [MCP tools]: https://modelcontextprotocol.io/docs/concepts/tools
 [using Goose extensions]: https://block.github.io/goose/docs/getting-started/using-extensions/
 [uv]: https://docs.astral.sh/uv/
