@@ -1,6 +1,6 @@
 import pytest
 
-from cratedb_mcp.__main__ import (
+from cratedb_mcp.tool import (
     fetch_cratedb_docs,
     get_cluster_health,
     get_cratedb_documentation_index,
@@ -39,7 +39,7 @@ def test_query_sql_permitted():
 
 def test_query_sql_trailing_slash(mocker):
     """Verify that query_sql works correctly when HTTP_URL has a trailing slash."""
-    mocker.patch("cratedb_mcp.__main__.HTTP_URL", "http://localhost:4200/")
+    mocker.patch("cratedb_mcp.tool.HTTP_URL", "http://localhost:4200/")
     assert query_sql("SELECT 42")["rows"] == [[42]]
 
 
