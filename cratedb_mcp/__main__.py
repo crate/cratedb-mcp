@@ -1,3 +1,6 @@
+import importlib.resources
+
+from cratedb_about.instruction import Instructions
 from fastmcp import FastMCP
 from fastmcp.tools import Tool
 
@@ -10,8 +13,14 @@ from .tool import (
     query_sql,
 )
 
+instructions_general = Instructions.full()
+instructions_mcp = (importlib.resources.files("cratedb_mcp") / "instructions.md").read_text()
+
 # Create FastMCP application object.
-mcp: FastMCP = FastMCP(__appname__)
+mcp: FastMCP = FastMCP(
+    name=__appname__,
+    instructions=instructions_mcp + instructions_general,
+)
 
 
 # ------------------------------------------
