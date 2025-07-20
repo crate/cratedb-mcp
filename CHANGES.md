@@ -2,6 +2,9 @@
 
 ## Unreleased
 - MCP: Fixed defunct `get_cratedb_documentation_index` tool
+- CLI: Added CLI options for user-defined prompts: `--instructions` and `--conventions`,
+  both accepting file paths or URLs.
+- CLI: Added subcommand `cratedb-mcp show-prompt` to display the system prompt.
 
 ## v0.0.4 - 2025-07-21
 - Parameters: Added CLI option `--host` and environment variable `CRATEDB_MCP_HOST`
