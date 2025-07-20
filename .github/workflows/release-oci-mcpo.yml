@@ -126,7 +126,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ github.token }}
 
-      - name: Build and push image (standard)
+      - name: Build and push image (mcpo)
         uses: docker/build-push-action@v6
         with:
           context: .

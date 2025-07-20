@@ -9,8 +9,10 @@ ENV TERM=linux
 ENV PIP_ROOT_USER_ACTION=ignore
 
 # Install prerequisites.
-RUN apt-get update
-RUN apt-get --yes install --no-install-recommends --no-install-suggests git
+RUN set -e \
+    && apt-get update \
+    && apt-get --yes install --no-install-recommends --no-install-suggests git \
+    && rm -rf /var/lib/apt/lists/*
 RUN pip install build
 
 COPY . ${BUILD}
@@ -28,7 +30,6 @@ ENV TERM=linux
 # - https://hynek.me/articles/docker-uv/
 
 # Install the `uv` package manager.
-# Security-conscious organizations should package/review uv themselves.
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # - Tell uv to byte-compile packages for faster application startups.
@@ -54,7 +55,7 @@ RUN \
     --mount=type=cache,id=pip,target=/root/.cache/pip \
     --mount=type=cache,id=uv,target=/root/.cache/uv \
     true \
-    && uv pip install --upgrade "$(ls /tmp/*.whl)"
+    && uv pip install --upgrade /tmp/*.whl
 
 # Copy `selftest.sh` to the image.
 COPY release/oci/selftest.sh /usr/local/bin
