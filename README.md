@@ -44,8 +44,8 @@ customers should use this feature at their own discretion.
 ### Quickstart Guide
 
 The CrateDB MCP Server is compatible with AI assistants that support the Model
-Context Protocol (MCP), either using standard input/output (stdio),
-server-sent events (SSE), or HTTP Streams (streamable-http).
+Context Protocol (MCP), either using standard input/output (`stdio`),
+server-sent events (`sse`), or HTTP Streams (`http`, earlier `streamable-http`).
 
 To use the MCP server, you need a [client that supports][MCP clients] the
 protocol. The most notable ones are ChatGPT, Claude, Cline Bot, Cursor,
@@ -223,6 +223,31 @@ in seconds.
 The `CRATEDB_MCP_DOCS_CACHE_TTL` environment variable (default: 3600) defines
 the cache lifetime for documentation resources in seconds.
 
+### Configure transport
+
+MCP servers can be started using different transport modes. The default transport
+is `stdio`, you can select another one of `{"stdio", "sse", "http"}`
+and supply it to the invocation like this:
+```shell
+cratedb-mcp serve --transport=stdio
+```
+NB: The `http` transport was called `streamable-http` in earlier spec iterations.
+
+When using one of the HTTP-based options for serving the MCP interface, you can
+use the CLI options `--host`, `--port` and `--path` to specify the listening address.
+The default values are `localhost:8000`, where the SSE server responds to `/sse/`
+and `/messages/` and the HTTP server responds to `/mcp/` by default.
+
+Alternatively, you can use environment variables instead of CLI options.
+```shell
+export CRATEDB_MCP_TRANSPORT=http
+export CRATEDB_MCP_HOST=0.0.0.0
+export CRATEDB_MCP_PORT=8000
+```
+```shell
+export CRATEDB_MCP_PATH=/path/in/url
+```
+
 ### Security considerations
 
 If you want to prevent agents from modifying data, i.e., permit `SELECT` statements
@@ -250,9 +275,9 @@ Start MCP server with `sse` transport.
 ```shell
 cratedb-mcp serve --transport=sse
 ```
-Start MCP server with `streamable-http` transport.
+Start MCP server with `http` transport (ex. `streamable-http`).
 ```shell
-cratedb-mcp serve --transport=streamable-http
+cratedb-mcp serve --transport=http
 ```
 Alternatively, use the `CRATEDB_MCP_TRANSPORT` environment variable instead of
 the `--transport` option.

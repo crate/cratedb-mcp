@@ -21,7 +21,7 @@ def cli(ctx: click.Context) -> None:
     boot_click(ctx=ctx)
 
 
-transport_types = t.Literal["stdio", "sse", "streamable-http"]
+transport_types = t.Literal["stdio", "sse", "http", "streamable-http"]
 transport_choices = t.get_args(transport_types)
 
 
@@ -31,21 +31,21 @@ transport_choices = t.get_args(transport_types)
     envvar="CRATEDB_MCP_TRANSPORT",
     type=click.Choice(transport_choices),
     default="stdio",
-    help="The transport protocol (stdio, sse, streamable-http)",
+    help="The transport protocol (stdio, sse, http, ex. streamable-http)",
 )
 @click.option(
     "--host",
     envvar="CRATEDB_MCP_HOST",
     type=str,
     default="127.0.0.1",
-    help="The host to listen on (for sse and streamable-http)",
+    help="The host to listen on (for sse, http)",
 )
 @click.option(
     "--port",
     envvar="CRATEDB_MCP_PORT",
     type=int,
     default=8000,
-    help="The port to listen on (for sse and streamable-http)",
+    help="The port to listen on (for sse, http)",
 )
 @click.option(
     "--path",
