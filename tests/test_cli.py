@@ -79,12 +79,11 @@ def test_cli_valid_default(mocker, capsys):
     # Verify the outcome.
     assert run_mock.call_count == 1
     assert run_mock.call_args == mock.call("stdio")
-    assert mcp.settings.port == 8000
 
 
 def test_cli_valid_custom(mocker, capsys):
     """
-    Verify `cratedb-mcp serve --transport=streamable-http --port=65535` works as expected.
+    Verify `cratedb-mcp serve --transport=http --port=65535` works as expected.
 
     The test needs to mock `anyio.run`, otherwise the call would block forever.
     """
@@ -94,14 +93,13 @@ def test_cli_valid_custom(mocker, capsys):
     runner = CliRunner()
     runner.invoke(
         cli,
-        args=["serve", "--transport=streamable-http", "--port=65535"],
+        args=["serve", "--transport=http", "--port=65535"],
         catch_exceptions=False,
     )
 
     # Verify the outcome.
     assert run_mock.call_count == 1
-    assert run_mock.call_args == mock.call("streamable-http")
-    assert mcp.settings.port == 65535
+    assert run_mock.call_args == mock.call("http", host="127.0.0.1", port=65535, path=None)
 
 
 def test_cli_invalid_transport_option(mocker, capsys):
