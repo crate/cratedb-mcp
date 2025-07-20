@@ -6,14 +6,6 @@ from cratedb_mcp.util.sql import sql_is_permitted
 
 
 # ------------------------------------------
-#            Health / Status
-# ------------------------------------------
-def get_cluster_health() -> dict:
-    """Query sys.health ordered by severity."""
-    return query_cratedb(Queries.HEALTH)
-
-
-# ------------------------------------------
 #              Text-to-SQL
 # ------------------------------------------
 def query_cratedb(query: str) -> dict:
@@ -58,3 +50,11 @@ def fetch_cratedb_docs(link: str) -> str:
     if not documentation_index.url_permitted(link):
         raise ValueError(f"Link is not permitted: {link}")
     return documentation_index.client.get(link, timeout=Settings.http_timeout()).text
+
+
+# ------------------------------------------
+#            Health / Status
+# ------------------------------------------
+def get_cluster_health() -> dict:
+    """Query sys.health ordered by severity."""
+    return query_cratedb(Queries.HEALTH)

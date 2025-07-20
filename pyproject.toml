@@ -73,7 +73,7 @@ dependencies = [
   "attrs",
   "cachetools<7",
   "click<9",
-  "cratedb-about==0.0.5",
+  "cratedb-about==0.0.6",
   "fastmcp>=2.7,<2.11",
   "hishel<0.2",
   "pueblo==0.0.11",
@@ -93,6 +93,15 @@ optional-dependencies.test = [
 ]
 
 scripts.cratedb-mcp = "cratedb_mcp.cli:cli"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+cratedb_mcp = [ "*.md" ]
+
+[tool.setuptools.packages.find]
+namespaces = false
 
 [tool.ruff]
 line-length = 100
@@ -131,9 +140,6 @@ lint.select = [
 lint.per-file-ignores."tests/*" = [
   "S101", # Allow use of `assert`.
 ]
-
-[tool.setuptools.packages.find]
-namespaces = false
 
 [tool.pytest.ini_options]
 addopts = """

@@ -7,6 +7,8 @@
   update to [MCP spec 2025-06-18].
 - OCI: Added building OCI standard image `cratedb-mcp`
 - OCI: Added building OCI image `cratedb-mcpo` for Open WebUI
+- Prompt: Added instructions (system prompt) to MCP server.
+  Thanks, @hammerhead and @WalBeh.
 
 [FastMCP 2.10]: https://github.com/jlowin/fastmcp/releases/tag/v2.10.0
 [MCP spec 2025-06-18]: https://modelcontextprotocol.io/specification/2025-06-18/changelog
