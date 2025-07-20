@@ -61,7 +61,7 @@ COPY release/oci/selftest.sh /usr/local/bin
 
 # Standard MCP server.
 # Specify the command to run the MCP server.
-ENTRYPOINT ["cratedb-mcp", "serve", "--transport=stdio"]
+ENTRYPOINT ["cratedb-mcp", "serve"]
 
 
 FROM standard AS mcpo
