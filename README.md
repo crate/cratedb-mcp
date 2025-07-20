@@ -154,6 +154,30 @@ mcpServers:
       CRATEDB_MCP_TRANSPORT: "stdio"
 ```
 
+#### OCI
+If you prefer to deploy the MCP server using Docker or Podman, your command/args
+configuration snippet may look like this.
+```json
+{
+  "mcpServers": {
+    "cratedb-mcp": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e", "CRATEDB_CLUSTER_URL",
+        "ghcr.io/crate/cratedb-mcp:latest"
+      ],
+      "env": {
+        "CRATEDB_CLUSTER_URL": "http://cratedb.example.org:4200/",
+        "CRATEDB_MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}
+```
+
 ## Handbook
 
 This section includes detailed information about how to configure and
@@ -203,50 +227,37 @@ Notes:
 - If you are unable to use `uv tool install`, you can use `uvx cratedb-mcp`
   to acquire the package and run the application ephemerally.
 
-### Use OCI Standard
+### Install OCI
 
-OCI images for Docker or Podman are available per `ghcr.io/crate/cratedb-mcp`.
-See also [Docker Hub MCP Server] and [mcp hub].
+OCI images for Docker or Podman are available on GHCR per [CrateDB MCP server OCI images].
+There is a standard OCI image and an MCPO image suitable for Open WebUI.
+
+- `ghcr.io/crate/cratedb-mcp`
+
+  See also [Docker Hub MCP Server] and [mcp hub].
+
+- `ghcr.io/crate/cratedb-mcpo`
+
+  For integrating Open WebUI, the project provides an OCI MCPO image which wraps
+  the MCP server using the `mcpo` proxy. See also [MCP support for Open WebUI] and
+  [MCP-to-OpenAPI proxy server (mcpo)].
 
 Probe invocation:
 ```shell
 docker run --rm -it --entrypoint="" ghcr.io/crate/cratedb-mcp cratedb-mcp --version
 ```
 
-Your command/args configuration snippet for the agent client user interface:
-```json
-{
-    "command": "docker",
-    "args": [
-      "run",
-      "--rm",
-      "-i",
-      "--env=CRATEDB_CLUSTER_URL",
-      "ghcr.io/crate/cratedb-mcp:latest"
-    ]
-}
-```
-
-### Use OCI MCPO
-
-For integrating Open WebUI, the project provides an OCI MCPO image which wraps
-the MCP server using the `mcpo` proxy. See also [MCP support for Open WebUI] and
-[MCP-to-OpenAPI proxy server (mcpo)].
-```shell
-docker run --rm --env=CRATEDB_CLUSTER_URL --publish 8000:8000 ghcr.io/crate/cratedb-mcpo
-```
-
-### Configure
+### Configure database connectivity
 
 Configure the `CRATEDB_CLUSTER_URL` environment variable to match your CrateDB instance.
 For example, when connecting to CrateDB Cloud, use a value like
 `https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/`.
 When connecting to CrateDB on localhost, use `http://localhost:4200/`.
 ```shell
-export CRATEDB_CLUSTER_URL="https://example.aks1.westeurope.azure.cratedb.net:4200"
+export CRATEDB_CLUSTER_URL="https://<username>:<password>@<example>.aks1.westeurope.azure.cratedb.net:4200"
 ```
 ```shell
-export CRATEDB_CLUSTER_URL="http://localhost:4200/"
+export CRATEDB_CLUSTER_URL="http://crate:crate@localhost:4200/"
 ```
 
 The `CRATEDB_MCP_HTTP_TIMEOUT` environment variable (default: 30.0) defines
@@ -259,14 +270,14 @@ the cache lifetime for documentation resources in seconds.
 ### Configure transport
 
 MCP servers can be started using different transport modes. The default transport
-is `stdio`, you can select another one of `{"stdio", "sse", "http"}`
+is `stdio`, you can select another one of `{"stdio", "http", "sse", "streamable-http"}`
 and supply it to the invocation like this:
 ```shell
 cratedb-mcp serve --transport=stdio
 ```
 NB: The `http` transport was called `streamable-http` in earlier spec iterations.
 
-When using one of the HTTP-based options for serving the MCP interface, you can
+When using any of the HTTP-based options for serving the MCP interface, you can
 use the CLI options `--host`, `--port` and `--path` to specify the listening address.
 The default values are `localhost:8000`, where the SSE server responds to `/sse/`
 and `/messages/` and the HTTP server responds to `/mcp/` by default.
@@ -298,7 +309,7 @@ All other operations will raise a `PermissionError` exception, unless the
 `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a
 truthy value.
 
-### Operate
+### Operate standalone
 
 Start MCP server with `stdio` transport (default).
 ```shell
@@ -315,6 +326,65 @@ cratedb-mcp serve --transport=http
 Alternatively, use the `CRATEDB_MCP_TRANSPORT` environment variable instead of
 the `--transport` option.
 
+### Operate OCI Standard
+
+Run CrateDB database.
+```shell
+docker network create demo
+```
+```shell
+docker run --rm --name=cratedb --network=demo \
+  -p 4200:4200 -p 5432:5432 \
+  -e CRATE_HEAP_SIZE=2g \
+  crate:latest -Cdiscovery.type=single-node
+```
+
+Configure and run CrateDB MCP server.
+```shell
+export CRATEDB_MCP_TRANSPORT=streamable-http
+export CRATEDB_MCP_HOST=0.0.0.0
+export CRATEDB_MCP_PORT=8000
+export CRATEDB_CLUSTER_URL=http://crate:crate@cratedb:4200/
+```
+```shell
+docker run --rm --name=cratedb-mcp --network=demo \
+  -p 8000:8000 \
+  -e CRATEDB_MCP_TRANSPORT -e CRATEDB_MCP_HOST -e CRATEDB_MCP_PORT -e CRATEDB_CLUSTER_URL \
+  ghcr.io/crate/cratedb-mcp
+```
+
+### Operate OCI MCPO
+Invoke the CrateDB MCPO server for Open WebUI.
+```shell
+docker run --rm --name=cratedb-mcpo --network=demo \
+  -p 8000:8000 \
+  -e CRATEDB_CLUSTER_URL ghcr.io/crate/cratedb-mcpo
+```
+
+### Operate OCI on GHA
+If you need instances of CrateDB and CrateDB MCP on a CI environment on GitHub Actions,
+using this section might be handy, as it includes all relevant configuration options
+in one go.
+```yaml
+services:
+  cratedb:
+    image: crate/crate:latest
+    ports:
+      - 4200:4200
+      - 5432:5432
+    env:
+      CRATE_HEAP_SIZE: 2g
+  cratedb-mcp:
+    image: ghcr.io/crate/cratedb-mcp:latest
+    ports:
+      - 8000:8000
+    env:
+      CRATEDB_MCP_TRANSPORT: streamable-http
+      CRATEDB_MCP_HOST: 0.0.0.0
+      CRATEDB_MCP_PORT: 8000
+      CRATEDB_CLUSTER_URL: http://crate:crate@cratedb:4200/
+```
+
 ### Use
 
 To connect to the MCP server using any of the available [MCP clients], use one
@@ -330,6 +400,7 @@ that LLMs can still hallucinate and give incorrect answers.
 - How can I format a timestamp column to '2019 Jan 21'?
 
 Please also explore the [example questions] from another shared collection.
+
 
 ## Project information
 
@@ -352,6 +423,7 @@ Version pinning is strongly recommended, especially if you use it as a library.
 [Add an MCP server to your VS Code workspace]: https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server-to-your-workspace
 [Automatic discovery of MCP servers]: https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_automatic-discovery-of-mcp-servers
 [CrateDB]: https://cratedb.com/database
+[CrateDB MCP server OCI images]: https://github.com/orgs/crate/packages?repo_name=cratedb-mcp
 [cratedb-about]: https://pypi.org/project/cratedb-about/
 [cratedb-outline.yaml]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/outline/cratedb-outline.yaml
 [create a read-only database user by using "GRANT DQL"]: https://community.cratedb.com/t/create-read-only-database-user-by-using-grant-dql/2031
