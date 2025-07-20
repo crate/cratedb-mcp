@@ -4,7 +4,8 @@ import typing as t
 import click
 from pueblo.util.cli import boot_click
 
-from cratedb_mcp.__main__ import mcp
+from cratedb_mcp.core import CrateDbMcp
+from cratedb_mcp.prompt import InstructionsPrompt
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +55,29 @@ transport_choices = t.get_args(transport_types)
     required=False,
     help="The URL path to serve on (for sse, http)",
 )
+@click.option(
+    "--instructions",
+    envvar="CRATEDB_MCP_INSTRUCTIONS",
+    type=str,
+    required=False,
+    help="If you want to change the default instructions prompt, use this option",
+)
+@click.option(
+    "--conventions",
+    envvar="CRATEDB_MCP_CONVENTIONS",
+    type=str,
+    required=False,
+    help="If you want to add custom conventions to the prompt, use this option",
+)
 @click.pass_context
 def serve(
-    ctx: click.Context, transport: str, host: str, port: int, path: t.Optional[str] = None
+    ctx: click.Context,
+    transport: str,
+    host: str,
+    port: int,
+    path: t.Optional[str],
+    instructions: t.Optional[str],
+    conventions: t.Optional[str],
 ) -> None:
     """
     Start MCP server.
@@ -69,4 +90,13 @@ def serve(
             "port": port,
             "path": path,
         }
-    mcp.run(transport=t.cast(transport_types, transport), **transport_kwargs)  # type: ignore[arg-type]
+    mcp_cratedb = CrateDbMcp(instructions=instructions, conventions=conventions)
+    mcp_cratedb.mcp.run(transport=t.cast(transport_types, transport), **transport_kwargs)  # type: ignore[arg-type]
+
+
+@cli.command()
+def show_prompt() -> None:
+    """
+    Display the system prompt.
+    """
+    print(InstructionsPrompt().render())  # noqa: T201

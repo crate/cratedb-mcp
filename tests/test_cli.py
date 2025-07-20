@@ -1,9 +1,9 @@
 from unittest import mock
 
+import fastmcp.server.server
 from click.testing import CliRunner
 
 from cratedb_mcp import __version__
-from cratedb_mcp.__main__ import mcp
 from cratedb_mcp.cli import cli
 
 
@@ -40,7 +40,27 @@ def test_cli_help():
 
     # Verify the outcome.
     assert result.exit_code == 0, result.output
-    assert "serve  Start MCP server" in result.output
+    assert "Start MCP server" in result.output
+    assert "Display the system prompt" in result.output
+
+
+def test_cli_show_prompt():
+    """
+    Verify `cratedb-mcp show-prompt` works as expected.
+    """
+
+    # Invoke the program.
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        args="show-prompt",
+        catch_exceptions=False,
+    )
+
+    # Verify the outcome.
+    assert result.exit_code == 0, result.output
+    assert "Rules for writing SQL queries" in result.output
+    assert "Tool instructions" in result.output
 
 
 def test_cli_no_command_no_option():
@@ -57,7 +77,8 @@ def test_cli_no_command_no_option():
 
     # Verify the outcome.
     assert result.exit_code == 2, result.output
-    assert "serve  Start MCP server" in result.output
+    assert "Start MCP server" in result.output
+    assert "Display the system prompt" in result.output
 
 
 def test_cli_valid_default(mocker, capsys):
@@ -66,7 +87,7 @@ def test_cli_valid_default(mocker, capsys):
 
     The test needs to mock `anyio.run`, otherwise the call would block forever.
     """
-    run_mock = mocker.patch.object(mcp, "run_async")
+    run_mock = mocker.patch.object(fastmcp.server.server.FastMCP, "run_async")
 
     # Invoke the program.
     runner = CliRunner()
@@ -90,7 +111,7 @@ def test_cli_valid_custom(mocker, capsys):
 
     The test needs to mock `anyio.run`, otherwise the call would block forever.
     """
-    run_mock = mocker.patch.object(mcp, "run_async")
+    run_mock = mocker.patch.object(fastmcp.server.server.FastMCP, "run_async")
 
     # Invoke the program.
     runner = CliRunner()

@@ -309,6 +309,46 @@ All other operations will raise a `PermissionError` exception, unless the
 `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a
 truthy value.
 
+### System prompt customizations
+
+The CrateDB MCP server allows users to adjust the system prompt by either
+redefining the baseline instructions or extending them with custom conventions.
+Additional conventions can capture domain-specific details—such as information
+required for particular ER data models —- or any other guidelines you develop
+over time.
+
+If you want to **add** custom conventions to the system prompt,
+use the `--conventions` option.
+```shell
+cratedb-mcp serve --conventions="conventions-custom.md"
+```
+
+If you want to **replace** the standard built-in instructions prompt completely,
+use the `--instructions` option.
+```shell
+cratedb-mcp serve --instructions="instructions-custom.md"
+```
+
+Alternatively, use the `CRATEDB_MCP_INSTRUCTIONS` and `CRATEDB_MCP_CONVENTIONS`
+environment variables instead of the CLI options.
+
+To retrieve the standard system prompt, use the `show-prompt` subcommand. By
+redirecting the output to a file, you can subsequently edit its contents and
+reuse it with the MCP server using the command outlined above.
+```shell
+cratedb-mcp show-prompt > instructions-custom.md
+```
+
+Instruction and convention fragments can be loaded from the following sources:
+
+- HTTP(S) URLs
+- Local file paths
+- Standard input (when fragment is "-")
+- Direct string content
+
+Because LLMs understand Markdown well, you should also use it for writing
+personal instructions or conventions.
+
 ### Operate standalone
 
 Start MCP server with `stdio` transport (default).
