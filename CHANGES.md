@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+
+## v0.0.4 - 2025-07-21
 - Parameters: Added CLI option `--host` and environment variable `CRATEDB_MCP_HOST`
 - Parameters: Added CLI option `--path` and environment variable `CRATEDB_MCP_PATH`
 - Dependencies: Allowed updating to [FastMCP 2.10], which includes a specification
