@@ -1,4 +1,4 @@
-## MCP tool instructions
+## Tool instructions
 
 Use all available tools from the CrateDB MCP server `cratedb-mcp` or derived
 applications for gathering accurate information.
