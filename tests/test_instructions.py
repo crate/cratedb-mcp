@@ -5,7 +5,7 @@ def test_instructions():
     instructions_text = mcp.instructions
 
     # MCP instructions.
-    assert "MCP tool instructions" in instructions_text
+    assert "Tool instructions" in instructions_text
 
     # General instructions.
     assert "Things to remember when working with CrateDB" in instructions_text
