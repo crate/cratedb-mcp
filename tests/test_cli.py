@@ -78,7 +78,10 @@ def test_cli_valid_default(mocker, capsys):
 
     # Verify the outcome.
     assert run_mock.call_count == 1
-    assert run_mock.call_args == mock.call("stdio")
+    assert run_mock.call_args in [
+        mock.call("stdio"),
+        mock.call("stdio", show_banner=True),
+    ]
 
 
 def test_cli_valid_custom(mocker, capsys):
@@ -99,7 +102,10 @@ def test_cli_valid_custom(mocker, capsys):
 
     # Verify the outcome.
     assert run_mock.call_count == 1
-    assert run_mock.call_args == mock.call("http", host="127.0.0.1", port=65535, path=None)
+    assert run_mock.call_args in [
+        mock.call("http", host="127.0.0.1", port=65535, path=None),
+        mock.call("http", show_banner=True, host="127.0.0.1", port=65535, path=None),
+    ]
 
 
 def test_cli_invalid_transport_option(mocker, capsys):
