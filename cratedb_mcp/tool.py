@@ -8,7 +8,7 @@ from cratedb_mcp.util.sql import sql_is_permitted
 # ------------------------------------------
 #            Health / Status
 # ------------------------------------------
-def get_cluster_health() -> list[dict]:
+def get_cluster_health() -> dict:
     """Query sys.health ordered by severity."""
     return query_cratedb(Queries.HEALTH)
 
@@ -16,7 +16,7 @@ def get_cluster_health() -> list[dict]:
 # ------------------------------------------
 #              Text-to-SQL
 # ------------------------------------------
-def query_cratedb(query: str) -> list[dict]:
+def query_cratedb(query: str) -> dict:
     """Sends a `query` to the set `$CRATEDB_CLUSTER_URL`"""
     url = HTTP_URL
     if url.endswith("/"):
@@ -25,13 +25,13 @@ def query_cratedb(query: str) -> list[dict]:
     return httpx.post(f"{url}/_sql", json={"stmt": query}, timeout=Settings.http_timeout()).json()
 
 
-def query_sql(query: str):
+def query_sql(query: str) -> dict:
     if not sql_is_permitted(query):
         raise PermissionError("Only queries that have a SELECT statement are allowed.")
     return query_cratedb(query)
 
 
-def get_table_metadata() -> list[dict]:
+def get_table_metadata() -> dict:
     """
     Return an aggregation of schema:tables, e.g.: {'doc': [{name:'mytable', ...}, ...]}
 
@@ -48,12 +48,12 @@ def get_table_metadata() -> list[dict]:
 documentation_index = DocumentationIndex()
 
 
-def get_cratedb_documentation_index():
+def get_cratedb_documentation_index() -> dict:
     """Get curated CrateDB documentation index."""
     return documentation_index.items()
 
 
-def fetch_cratedb_docs(link: str):
+def fetch_cratedb_docs(link: str) -> str:
     """Fetch a CrateDB documentation link."""
     if not documentation_index.url_permitted(link):
         raise ValueError(f"Link is not permitted: {link}")
