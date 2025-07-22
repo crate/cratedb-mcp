@@ -1,6 +1,7 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- MCP: Fixed defunct `get_cratedb_documentation_index` tool
 
 ## v0.0.4 - 2025-07-21
 - Parameters: Added CLI option `--host` and environment variable `CRATEDB_MCP_HOST`

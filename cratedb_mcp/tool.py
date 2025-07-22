@@ -40,7 +40,7 @@ def get_table_metadata() -> dict:
 documentation_index = DocumentationIndex()
 
 
-def get_cratedb_documentation_index() -> dict:
+def get_cratedb_documentation_index() -> list:
     """Get curated CrateDB documentation index."""
     return documentation_index.items()
 
