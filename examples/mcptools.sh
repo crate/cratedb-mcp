@@ -24,17 +24,17 @@ fi
 alias mcpt=mcptools
 
 # Display available MCP tools.
-mcpt tools uvx cratedb-mcp serve
+mcpt tools cratedb-mcp serve
 
 # Explore the Text-to-SQL tools.
-mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' uvx cratedb-mcp serve
-mcpt call get_table_metadata uvx cratedb-mcp serve
-mcpt call get_cluster_health uvx cratedb-mcp serve
+mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' cratedb-mcp serve
+mcpt call get_table_metadata cratedb-mcp serve
+mcpt call get_cluster_health cratedb-mcp serve
 
 # Exercise the documentation server tools.
-mcpt call get_cratedb_documentation_index uvx cratedb-mcp serve
+mcpt call get_cratedb_documentation_index cratedb-mcp serve
 mcpt call \
   fetch_cratedb_docs --params '{"link":"https://cratedb.com/docs/cloud/en/latest/_sources/cluster/integrations/mongo-cdc.md.txt"}' \
-  uvx cratedb-mcp serve
+  cratedb-mcp serve
 
 echo "Ready."
