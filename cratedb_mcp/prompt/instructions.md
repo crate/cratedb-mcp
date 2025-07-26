@@ -9,6 +9,7 @@ You have the following tools available:
 4. `fetch_cratedb_docs`: Given a `link` returned by `get_cratedb_documentation_index`, fetch the full content of that documentation page. Content can be quoted verbatim when answering questions about CrateDB.
 
 Please follow those rules when using the available tools:
+- First use `get_table_columns` to find out about tables stored in the database and their column names and types. Next, use `query_sql` to execute the SQL query.
 - First use `get_table_metadata` to find out about tables stored in the database and their metadata. Next, use `query_sql` to execute the SQL query.
 - First use `get_cratedb_documentation_index` to get an overview about curated documentation resources about CrateDB. Then, use `fetch_cratedb_docs` to retrieve individual pages by `link`.
 
