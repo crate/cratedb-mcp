@@ -28,6 +28,40 @@ def query_sql(query: str) -> dict:
     return query_cratedb(query)
 
 
+def get_table_columns() -> dict:
+    """
+    Return schema and column information for all tables stored in CrateDB from
+    its `information_schema` table. Use it to discover database entities you are
+    unfamiliar with, the column names are crucial for correctly formulating SQL
+    queries.
+
+    The returned fields are table_schema, table_name, column_name,
+    data_type, is_nullable, and column_default.
+
+    The returned sections are:
+    - user tables: includes all user-defined tables without system tables
+    - system tables: `information_schema`, `pg_catalog`, and `sys`.
+
+    """
+
+    variants = {
+        "user": """
+            table_schema != 'information_schema' AND
+            table_schema != 'pg_catalog' AND
+            table_schema != 'sys'
+        """,
+        "information_schema": "table_schema = 'information_schema'",
+        "pg_catalog": "table_schema = 'pg_catalog'",
+        "sys": "table_schema = 'sys'",
+    }
+
+    response = {}
+    for variant, where in variants.items():
+        query = Queries.TABLES_COLUMNS.format(where=where)
+        response[variant] = query_sql(query)
+    return response
+
+
 def get_table_metadata() -> dict:
     """
     Return table metadata for all tables stored in CrateDB.
