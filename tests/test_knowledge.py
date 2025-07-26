@@ -12,6 +12,7 @@ def test_documentation_index():
 
 
 def test_queries():
+    assert "information_schema.columns" in Queries.TABLES_COLUMNS
     assert "information_schema.tables" in Queries.TABLES_METADATA
     assert "partitions_health" in Queries.TABLES_METADATA
     assert "sys.health" in Queries.HEALTH

@@ -4,6 +4,7 @@ from cratedb_mcp.tool import (
     fetch_cratedb_docs,
     get_cluster_health,
     get_cratedb_documentation_index,
+    get_table_columns,
     get_table_metadata,
     query_sql,
 )
@@ -55,6 +56,12 @@ def test_query_sql_forbidden_sneak_value():
     with pytest.raises(PermissionError) as ex:
         query_sql("INSERT INTO foobar (operation) VALUES ('select')")
     assert ex.match("Only queries that have a SELECT statement are allowed")
+
+
+def test_get_table_columns():
+    response = str(get_table_columns())
+    assert "information_schema" in response
+    assert "pg_catalog" in response
 
 
 def test_get_table_metadata():
