@@ -9,6 +9,21 @@ from cratedb_mcp.settings import Settings
 
 
 class Queries:
+    TABLES_COLUMNS = """
+SELECT
+    c.table_schema,
+    c.table_name,
+    c.column_name,
+    c.data_type,
+    c.is_nullable,
+    c.column_default
+FROM information_schema.columns c
+WHERE {where}
+ORDER BY
+    c.table_schema,
+    c.table_name,
+    c.ordinal_position
+    """
     TABLES_METADATA = """
 WITH partitions_health AS (SELECT table_name,
                                       table_schema,

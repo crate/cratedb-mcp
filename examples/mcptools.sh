@@ -28,6 +28,7 @@ mcpt tools cratedb-mcp serve
 
 # Explore the Text-to-SQL tools.
 mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' cratedb-mcp serve
+mcpt call get_table_columns cratedb-mcp serve
 mcpt call get_table_metadata cratedb-mcp serve
 mcpt call get_cluster_health cratedb-mcp serve
 
