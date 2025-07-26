@@ -1,6 +1,7 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- MCP: Started using MCP tool descriptions from Python docstrings
 
 ## v0.0.5 - 2025-07-22
 - MCP: Fixed defunct `get_cratedb_documentation_index` tool
