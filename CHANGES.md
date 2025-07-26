@@ -3,6 +3,7 @@
 ## Unreleased
 - OCI: Added `curl` to image
 - MCP: Started using MCP tool descriptions from Python docstrings
+- Instructions: Copy-editing. Wording.
 
 ## v0.0.5 - 2025-07-22
 - MCP: Fixed defunct `get_cratedb_documentation_index` tool
