@@ -25,6 +25,11 @@ FROM python:3.13-slim-bookworm AS standard
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TERM=linux
 
+RUN set -e \
+    && apt-get update \
+    && apt-get --yes install --no-install-recommends --no-install-suggests curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install and configure `uv`.
 # Guidelines that have been followed.
 # - https://hynek.me/articles/docker-uv/
