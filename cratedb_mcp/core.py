@@ -41,17 +41,15 @@ class CrateDbMcp:
         # ------------------------------------------
         self.mcp.add_tool(
             Tool.from_function(
-                fn=get_table_metadata,
-                description="Return column schema and metadata for all tables stored in CrateDB. "
-                "Use it to inquire entities you don't know about.",
+                fn=query_sql,
+                description=query_sql.__doc__,
                 tags={"text-to-sql"},
             )
         )
         self.mcp.add_tool(
             Tool.from_function(
-                fn=query_sql,
-                description="Send an SQL query to CrateDB and return results. "
-                "Only 'SELECT' queries are allowed.",
+                fn=get_table_metadata,
+                description=get_table_metadata.__doc__,
                 tags={"text-to-sql"},
             )
         )
@@ -62,16 +60,14 @@ class CrateDbMcp:
         self.mcp.add_tool(
             Tool.from_function(
                 fn=get_cratedb_documentation_index,
-                description="Get an index of CrateDB documentation links for fetching. "
-                "Should download docs before answering questions. "
-                "Has documentation title, description, and link.",
+                description=get_cratedb_documentation_index.__doc__,
                 tags={"documentation"},
             )
         )
         self.mcp.add_tool(
             Tool.from_function(
                 fn=fetch_cratedb_docs,
-                description="Download individual CrateDB documentation pages by link.",
+                description=fetch_cratedb_docs.__doc__,
                 tags={"documentation"},
             )
         )
@@ -82,7 +78,7 @@ class CrateDbMcp:
         self.mcp.add_tool(
             Tool.from_function(
                 fn=get_cluster_health,
-                description="Return the health of the CrateDB cluster.",
+                description=get_cluster_health.__doc__,
                 tags={"health", "monitoring", "status"},
             )
         )

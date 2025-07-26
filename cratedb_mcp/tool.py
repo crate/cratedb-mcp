@@ -9,7 +9,7 @@ from cratedb_mcp.util.sql import sql_is_permitted
 #              Text-to-SQL
 # ------------------------------------------
 def query_cratedb(query: str) -> dict:
-    """Sends a `query` to the set `$CRATEDB_CLUSTER_URL`"""
+    """Send the SQL `query` to the configured CrateDB server and return the result."""
     url = HTTP_URL
     if url.endswith("/"):
         url = url.removesuffix("/")
@@ -18,6 +18,11 @@ def query_cratedb(query: str) -> dict:
 
 
 def query_sql(query: str) -> dict:
+    """
+    Execute an SQL query on CrateDB and return the results.
+    Select only the columns you need (avoid `SELECT *`) and,
+    where appropriate, add a `LIMIT` clause to keep result sets concise.
+    """
     if not sql_is_permitted(query):
         raise PermissionError("Only queries that have a SELECT statement are allowed.")
     return query_cratedb(query)
@@ -25,6 +30,7 @@ def query_sql(query: str) -> dict:
 
 def get_table_metadata() -> dict:
     """
+    Return table metadata for all tables stored in CrateDB.
     Return an aggregation of schema:tables, e.g.: {'doc': [{name:'mytable', ...}, ...]}
 
     The tables have metadata datapoints like replicas, shards,
@@ -36,17 +42,25 @@ def get_table_metadata() -> dict:
 # ------------------------------------------
 #          Documentation inquiry
 # ------------------------------------------
+
 # Load CrateDB documentation outline.
 documentation_index = DocumentationIndex()
 
 
 def get_cratedb_documentation_index() -> list:
-    """Get curated CrateDB documentation index."""
+    """
+    Return the table of contents for the curated CrateDB documentation index.
+    Use it whenever you need to verify CrateDB-specific details or syntax.
+    """
     return documentation_index.items()
 
 
 def fetch_cratedb_docs(link: str) -> str:
-    """Fetch a CrateDB documentation link."""
+    """
+    Given a `link` returned by `get_cratedb_documentation_index`,
+    fetch the full content of that documentation page. Content
+    can be quoted verbatim when answering questions about CrateDB.
+    """
     if not documentation_index.url_permitted(link):
         raise ValueError(f"Link is not permitted: {link}")
     return documentation_index.client.get(link, timeout=Settings.http_timeout()).text
@@ -56,5 +70,5 @@ def fetch_cratedb_docs(link: str) -> str:
 #            Health / Status
 # ------------------------------------------
 def get_cluster_health() -> dict:
-    """Query sys.health ordered by severity."""
+    """Return the health of the CrateDB cluster by querying `sys.health` ordered by severity."""
     return query_cratedb(Queries.HEALTH)
