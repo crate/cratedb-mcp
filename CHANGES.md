@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+
+## v0.0.6 - 2025-07-27
 - OCI: Added `curl` to image
 - MCP: Started using MCP tool descriptions from Python docstrings
 - Instructions: Copy-editing. Wording.
