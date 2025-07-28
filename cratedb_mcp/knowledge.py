@@ -152,7 +152,7 @@ class DocumentationIndex:
         """
         Return outline items, cached for a little bit less than one hour.
         """
-        return self.outline.find_items().to_dict()
+        return self.outline.find_items().to_list()
 
     def url_permitted(self, url: str) -> bool:
         """

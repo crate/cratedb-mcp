@@ -1,6 +1,9 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- Instructions: Updated to [cratedb-about v0.0.8]
+
+[cratedb-about v0.0.8]: https://github.com/crate/about/releases/tag/v0.0.8
 
 ## v0.0.6 - 2025-07-27
 - OCI: Added `curl` to image
