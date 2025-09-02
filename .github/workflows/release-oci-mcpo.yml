@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Acquire sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build wheel package
         run: |
@@ -70,7 +70,7 @@ jobs:
 
     steps:
       - name: Acquire sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
