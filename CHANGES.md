@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## v0.0.8 - 2025-10-14
+- Rebuild for Debian CVEs
+
 ## v0.0.7 - 2025-07-28
 - Instructions: Updated to [cratedb-about v0.0.8]
 
