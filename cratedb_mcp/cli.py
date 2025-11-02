@@ -19,6 +19,12 @@ def cli(ctx: click.Context) -> None:
 
     Documentation: https://github.com/crate/cratedb-mcp
     """
+
+    # Tame logging of HTTPX to not reveal credentials.
+    # https://github.com/encode/httpx/pull/3513#issuecomment-3360536080
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+
+    # Set up logger.
     boot_click(ctx=ctx)
 
 
