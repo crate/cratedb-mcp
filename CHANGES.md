@@ -1,6 +1,7 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- Tamed logging of HTTPX to not reveal credentials. Thanks, @WalBeh.
 
 ## v0.0.8 - 2025-10-14
 - Rebuild for Debian CVEs
