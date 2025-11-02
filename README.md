@@ -52,7 +52,7 @@ protocol. The most notable ones are ChatGPT, Claude, Cline Bot, Cursor,
 GitHub Copilot, Mistral AI, OpenAI Agents SDK, Windsurf, and others.
 
 The `uvx` launcher command is provided by the [uv] package manager.
-The [installation docs](#install) section includes guidelines on how to
+The [installation docs](#install-package) section includes guidelines on how to
 install it on your machine.
 
 #### Claude, Cline, Cursor, Roo Code, Windsurf

@@ -86,6 +86,15 @@ optional-dependencies.develop = [
   "ruff<0.15",
   "validate-pyproject<1",
 ]
+optional-dependencies.docs = [
+  "furo",
+  "myst-parser[linkify]>=0.18,<5",
+  "sphinx-autobuild==2021.3.14",   # Newer versions stopped "watching" appropriately?
+  "sphinx-copybutton",
+  "sphinx-design-elements<1",
+  "sphinxcontrib-mermaid<2",
+  "sphinxext-opengraph<1",
+]
 optional-dependencies.test = [
   "pytest<9",
   "pytest-cov<8",
@@ -136,6 +145,7 @@ lint.select = [
   "YTT",
 ]
 
+lint.per-file-ignores."docs/conf.py" = [ "A001", "ERA001" ]
 lint.per-file-ignores."tests/*" = [
   "S101", # Allow use of `assert`.
 ]
@@ -198,6 +208,16 @@ describe-subst = "$Format:%(describe:tags,match=v*)$"
 check = [
   "lint",
   "test",
+]
+
+docs-autobuild = [
+  { cmd = "sphinx-autobuild --open-browser --watch cratedb_mcp docs docs/_build" },
+]
+docs-html = [
+  { cmd = "sphinx-build -W --keep-going docs docs/_build" },
+]
+docs-linkcheck = [
+  { cmd = "sphinx-build -W --keep-going -b linkcheck doc docs/_build" },
 ]
 
 format = [

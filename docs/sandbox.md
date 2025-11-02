@@ -35,7 +35,7 @@ pytest --no-cov -k query
 The project uses [versioningit] so you don't need to do any version bumping
 within files because the version number will be derived from the Git tag.
 
-However, you need to designate the new release within the [CHANGES.md](./CHANGES.md)
+However, you need to designate the new release within the [CHANGES.md](./changes.md)
 file, and commit it. The release procedure currently looks like this:
 ```shell
 git commit -m 'Release v0.0.1'
