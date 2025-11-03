@@ -33,6 +33,11 @@ It serves as a bridge between AI tools and your analytics database,
 allowing you to analyze data, the cluster state, troubleshoot issues, and
 perform operations using conversational prompts.
 
+## Documentation
+
+The project documentation is available at https://cratedb-mcp.readthedocs.io/.
+It includes information on how to install and operate the package.
+
 
 [development documentation]: https://cratedb-mcp.readthedocs.io/sandbox.html
 [managed on GitHub]: https://github.com/crate/cratedb-mcp
@@ -40,6 +45,7 @@ perform operations using conversational prompts.
 
 [Bluesky]: https://bsky.app/search?q=cratedb
 [Community Forum]: https://community.cratedb.com/
+[CrateDB]: https://cratedb.com/database
 [CrateDB Handbook]: https://cratedb.com/docs/guide/handbook/
 [Documentation]: https://cratedb-mcp.readthedocs.io/
 [Issues]: https://github.com/crate/cratedb-mcp/issues
@@ -62,6 +68,7 @@ perform operations using conversational prompts.
 [project-license]: https://github.com/crate/cratedb-mcp/blob/main/LICENSE
 [project-pypi]: https://pypi.org/project/cratedb-mcp
 [project-release-notes]: https://github.com/crate/cratedb-mcp/releases
+
 
 
 

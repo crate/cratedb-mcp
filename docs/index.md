@@ -7,7 +7,7 @@
 
 :::{include} readme.md
 :start-line: 1
-:end-line: 74
+:end-line: 79
 :::
 
 :::{note}
