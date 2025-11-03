@@ -5,6 +5,8 @@
 
 # Integrations
 
+Integrate CrateDB MCP with standard AI applications.
+
 ## Claude, Cline, Cursor, Roo Code, Windsurf
 Add the following configuration to your AI assistant's settings to enable the
 CrateDB MCP Server.
