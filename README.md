@@ -14,7 +14,7 @@
 | [Issues]
 | [Source code]
 | [License]
-| [CrateDB]
+| [CrateDB][CrateDB home]
 | [CrateDB Handbook]
 | [Community Forum]
 
@@ -22,7 +22,7 @@
 
 The CrateDB MCP Server for natural-language Text-to-SQL and documentation
 retrieval specializes in CrateDB database clusters.
-The Model Context Protocol ([MCP]) is a protocol that standardizes providing
+The Model Context Protocol ([MCP][MCP home]) is a protocol that standardizes providing
 context to language models and AI assistants.
 
 The CrateDB Model Context Protocol (MCP) Server connects AI assistants directly
@@ -41,11 +41,11 @@ It includes information on how to install and operate the package.
 
 [development documentation]: https://cratedb-mcp.readthedocs.io/sandbox.html
 [managed on GitHub]: https://github.com/crate/cratedb-mcp
-[MCP]: https://modelcontextprotocol.io/introduction
+[MCP home]: https://modelcontextprotocol.io/introduction
 
 [Bluesky]: https://bsky.app/search?q=cratedb
 [Community Forum]: https://community.cratedb.com/
-[CrateDB]: https://cratedb.com/database
+[CrateDB home]: https://cratedb.com/database
 [CrateDB Handbook]: https://cratedb.com/docs/guide/handbook/
 [Documentation]: https://cratedb-mcp.readthedocs.io/
 [Issues]: https://github.com/crate/cratedb-mcp/issues
