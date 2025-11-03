@@ -33,11 +33,6 @@ It serves as a bridge between AI tools and your analytics database,
 allowing you to analyze data, the cluster state, troubleshoot issues, and
 perform operations using conversational prompts.
 
-## Documentation
-
-The project documentation is available at https://cratedb-mcp.readthedocs.io/.
-It includes information on how to install and operate the package.
-
 
 [development documentation]: https://cratedb-mcp.readthedocs.io/sandbox.html
 [managed on GitHub]: https://github.com/crate/cratedb-mcp
@@ -76,6 +71,11 @@ It includes information on how to install and operate the package.
 
 
 
+
+## Documentation
+
+The project documentation is available at https://cratedb-mcp.readthedocs.io/.
+It includes information on how to install and operate the package.
 
 ## Project information
 
