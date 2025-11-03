@@ -1,7 +1,10 @@
 # CrateDB MCP changelog
 
 ## Unreleased
-- Tamed logging of HTTPX to not reveal credentials. Thanks, @WalBeh.
+- Security: Tamed logging of HTTPX to not reveal credentials. Thanks, @WalBeh.
+- Security: Updated to `fastmcp>=2.13`, earlier versions had vulnerabilities
+- Dependencies: Validated support for Python 3.14. Thanks, @surister.
+- Documentation: Published to RTD at https://cratedb-mcp.readthedocs.io/
 
 ## v0.0.8 - 2025-10-14
 - Rebuild for Debian CVEs
