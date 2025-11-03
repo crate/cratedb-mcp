@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+
+## v0.0.9 - 2025-11-03
 - Security: Tamed logging of HTTPX to not reveal credentials. Thanks, @WalBeh.
 - Security: Updated to `fastmcp>=2.13`, earlier versions had vulnerabilities
 - Dependencies: Validated support for Python 3.14. Thanks, @surister.
