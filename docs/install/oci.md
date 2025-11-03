@@ -21,7 +21,7 @@ ghcr.io/crate/cratedb-mcp
 
 Probe invocation.
 ```shell
-docker run --rm -it --entrypoint="" ghcr.io/crate/cratedb-mcp cratedb-mcp --version
+docker run --rm -it --entrypoint="" ghcr.io/crate/cratedb-mcp:latest cratedb-mcp --version
 ```
 
 ## Usage
@@ -42,13 +42,13 @@ Configure and run CrateDB MCP server.
 export CRATEDB_MCP_TRANSPORT=streamable-http
 export CRATEDB_MCP_HOST=0.0.0.0
 export CRATEDB_MCP_PORT=8000
-export CRATEDB_CLUSTER_URL=http://crate:crate@cratedb:4200/
+export CRATEDB_CLUSTER_URL=http://crate:crate@testcluster.cratedb.net:4200/
 ```
 ```shell
 docker run --rm --name=cratedb-mcp --network=demo \
   -p 8000:8000 \
   -e CRATEDB_MCP_TRANSPORT -e CRATEDB_MCP_HOST -e CRATEDB_MCP_PORT -e CRATEDB_CLUSTER_URL \
-  ghcr.io/crate/cratedb-mcp
+  ghcr.io/crate/cratedb-mcp:latest
 ```
 
 ## GitHub Actions
@@ -75,5 +75,5 @@ services:
       CRATEDB_MCP_TRANSPORT: streamable-http
       CRATEDB_MCP_HOST: 0.0.0.0
       CRATEDB_MCP_PORT: 8000
-      CRATEDB_CLUSTER_URL: http://crate:crate@cratedb:4200/
+      CRATEDB_CLUSTER_URL: http://crate:crate@testcluster.cratedb.net:4200/
 ```
