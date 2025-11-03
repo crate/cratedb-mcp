@@ -7,13 +7,7 @@
 
 :::{include} readme.md
 :start-line: 1
-:end-line: 79
-:::
-
-:::{note}
-**Experimental:** Please note that the CrateDB MCP Server is an experimental
-feature provided as-is without warranty or support guarantees. Enterprise
-customers should use this feature at their own discretion.
+:end-line: 74
 :::
 
 ## Quickstart Guide
@@ -72,7 +66,7 @@ The CrateDB MCP Server provides two families of tools.
   talk to a CrateDB database cluster to inquire database
   and table metadata, and table content.
 
-:Documentation server:
+:Documentation inquiry:
 
   The tools `get_cratedb_documentation_index` and `fetch_cratedb_docs`
   look up guidelines specific to CrateDB topics,
@@ -80,10 +74,16 @@ The CrateDB MCP Server provides two families of tools.
   Relevant information is pulled from <https://cratedb.com/docs>, curated per
   [cratedb-outline.yaml] through the [cratedb-about] package.
 
-:Health inquiry:
+:Health status:
 
   The tool `get_cluster_health` returns cluster health information derived
   from CrateDB's system tables.
+:::
+
+:::{note}
+**Experimental:** Please note that the CrateDB MCP Server is an experimental
+feature provided as-is without warranty or support guarantees. Enterprise
+customers should use this feature at their own discretion.
 :::
 
 
