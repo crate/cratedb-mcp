@@ -72,7 +72,7 @@ def test_fragment_remote_failure():
     Verify fragment-loading from HTTP URLs fails correctly.
     """
     with pytest.raises(ValueError) as ex:
-        InstructionsPrompt(instructions="https://httpbin.org/404")
+        InstructionsPrompt(instructions="https://www.iana.org/404")
     assert ex.match(
-        "Failed to load fragment 'https://httpbin.org/404': (Client error|Server error)"
+        "Failed to load fragment 'https://www.iana.org/404': (Client error|Server error)"
     )
