@@ -73,7 +73,7 @@ dependencies = [
   "attrs",
   "cachetools<7",
   "click<9",
-  "cratedb-about==0.0.8",
+  "cratedb-about==0.0.9",
   "fastmcp>=2.7,<2.14",
   "hishel<0.2",
   "pueblo==0.0.11",

@@ -5,7 +5,7 @@ def test_documentation_index():
     documentation_index = DocumentationIndex()
     titles = [item["title"] for item in documentation_index.items()]
     assert len(titles) >= 50
-    assert "CrateDB database" in titles
+    assert "Welcome to CrateDB" in titles
     assert "CrateDB features" in titles
     assert "CrateDB SQL reference: Scalar functions" in titles
     assert "Guide: CrateDB query optimization" in titles
