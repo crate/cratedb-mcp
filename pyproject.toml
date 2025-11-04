@@ -102,6 +102,11 @@ optional-dependencies.test = [
   "pytest-mock<4",
 ]
 
+urls.Changelog = "https://github.com/crate/cratedb-mcp/blob/main/CHANGES.md"
+urls.Documentation = "https://cratedb-mcp.readthedocs.io/"
+urls.Issues = "https://github.com/crate/cratedb-mcp/issues"
+urls.Repository = "https://github.com/crate/cratedb-mcp"
+
 scripts.cratedb-mcp = "cratedb_mcp.cli:cli"
 
 [tool.setuptools.package-data]
