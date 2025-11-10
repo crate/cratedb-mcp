@@ -97,7 +97,7 @@ optional-dependencies.docs = [
   "sphinxext-opengraph<1",
 ]
 optional-dependencies.test = [
-  "pytest<9",
+  "pytest<10",
   "pytest-cov<8",
   "pytest-mock<4",
 ]
