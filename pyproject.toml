@@ -91,7 +91,7 @@ optional-dependencies.docs = [
   "furo",
   "myst-parser[linkify]>=0.18,<5",
   "sphinx<8",
-  "sphinx-autobuild==2024.10.3",   # Newer versions stopped "watching" appropriately?
+  "sphinx-autobuild==2025.8.25",   # Newer versions stopped "watching" appropriately?
   "sphinx-copybutton",
   "sphinx-design-elements<1",
   "sphinxcontrib-mermaid<2",
