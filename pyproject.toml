@@ -94,7 +94,7 @@ optional-dependencies.docs = [
   "sphinx-autobuild==2025.8.25",   # Newer versions stopped "watching" appropriately?
   "sphinx-copybutton",
   "sphinx-design-elements<1",
-  "sphinxcontrib-mermaid<2",
+  "sphinxcontrib-mermaid<3",
   "sphinxext-opengraph<1",
 ]
 optional-dependencies.test = [
