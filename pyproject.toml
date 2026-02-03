@@ -72,7 +72,7 @@ dynamic = [
 ]
 dependencies = [
   "attrs",
-  "cachetools<7",
+  "cachetools<8",
   "click<9",
   "cratedb-about<0.1.0",
   "fastmcp>=2.13,<2.15",
