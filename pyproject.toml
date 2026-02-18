@@ -75,7 +75,7 @@ dependencies = [
   "cachetools<8",
   "click<9",
   "cratedb-about<0.1.0",
-  "fastmcp>=2.13,<2.15",
+  "fastmcp>=2.13,<3.1",
   "hishel<0.2",
   "pueblo==0.0.15",
   "sqlparse<0.6",
