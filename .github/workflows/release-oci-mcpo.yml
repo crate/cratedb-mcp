@@ -48,7 +48,7 @@ jobs:
           python -m build --wheel
 
       - name: Upload wheel package
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ runner.os }}-wheel-${{ github.sha }}
           path: dist/*.whl
