@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## v0.1.0 - 2026-03-03
+- Dependencies: Updated to FastMCP 3.1
+
 ## v0.0.9 - 2025-11-03
 - Security: Tamed logging of HTTPX to not reveal credentials. Thanks, @WalBeh.
 - Security: Updated to `fastmcp>=2.13`, earlier versions had vulnerabilities
