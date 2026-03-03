@@ -102,28 +102,21 @@ optional-dependencies.test = [
   "pytest-cov<8",
   "pytest-mock<4",
 ]
-
 urls.Changelog = "https://github.com/crate/cratedb-mcp/blob/main/CHANGES.md"
 urls.Documentation = "https://cratedb-mcp.readthedocs.io/"
 urls.Issues = "https://github.com/crate/cratedb-mcp/issues"
 urls.Repository = "https://github.com/crate/cratedb-mcp"
-
 scripts.cratedb-mcp = "cratedb_mcp.cli:cli"
 
-[tool.setuptools.package-data]
-cratedb_mcp = [
+[tool.setuptools]
+package-data.cratedb_mcp = [
   "**/*.md",
 ]
-
-[tool.setuptools.packages.find]
-namespaces = false
+packages.find.namespaces = false
 
 [tool.ruff]
 line-length = 100
-
-extend-exclude = [
-]
-
+extend-exclude = []
 lint.select = [
   # Builtins
   "A",
@@ -151,45 +144,39 @@ lint.select = [
   # flake8-2020
   "YTT",
 ]
-
 lint.per-file-ignores."docs/conf.py" = [ "A001", "ERA001" ]
 lint.per-file-ignores."tests/*" = [
   "S101", # Allow use of `assert`.
 ]
 
-[tool.pytest.ini_options]
-addopts = """
+[tool.pytest]
+ini_options.addopts = """
   -rfEXs -p pytester --strict-markers --verbosity=3
   --cov --cov-report=term-missing --cov-report=xml
   """
-minversion = "2.0"
-log_level = "DEBUG"
-log_cli_level = "DEBUG"
-log_format = "%(asctime)-15s [%(name)-36s] %(levelname)-8s: %(message)s"
-pythonpath = [
+ini_options.minversion = "2.0"
+ini_options.log_level = "DEBUG"
+ini_options.log_cli_level = "DEBUG"
+ini_options.log_format = "%(asctime)-15s [%(name)-36s] %(levelname)-8s: %(message)s"
+ini_options.pythonpath = [
   "src",
 ]
-xfail_strict = true
-markers = [
-]
+ini_options.xfail_strict = true
+ini_options.markers = []
 
-[tool.coverage.paths]
-source = [
-  "src/",
-]
-
-[tool.coverage.run]
-branch = false
-omit = [
+[tool.coverage]
+run.branch = false
+run.omit = [
   "tests/*",
 ]
-
-[tool.coverage.report]
-show_missing = true
-exclude_lines = [
+paths.source = [
+  "src/",
+]
+report.exclude_lines = [
   "# pragma: no cover",
   "raise NotImplemented",
 ]
+report.show_missing = true
 
 [tool.mypy]
 packages = [
@@ -201,50 +188,43 @@ implicit_optional = true
 install_types = true
 non_interactive = true
 
-[tool.versioningit.vcs]
-method = "git-archive"
-default-tag = "v0.0.0"
-describe-subst = "$Format:%(describe:tags,match=v*)$"
-
+[tool.poe]
 # ===================
 # Tasks configuration
 # ===================
-
-[tool.poe.tasks]
-
-check = [
+tasks.check = [
   "lint",
   "test",
 ]
-
-docs-autobuild = [
+tasks.docs-autobuild = [
   { cmd = "sphinx-autobuild --open-browser --watch cratedb_mcp docs docs/_build" },
 ]
-docs-html = [
+tasks.docs-html = [
   { cmd = "sphinx-build -W --keep-going docs docs/_build" },
 ]
-docs-linkcheck = [
+tasks.docs-linkcheck = [
   { cmd = "sphinx-build -W --keep-going -b linkcheck doc docs/_build" },
 ]
-
-format = [
+tasks.format = [
   { cmd = "ruff format ." },
   # Configure Ruff not to auto-fix (remove!):
   # unused imports (F401), unused variables (F841), `print` statements (T201), and commented-out code (ERA001).
   { cmd = "ruff check --fix --ignore=ERA --ignore=F401 --ignore=F841 --ignore=T20 --ignore=ERA001 ." },
   { cmd = "pyproject-fmt --keep-full-version pyproject.toml" },
 ]
-
-lint = [
+tasks.lint = [
   { cmd = "ruff format --check ." },
   { cmd = "ruff check ." },
   { cmd = "validate-pyproject pyproject.toml" },
   { cmd = "mypy" },
 ]
-
-release = [
+tasks.release = [
   { cmd = "python -m build" },
   { cmd = "twine upload --skip-existing dist/*" },
 ]
+tasks.test = { cmd = "pytest" }
 
-test = { cmd = "pytest" }
+[tool.versioningit]
+vcs.method = "git-archive"
+vcs.default-tag = "v0.0.0"
+vcs.describe-subst = "$Format:%(describe:tags,match=v*)$"
