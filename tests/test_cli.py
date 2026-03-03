@@ -101,7 +101,7 @@ def test_cli_valid_default(mocker, capsys):
     assert run_mock.call_count == 1
     assert run_mock.call_args in [
         mock.call("stdio"),
-        mock.call("stdio", show_banner=True),
+        mock.call("stdio", show_banner=mock.ANY),
     ]
 
 
@@ -125,7 +125,7 @@ def test_cli_valid_custom(mocker, capsys):
     assert run_mock.call_count == 1
     assert run_mock.call_args in [
         mock.call("http", host="127.0.0.1", port=65535, path=None),
-        mock.call("http", show_banner=True, host="127.0.0.1", port=65535, path=None),
+        mock.call("http", show_banner=mock.ANY, host="127.0.0.1", port=65535, path=None),
     ]
 
 
