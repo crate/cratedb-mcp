@@ -127,7 +127,7 @@ jobs:
           password: ${{ github.token }}
 
       - name: Build and push image (mcpo)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ env.RECIPE_PATH }}/Dockerfile
