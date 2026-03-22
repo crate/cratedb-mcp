@@ -2,6 +2,7 @@
 
 ## Unreleased
 - OCI: Updated to Python 3.14 and Debian 13 "trixie"
+- Dependencies: Stopped version-pinning `pueblo` package
 
 ## v0.1.0 - 2026-03-03
 - Dependencies: Updated to FastMCP 3.1
