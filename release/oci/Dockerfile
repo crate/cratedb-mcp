@@ -1,5 +1,5 @@
 # Stage 1: Build wheel package
-FROM python:3.13-slim-bookworm AS build
+FROM python:3.14-slim-trixie AS build
 
 ARG BUILD=/usr/src
 
@@ -19,7 +19,7 @@ COPY . ${BUILD}
 RUN python -m build --wheel ${BUILD}
 
 
-FROM python:3.13-slim-bookworm AS standard
+FROM python:3.14-slim-trixie AS standard
 
 # Configure operating system.
 ENV DEBIAN_FRONTEND=noninteractive
