@@ -94,7 +94,7 @@ jobs:
           echo "Labels:    ${{ steps.meta.outputs.labels }}"
 
       - name: Install QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         with:
           image: tonistiigi/binfmt:qemu-v7.0.0-28
 
