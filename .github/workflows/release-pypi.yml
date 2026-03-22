@@ -20,16 +20,8 @@ on:
 
 jobs:
   build-and-publish:
-    name: "Build and publish to PyPI"
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ["ubuntu-latest"]
-        python-version: ["3.13"]
-    env:
-      OS_TYPE: ${{ matrix.os }}
-      PYTHON_VERSION: ${{ matrix.python-version }}
+    name: 'Build and publish to PyPI'
+    runs-on: 'ubuntu-latest'
 
     # Trusted publishing.
     # Specifying a GitHub environment is optional, but strongly encouraged.
@@ -50,7 +42,7 @@ jobs:
         with:
           cache-dependency-glob: |
             pyproject.toml
-          cache-suffix: ${{ matrix.python-version }}
+          cache-suffix: '3.14'
           enable-cache: true
           version: "latest"
 
