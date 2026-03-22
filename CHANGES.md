@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+
+## v0.1.1 - 2026-03-22
 - OCI: Updated to Python 3.14 and Debian 13 "trixie"
 - Dependencies: Stopped version-pinning `pueblo` package
 
