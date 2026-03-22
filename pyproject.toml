@@ -149,6 +149,16 @@ lint.per-file-ignores."tests/*" = [
   "S101", # Allow use of `assert`.
 ]
 
+[tool.mypy]
+packages = [
+  "cratedb_mcp",
+]
+check_untyped_defs = true
+ignore_missing_imports = true
+implicit_optional = true
+install_types = true
+non_interactive = true
+
 [tool.pytest]
 ini_options.addopts = """
   -rfEXs -p pytester --strict-markers --verbosity=3
@@ -177,16 +187,6 @@ report.exclude_lines = [
   "raise NotImplemented",
 ]
 report.show_missing = true
-
-[tool.mypy]
-packages = [
-  "cratedb_mcp",
-]
-check_untyped_defs = true
-ignore_missing_imports = true
-implicit_optional = true
-install_types = true
-non_interactive = true
 
 [tool.poe]
 # ===================
@@ -228,9 +228,7 @@ tasks.test = { cmd = "pytest" }
 vcs.method = "git-archive"
 vcs.default-tag = "v0.0.0"
 vcs.describe-subst = "$Format:%(describe:tags,match=v*)$"
-
-[tool.versioningit.format]
 # Emit PyPI-compatible "dirty" version strings. `+` characters are unsuitable, because
 # they would designate local version identifiers, which do not upload to PyPI.
 # https://packaging.python.org/en/latest/specifications/version-specifiers/#local-version-identifiers
-distance = "{base_version}.dev{distance}"
+format.distance = "{base_version}.dev{distance}"
