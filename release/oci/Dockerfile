@@ -43,9 +43,11 @@ ARG TARGETARCH
 ARG TARGETVARIANT
 
 # Install curl, it is needed for health checks.
+# apt-get upgrade ensures security patches from Debian are applied at build time.
 RUN \
     true \
     && apt-get update \
+    && apt-get upgrade --no-install-recommends --yes \
     && apt-get install --no-install-recommends --no-install-suggests --yes curl \
     && rm -rf /var/lib/apt/lists/*
 
