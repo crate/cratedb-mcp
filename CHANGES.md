@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.1.2 - 2026-05-12
+- Security: Updated to `fastmcp>=3.2`, fixing CVE-2026-32871 (CRITICAL, SSRF via path traversal)
+  and CVE-2026-27124 (HIGH, OAuth consent bypass)
+- Security: OCI image now runs `apt-get upgrade` at build time to apply available Debian patches,
+  fixing CVE-2026-31789 (CRITICAL) in OpenSSL
+
 ## v0.1.1 - 2026-03-22
 - OCI: Updated to Python 3.14 and Debian 13 "trixie"
 - Dependencies: Stopped version-pinning `pueblo` package
