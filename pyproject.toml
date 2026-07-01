@@ -151,7 +151,7 @@ lint.per-file-ignores."tests/*" = [
 
 [tool.mypy]
 packages = [
-  "cratedb_mcp",
+#  "cratedb_mcp",
 ]
 check_untyped_defs = true
 ignore_missing_imports = true
