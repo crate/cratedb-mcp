@@ -151,13 +151,17 @@ lint.per-file-ignores."tests/*" = [
 
 [tool.mypy]
 packages = [
-#  "cratedb_mcp",
+  "cratedb_mcp",
 ]
 check_untyped_defs = true
 ignore_missing_imports = true
 implicit_optional = true
 install_types = true
 non_interactive = true
+# TODO: remove when MyPy fixed 
+# https://github.com/python/mypy/issues/17166 and https://github.com/python/mypy/issues/17825
+# are closed but the issue still persists
+disable_error_code = ["call-arg"]
 
 [tool.pytest]
 ini_options.addopts = """
