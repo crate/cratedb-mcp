@@ -53,6 +53,10 @@ jobs:
       - name: Acquire sources
         uses: actions/checkout@v6
 
+      - name: Set up httpbin
+        uses: lfreleng/setup-go-httpbin@v1
+        id: httpbin
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
