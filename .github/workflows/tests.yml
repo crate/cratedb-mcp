@@ -56,6 +56,8 @@ jobs:
       - name: Set up httpbin
         uses: lfreleng-actions/setup-go-httpbin@v0.1.5
         id: httpbin
+        with:
+          skip-certificate: 'true'
 
       - name: Set up Python
         uses: actions/setup-python@v6
