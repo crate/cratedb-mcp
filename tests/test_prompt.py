@@ -1,4 +1,5 @@
 import io
+import os
 
 import pytest
 
@@ -63,7 +64,8 @@ def test_fragment_remote_success():
     """
     Verify fragments are loaded from HTTP URLs successfully.
     """
-    instructions = InstructionsPrompt(instructions="https://httpbin.org/uuid")
+    httpbin_url = os.environ.get("GO_HTTPBIN_URL", "https://httpbin.org")
+    instructions = InstructionsPrompt(instructions=httpbin_url + "/uuid")
     assert '"uuid"' in instructions.render()
 
 

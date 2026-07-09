@@ -14,6 +14,20 @@ uv pip install --upgrade --editable='.[develop,test]'
 
 ## Software tests
 
+Fist, you will need to prepare the httpbin service:
+
+```shell
+docker pull kennethreitz/httpbin
+docker run -p 8008:80 kennethreitz/httpbin
+export GO_HTTPBIN_URL=http://localhost:8008
+```
+
+Moreover, you will need to start a CrateDB server:
+
+```shell
+docker run --rm   --publish=4200:4200 --publish=5432:5432 --env=CRATE_HEAP_SIZE=2g   crate:latest -Cdiscovery.type=single-node
+```
+
 The project uses the [poethepoet] task runner, which provides convenience entry
 points for invoking linters and software tests. The top-level one-shot command
 will invoke both and is also used on CI/GHA.
