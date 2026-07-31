@@ -1,5 +1,7 @@
 # CrateDB MCP Server
 
+[![MCP Toplist](https://mcptoplist.com/badge/glama%2Fcrate%2Fcratedb-mcp.svg)](https://mcptoplist.com/server/glama%2Fcrate%2Fcratedb-mcp)
+
 [![Status][badge-status]][project-pypi]
 [![CI][badge-ci]][project-ci]
 [![Coverage][badge-coverage]][project-coverage]
