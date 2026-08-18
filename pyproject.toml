@@ -78,7 +78,7 @@ dependencies = [
   "fastmcp>=3.2,<3.5",
   "hishel<1.4",
   "pueblo>=0.0.15,<0.1",
-  "sqlparse<0.6",
+  "sqlparse<0.7",
 ]
 optional-dependencies.develop = [
   "mypy<2.4",
