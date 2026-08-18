@@ -1,5 +1,5 @@
 # Stage 1: Build wheel package
-FROM python:3.13-slim-bookworm AS build
+FROM python:3.14-slim-trixie AS build
 
 ARG BUILD=/usr/src
 
@@ -8,26 +8,47 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TERM=linux
 ENV PIP_ROOT_USER_ACTION=ignore
 
-# Install prerequisites.
-RUN set -e \
+# Enable concurrent multi-arch builds.
+# https://github.com/docker/buildx/issues/549#issuecomment-1788297892
+ARG TARGETPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETVARIANT
+
+# Install Git, it is needed for `versioningit`.
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN --mount=type=cache,id=apt-cache-${TARGETARCH}${TARGETVARIANT},target=/var/cache/apt \
+    true \
     && apt-get update \
-    && apt-get --yes install --no-install-recommends --no-install-suggests git \
+    && apt-get install --no-install-recommends --no-install-suggests --yes git \
     && rm -rf /var/lib/apt/lists/*
+
 RUN pip install build
 
 COPY . ${BUILD}
 RUN python -m build --wheel ${BUILD}
 
 
-FROM python:3.13-slim-bookworm AS standard
+FROM python:3.14-slim-trixie AS standard
 
 # Configure operating system.
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TERM=linux
 
-RUN set -e \
+# Enable concurrent multi-arch builds.
+# https://github.com/docker/buildx/issues/549#issuecomment-1788297892
+ARG TARGETPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETVARIANT
+
+# Install curl, it is needed for health checks.
+# apt-get upgrade ensures security patches from Debian are applied at build time.
+RUN \
+    true \
     && apt-get update \
-    && apt-get --yes install --no-install-recommends --no-install-suggests curl \
+    && apt-get upgrade --no-install-recommends --yes \
+    && apt-get install --no-install-recommends --no-install-suggests --yes curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install and configure `uv`.
@@ -57,8 +78,8 @@ COPY --from=build ${BUILD}/dist/*.whl /tmp
 
 # Install package.
 RUN \
-    --mount=type=cache,id=pip,target=/root/.cache/pip \
-    --mount=type=cache,id=uv,target=/root/.cache/uv \
+    --mount=type=cache,id=pip-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/pip \
+    --mount=type=cache,id=uv-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/uv \
     true \
     && uv pip install --upgrade /tmp/*.whl
 

@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## v0.1.2 - 2026-05-13
+- Security: Updated to `fastmcp>=3.2`, earlier versions had vulnerabilities
+- Security: OCI: Apply available Debian security patches at build time
+
+## v0.1.1 - 2026-03-22
+- OCI: Updated to Python 3.14 and Debian 13 "trixie"
+- Dependencies: Stopped version-pinning `pueblo` package
+
+## v0.1.0 - 2026-03-03
+- Dependencies: Updated to FastMCP 3.1
+
 ## v0.0.9 - 2025-11-03
 - Security: Tamed logging of HTTPX to not reveal credentials. Thanks, @WalBeh.
 - Security: Updated to `fastmcp>=2.13`, earlier versions had vulnerabilities

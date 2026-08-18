@@ -26,14 +26,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest']
-        python-version: [
-          '3.10',
-          '3.14'
-        ]
-        cratedb-version: [
-          'nightly',
-        ]
+        os:
+          - 'ubuntu-latest'
+        python-version:
+          - '3.10'
+          - '3.14'
+        cratedb-version:
+          - 'nightly'
 
     env:
       OS: ${{ matrix.os }}
@@ -52,10 +51,16 @@ jobs:
     steps:
 
       - name: Acquire sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
+      - name: Set up httpbin
+        uses: lfreleng-actions/setup-go-httpbin@v0.1.5
+        id: httpbin
+        with:
+          skip-certificate: 'true'
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -81,7 +86,7 @@ jobs:
 
       # https://github.com/codecov/codecov-action
       - name: Upload coverage results to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
