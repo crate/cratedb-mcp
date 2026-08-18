@@ -81,10 +81,10 @@ dependencies = [
   "sqlparse<0.6",
 ]
 optional-dependencies.develop = [
-  "mypy<2.2",
+  "mypy<2.4",
   "poethepoet<1",
   "pyproject-fmt<3",
-  "ruff<0.16",
+  "ruff<0.17",
   "validate-pyproject<1",
 ]
 optional-dependencies.docs = [
@@ -158,6 +158,10 @@ ignore_missing_imports = true
 implicit_optional = true
 install_types = true
 non_interactive = true
+# TODO: remove when MyPy fixed 
+# https://github.com/python/mypy/issues/17166 and https://github.com/python/mypy/issues/17825
+# are closed but the issue still persists
+disable_error_code = ["call-arg"]
 
 [tool.pytest]
 ini_options.addopts = """
