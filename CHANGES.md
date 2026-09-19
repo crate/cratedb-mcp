@@ -2,6 +2,10 @@
 
 ## Unreleased
 - Dependencies: Pinned `hishel<0.2`, because v1 is not API-compatible
+- Security: Hardened error reporting, result size limits, read-only statement filtering, HTTP transport authentication, and credentials handling
+- Dependencies: Require `fastmcp>=3.4`, removed `cachetools`
+- Breaking: Removed the deprecated `sse` transport, please use `http` instead
+- Breaking: HTTP transports listening on non-loopback addresses require `CRATEDB_MCP_AUTH_TOKEN`
 
 ## v0.1.2 - 2026-05-13
 - Security: Updated to `fastmcp>=3.2`, earlier versions had vulnerabilities

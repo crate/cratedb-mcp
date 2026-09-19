@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from cratedb_mcp.util.sql import sql_is_permitted
+from cratedb_mcp.util.sql import sql_denial_message, sql_is_permitted
 
 
 def test_sql_select_permitted():
@@ -123,3 +123,96 @@ def test_sql_case_manipulation_rejected():
 def test_sql_unicode_evasion_rejected():
     """Statements with unicode characters to evade filters are rejected"""
     assert sql_is_permitted("SELECT * FROM users; \uff1b DROP TABLE users") is False
+
+
+def test_sql_explain_permitted():
+    """`EXPLAIN` statements are permitted when they explain read-only statements"""
+    assert sql_is_permitted("EXPLAIN SELECT 42") is True
+    assert sql_is_permitted("EXPLAIN SELECT * FROM foobar WHERE name = 'delete'") is True
+    assert sql_is_permitted("EXPLAIN ANALYZE SELECT 42") is True
+
+
+def test_sql_explain_rejected():
+    """`EXPLAIN` statements are rejected when they explain write statements"""
+    assert sql_is_permitted("EXPLAIN INSERT INTO foobar VALUES (42)") is False
+    assert sql_is_permitted("EXPLAIN UPDATE foobar SET name = 'value'") is False
+    assert sql_is_permitted("EXPLAIN DELETE FROM foobar") is False
+    assert sql_is_permitted("EXPLAIN ANALYZE DELETE FROM foobar") is False
+
+
+def test_sql_show_permitted():
+    """`SHOW` statements are read-only, and thus permitted"""
+    assert sql_is_permitted("SHOW TABLES") is True
+    assert sql_is_permitted("SHOW CREATE TABLE foobar") is True
+    assert sql_is_permitted("SHOW COLUMNS FROM foobar") is True
+
+
+def test_sql_show_evasion_rejected():
+    """`SHOW` statements do not permit chaining write statements"""
+    assert sql_is_permitted("SHOW TABLES; DROP TABLE foobar") is False
+
+
+def test_sql_with_permitted():
+    """Common table expressions are permitted when they are read-only"""
+    assert sql_is_permitted("WITH x AS (SELECT 42) SELECT * FROM x") is True
+
+
+def test_sql_with_rejected():
+    """Common table expressions are rejected when they smuggle in writes"""
+    assert sql_is_permitted("WITH x AS (DELETE FROM foobar RETURNING id) SELECT * FROM x") is False
+    assert sql_is_permitted("WITH x AS (UPDATE foobar SET name = 'v') SELECT * FROM x") is False
+    assert sql_is_permitted("WITH x AS (INSERT INTO foobar VALUES (42)) SELECT * FROM x") is False
+
+
+def test_sql_parenthesized_permitted():
+    """Parenthesized queries are permitted"""
+    assert sql_is_permitted("(SELECT 42)") is True
+
+
+def test_sql_excessive_nesting_rejected():
+    """Statements which can not be analyzed are denied, without raising an exception"""
+    assert sql_is_permitted("SELECT " + "(" * 3000 + "1" + ")" * 3000) is False
+
+
+def test_sql_explain_chain_bounded():
+    """A long chain of `EXPLAIN` keywords is classified in bounded time, without recursion"""
+    assert sql_is_permitted("EXPLAIN " * 3000 + "SELECT 1") is True
+    assert sql_is_permitted("EXPLAIN " * 3000 + "DELETE FROM foobar") is False
+
+
+def test_sql_explain_options_permitted():
+    """`EXPLAIN` accepts options, the explained statement decides about the outcome"""
+    assert sql_is_permitted("EXPLAIN VERBOSE SELECT 42") is True
+    assert sql_is_permitted("EXPLAIN (COSTS false) SELECT 42") is True
+    assert sql_is_permitted("EXPLAIN (ANALYZE true, COSTS false) SELECT 42") is True
+    assert sql_is_permitted("EXPLAIN (ANALYZE) DELETE FROM foobar") is False
+    assert sql_is_permitted("EXPLAIN VERBOSE DROP TABLE foobar") is False
+    assert sql_is_permitted("-- comment\nEXPLAIN SELECT 42") is False
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "OPTIMIZE TABLE foobar WITH (max_num_segments = 1)",
+        "REFRESH TABLE foobar",
+        "KILL ALL",
+        "foo WITH bar AS (SELECT 1) SELECT 1",
+        "foo SHOW TABLES",
+        "foo SELECT 1",
+        "(DELETE FROM foobar)",
+    ],
+)
+def test_sql_classified_by_leading_token(expression):
+    """Statements unknown to sqlparse are classified by their leading token, not a later keyword"""
+    assert sql_is_permitted(expression) is False
+
+
+def test_sql_parenthesized_query_permitted():
+    assert sql_is_permitted("(SELECT 1)") is True
+    assert sql_is_permitted("/* comment */ SHOW TABLES") is True
+
+
+def test_sql_denial_message_not_analyzable():
+    """Statements which can not be analyzed are explained using the generic message"""
+    message = sql_denial_message("SELECT " + "(" * 3000 + "1" + ")" * 3000)
+    assert message == "Only read-only statements (SELECT, WITH, EXPLAIN, SHOW) are permitted"

@@ -1,9 +1,12 @@
 from typing import Optional
 
 from fastmcp import FastMCP
+from fastmcp.server.auth import TokenVerifier
 from fastmcp.tools import Tool
+from mcp.types import ToolAnnotations
 
 from cratedb_mcp.prompt import InstructionsPrompt
+from cratedb_mcp.settings import Settings
 
 from . import __appname__, __version__
 from .tool import (
@@ -14,6 +17,16 @@ from .tool import (
     get_table_metadata,
     query_sql,
 )
+
+# Tools running read-only statements towards the database, so clients may auto-approve them.
+QUERY_TOOL = ToolAnnotations(readOnlyHint=True, idempotentHint=True, openWorldHint=False)
+# When all statements are permitted, `query_sql` can modify and destroy data,
+# so it must not be announced as read-only, otherwise clients may auto-approve writes.
+QUERY_TOOL_WRITABLE = ToolAnnotations(
+    readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False
+)
+# Acquiring documentation resources touches the network, hence `openWorldHint`.
+DOCS_TOOL = ToolAnnotations(readOnlyHint=True, idempotentHint=True, openWorldHint=True)
 
 
 class CrateDbMcp:
@@ -26,12 +39,14 @@ class CrateDbMcp:
         mcp: Optional[FastMCP] = None,
         instructions: Optional[str] = None,
         conventions: Optional[str] = None,
+        auth: Optional[TokenVerifier] = None,
     ) -> None:
         prompt = InstructionsPrompt(instructions=instructions, conventions=conventions)
         self.mcp = mcp or FastMCP(
             name=__appname__,
             version=__version__,
             instructions=prompt.render(),
+            auth=auth,
         )
         self.add_tools()
 
@@ -45,6 +60,9 @@ class CrateDbMcp:
                 fn=query_sql,
                 description=query_sql.__doc__,
                 tags={"text-to-sql"},
+                annotations=(
+                    QUERY_TOOL_WRITABLE if Settings.permit_all_statements() else QUERY_TOOL
+                ),
             )
         )
         self.mcp.add_tool(
@@ -52,6 +70,7 @@ class CrateDbMcp:
                 fn=get_table_columns,
                 description=get_table_columns.__doc__,
                 tags={"text-to-sql"},
+                annotations=QUERY_TOOL,
             )
         )
         self.mcp.add_tool(
@@ -59,6 +78,7 @@ class CrateDbMcp:
                 fn=get_table_metadata,
                 description=get_table_metadata.__doc__,
                 tags={"text-to-sql"},
+                annotations=QUERY_TOOL,
             )
         )
 
@@ -70,6 +90,7 @@ class CrateDbMcp:
                 fn=get_cratedb_documentation_index,
                 description=get_cratedb_documentation_index.__doc__,
                 tags={"documentation"},
+                annotations=DOCS_TOOL,
             )
         )
         self.mcp.add_tool(
@@ -77,6 +98,7 @@ class CrateDbMcp:
                 fn=fetch_cratedb_docs,
                 description=fetch_cratedb_docs.__doc__,
                 tags={"documentation"},
+                annotations=DOCS_TOOL,
             )
         )
 
@@ -88,6 +110,7 @@ class CrateDbMcp:
                 fn=get_cluster_health,
                 description=get_cluster_health.__doc__,
                 tags={"health", "monitoring", "status"},
+                annotations=QUERY_TOOL,
             )
         )
 

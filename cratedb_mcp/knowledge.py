@@ -1,8 +1,13 @@
 # ruff: noqa: E501
+import sqlite3
+import threading
+import time
 import typing as t
+import warnings
+from pathlib import Path
 
-import cachetools
 import hishel
+import httpx
 from cratedb_about import CrateDbKnowledgeOutline
 
 from cratedb_mcp.settings import Settings
@@ -133,39 +138,108 @@ class DocumentationIndex:
     # List of permitted URL prefixes to acquire resources from on demand.
     permitted_urls: t.List[str] = [
         "https://cratedb.com/",
-        "https://github.com/crate",
-        "https://raw.githubusercontent.com/crate",
+        "https://github.com/crate/",
+        "https://raw.githubusercontent.com/crate/",
     ]
 
-    def __init__(self):
-        # Configure Hishel, an httpx client with caching.
-        # Define one hour of caching time.
-        controller = hishel.Controller(allow_stale=True)
-        storage = hishel.SQLiteStorage(ttl=self.settings.docs_cache_ttl())
-        self.client = hishel.CacheClient(controller=controller, storage=storage)
-
+    def __init__(self) -> None:
         # Load documentation outline.
         self.outline = CrateDbKnowledgeOutline.load()
 
-    @cachetools.cached(cache=cachetools.TTLCache(maxsize=1, ttl=settings.docs_cache_ttl() - 5))
+        # Links of the curated index are permitted verbatim. The index advertises
+        # a few resources outside the permitted URL prefixes, e.g. documentation
+        # of PostgreSQL drivers, which could not be fetched otherwise. Matching
+        # them exactly keeps the allowlist tight, no further prefixes are opened.
+        self._indexed_links: t.FrozenSet[str] = frozenset(
+            item.link for item in self.outline.find_items()
+        )
+
+        # Defer creating the HTTP client, it may touch the file system.
+        # Tools run in a thread pool, so creating it is guarded by a lock.
+        self._client: t.Optional[httpx.Client] = None
+        self._client_lock = threading.Lock()
+
+        # Outline items, cached according to the lifetime configured at access time.
+        self._items: t.Optional[list] = None
+        self._items_expiry: float = 0.0
+
+    @property
+    def client(self) -> httpx.Client:
+        """
+        Return the HTTP client to acquire documentation resources with, using a cache.
+        """
+        with self._client_lock:
+            if self._client is None:
+                self._client = self._make_client()
+            return self._client
+
+    def disable_cache(self, reason: Exception) -> None:
+        """
+        Carry on with an uncached HTTP client, after the cache failed while serving a request.
+        """
+        warnings.warn(
+            f"Documentation cache failed: {reason}. Falling back to an uncached HTTP client.",
+            category=UserWarning,
+            stacklevel=2,
+        )
+        with self._client_lock:
+            if self._client is not None:
+                self._client.close()
+            self._client = httpx.Client()
+
+    def _make_client(self) -> httpx.Client:
+        """
+        Build the HTTP client to acquire documentation resources with.
+
+        Falls back to an uncached client when caching is disabled, or when the
+        cache is unavailable, e.g. on a read-only file system.
+        """
+        ttl = self.settings.docs_cache_ttl()
+        if ttl <= 0:
+            return httpx.Client()
+        cache_path = Path(self.settings.docs_cache_dir()) / "documentation.sqlite"
+        try:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            # Tools run in a thread pool, so the connection must be shareable.
+            connection = sqlite3.connect(cache_path, check_same_thread=False)
+            storage = hishel.SQLiteStorage(connection=connection, ttl=ttl)
+            controller = hishel.Controller(allow_stale=True)
+            return hishel.CacheClient(controller=controller, storage=storage)
+        except Exception as e:
+            # The cache is optional, so any failure to set it up must not break the tool.
+            warnings.warn(
+                f"Cannot use documentation cache at `{cache_path}`: {e}. "
+                f"Falling back to an uncached HTTP client.",
+                category=UserWarning,
+                stacklevel=2,
+            )
+            return httpx.Client()
+
     def items(self):
         """
-        Return outline items, cached for a little bit less than one hour.
+        Return outline items, cached for a little bit less than the configured cache lifetime.
         """
-        return self.outline.find_items().to_list()
+        now = time.monotonic()
+        if self._items is None or now >= self._items_expiry:
+            self._items = self.outline.find_items().to_list()
+            self._items_expiry = now + max(self.settings.docs_cache_ttl() - 5, 0)
+        return self._items
 
     def url_permitted(self, url: str) -> bool:
         """
-        Validate if a documentation URL is from a permitted domain.
+        Validate if a documentation URL is permitted to be fetched.
 
-        Only URLs from CrateDB domains and specific GitHub repositories are allowed.
+        Only links of the curated documentation index, and URLs from CrateDB
+        domains and specific GitHub repositories are allowed.
 
         Args:
             url: The URL to validate
 
         Returns:
-            bool: True if the URL is from a permitted domain, False otherwise
+            bool: True if the URL is permitted, False otherwise
         """
+        if url in self._indexed_links:
+            return True
         for permitted_url in self.permitted_urls:
             if url.startswith(permitted_url):
                 return True
