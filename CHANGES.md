@@ -1,6 +1,7 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- Dependencies: Pinned `hishel<0.2`, because v1 is not API-compatible
 
 ## v0.1.2 - 2026-05-13
 - Security: Updated to `fastmcp>=3.2`, earlier versions had vulnerabilities
