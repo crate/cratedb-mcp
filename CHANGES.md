@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of
+  the CrateDB documentation
 
 ## v0.1.2 - 2026-05-13
 - Security: Updated to `fastmcp>=3.2`, earlier versions had vulnerabilities

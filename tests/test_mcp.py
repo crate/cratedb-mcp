@@ -27,9 +27,9 @@ def test_fetch_docs_permitted_github():
     assert "initcap" in response
 
 
-def test_fetch_docs_permitted_cratedb_com():
+def test_fetch_docs_permitted_docs_cratedb_com():
     response = fetch_cratedb_docs(
-        "https://cratedb.com/docs/crate/reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt"
+        "https://docs.cratedb.com/projects/crate-reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt"
     )
     assert "initcap" in response
 
