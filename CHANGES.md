@@ -3,6 +3,8 @@
 ## Unreleased
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of
   the CrateDB documentation
+- MCP: `fetch_cratedb_docs` follows redirects to permitted hosts, and raises an error
+  when a page answers with an error status
 
 ## v0.1.2 - 2026-05-13
 - Security: Updated to `fastmcp>=3.2`, earlier versions had vulnerabilities

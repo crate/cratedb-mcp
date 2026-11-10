@@ -97,7 +97,13 @@ def fetch_cratedb_docs(link: str) -> str:
     """
     if not documentation_index.url_permitted(link):
         raise ValueError(f"Link is not permitted: {link}")
-    return documentation_index.client.get(link, timeout=Settings.http_timeout()).text
+    response = documentation_index.client.get(
+        link, timeout=Settings.http_timeout(), follow_redirects=True
+    )
+    if not documentation_index.url_permitted(str(response.url)):
+        raise ValueError(f"Link redirects to a location that is not permitted: {response.url}")
+    response.raise_for_status()
+    return response.text
 
 
 # ------------------------------------------
