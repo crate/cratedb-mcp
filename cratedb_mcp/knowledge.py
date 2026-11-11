@@ -2,8 +2,8 @@
 import typing as t
 
 import cachetools
-import hishel
 from cratedb_about import CrateDbKnowledgeOutline
+from cratedb_about.util import get_cache_client
 
 from cratedb_mcp.settings import Settings
 
@@ -139,11 +139,7 @@ class DocumentationIndex:
     ]
 
     def __init__(self):
-        # Configure Hishel, an httpx client with caching.
-        # Define one hour of caching time.
-        controller = hishel.Controller(allow_stale=True)
-        storage = hishel.SQLiteStorage(ttl=self.settings.docs_cache_ttl())
-        self.client = hishel.CacheClient(controller=controller, storage=storage)
+        self.client = get_cache_client(ttl=self.settings.docs_cache_ttl())
 
         # Load documentation outline.
         self.outline = CrateDbKnowledgeOutline.load()

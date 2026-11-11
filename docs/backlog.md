@@ -42,12 +42,12 @@
     - https://raw.githubusercontent.com/controlplaneio-fluxcd/distribution/refs/heads/main/docs/mcp/instructions.md
 - Docs: Load documentation index from a custom outline file
 - Naming things: Better names for API entrypoints?
-- Use `platformdirs.user_cache_dir` for Hishel, see `pueblo.cache`
 - Refactoring
   - Extract `SqlFilter` or `SqlGateway` functionality to the `cratedb-sqlparse` package
   - Extract other utilities to the `pueblo` package
 
 ## Done
+- Use `platformdirs.user_cache_dir` for Hishel, see `pueblo.cache`
 - Make it work
 - SQL: Stronger read-only mode
 - Docs: HTTP caching
