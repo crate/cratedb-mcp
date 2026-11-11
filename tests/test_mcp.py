@@ -1,6 +1,8 @@
+import httpx
 import pytest
 
 from cratedb_mcp.tool import (
+    documentation_index,
     fetch_cratedb_docs,
     get_cluster_health,
     get_cratedb_documentation_index,
@@ -27,11 +29,26 @@ def test_fetch_docs_permitted_github():
     assert "initcap" in response
 
 
-def test_fetch_docs_permitted_cratedb_com():
+def test_fetch_docs_permitted_docs_cratedb_com():
     response = fetch_cratedb_docs(
-        "https://cratedb.com/docs/crate/reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt"
+        "https://docs.cratedb.com/projects/crate-reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt"
     )
     assert "initcap" in response
+
+
+def test_fetch_docs_missing_page():
+    with pytest.raises(httpx.HTTPStatusError):
+        fetch_cratedb_docs("https://docs.cratedb.com/projects/guide/_sources/does-not-exist.md.txt")
+
+
+def test_fetch_docs_redirect_forbidden(mocker):
+    response = httpx.Response(
+        200, text="elsewhere", request=httpx.Request("GET", "https://example.com/")
+    )
+    mocker.patch.object(documentation_index.client, "get", return_value=response)
+    with pytest.raises(ValueError) as ex:
+        fetch_cratedb_docs("https://docs.cratedb.com/projects/guide/")
+    assert ex.match("Link redirects to a location that is not permitted: https://example.com/")
 
 
 def test_query_sql_permitted():

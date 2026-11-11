@@ -119,11 +119,11 @@ class DocumentationIndex:
     Examples:
     ```yaml
     - title: "CrateDB SQL functions"
-      link: https://cratedb.com/docs/crate/reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt
+      link: https://docs.cratedb.com/projects/crate-reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt
       description: The reference documentation about all SQL functions CrateDB provides.
 
     - title: "Guide: CrateDB query optimization"
-      link: https://cratedb.com/docs/guide/_sources/performance/optimization.rst.txt
+      link: https://docs.cratedb.com/projects/guide/_sources/performance/optimization.md.txt
       description: Essential principles for optimizing queries in CrateDB while avoiding the most common pitfalls.
     ```
     """
@@ -133,6 +133,7 @@ class DocumentationIndex:
     # List of permitted URL prefixes to acquire resources from on demand.
     permitted_urls: t.List[str] = [
         "https://cratedb.com/",
+        "https://docs.cratedb.com/",
         "https://github.com/crate",
         "https://raw.githubusercontent.com/crate",
     ]

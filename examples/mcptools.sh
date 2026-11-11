@@ -35,7 +35,7 @@ mcpt call get_cluster_health cratedb-mcp serve
 # Exercise the documentation server tools.
 mcpt call get_cratedb_documentation_index cratedb-mcp serve
 mcpt call \
-  fetch_cratedb_docs --params '{"link":"https://cratedb.com/docs/cloud/en/latest/_sources/cluster/integrations/mongo-cdc.md.txt"}' \
+  fetch_cratedb_docs --params '{"link":"https://docs.cratedb.com/projects/cloud/en/latest/_sources/cluster/integrations/mongo-cdc.md.txt"}' \
   cratedb-mcp serve
 
 echo "Ready."
