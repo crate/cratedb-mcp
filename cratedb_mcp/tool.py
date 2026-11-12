@@ -218,6 +218,10 @@ def quote_identifier(name: str) -> str:
     return '"' + name.replace('"', '""') + '"'
 
 
+def exclude_system_schemas(column: str) -> t.Tuple[str, t.List[t.Any]]:
+    return f"{column} NOT IN ({', '.join('?' * len(SYSTEM_SCHEMAS))})", list(SYSTEM_SCHEMAS)
+
+
 def list_schemas(include_system: bool = False) -> t.List[SchemaInfo]:
     """
     List the schemas that hold tables or views, with how many of each.
@@ -225,10 +229,11 @@ def list_schemas(include_system: bool = False) -> t.List[SchemaInfo]:
     information_schema, pg_catalog, sys and blob are left out unless
     `include_system` is true.
     """
-    where, args = "", []
+    where = ""
+    args: t.List[t.Any] = []
     if not include_system:
-        where = f"WHERE table_schema NOT IN ({', '.join('?' * len(SYSTEM_SCHEMAS))})"
-        args = list(SYSTEM_SCHEMAS)
+        condition, args = exclude_system_schemas("table_schema")
+        where = f"WHERE {condition}"
     rows = query_rows(Queries.SCHEMAS.format(where=where), args)
     return [SchemaInfo(schema_name=row[0], tables=row[1], views=row[2]) for row in rows]
 
@@ -285,6 +290,201 @@ def describe_table(schema: str, table: str) -> TableDescription:
         description.partitions,
     ) = storage
     return description
+
+
+GB = 1_000_000_000
+MIN_SHARD_BYTES = 5 * GB
+MAX_SHARD_BYTES = 50 * GB
+MAX_SHARD_RECORDS = 200_000_000
+SHARD_LIMIT_WARNING = 0.9
+
+
+class TableLayout(BaseModel):
+    model_config = ConfigDict(json_schema_extra=declare_present_types)
+
+    schema_name: str
+    name: str
+    number_of_shards: t.Optional[int] = absent()
+    number_of_replicas: t.Optional[str] = absent()
+    partitions: int
+    primary_shards: t.Optional[int] = absent()
+    replica_shards: t.Optional[int] = absent()
+    unassigned_shards: t.Optional[int] = absent()
+    records: t.Optional[int] = absent()
+    size_bytes: t.Optional[int] = absent()
+    avg_shard_bytes: t.Optional[int] = absent()
+    max_shard_bytes: t.Optional[int] = absent()
+    max_shard_records: t.Optional[int] = absent()
+    findings: t.List[str] = []
+
+
+class TableLayoutReport(BaseModel):
+    model_config = ConfigDict(json_schema_extra=declare_present_types)
+
+    cpus: t.Optional[int] = absent()
+    max_shards_per_node: t.Optional[int] = absent()
+    busiest_node_shards: t.Optional[int] = absent()
+    findings: t.List[str] = []
+    tables: t.List[TableLayout]
+    truncated: bool
+    note: t.Optional[str] = absent()
+
+
+def format_bytes(size: float) -> str:
+    if size >= GB:
+        return f"{size / GB:,.1f} GB"
+    return f"{size / 1_000_000:,.1f} MB"
+
+
+def score_layout(
+    shards: int,
+    partitions: int,
+    avg_shard_bytes: float,
+    max_shard_bytes: int,
+    max_shard_records: int,
+    cpus: int,
+) -> t.List[str]:
+    """Compare one table's shards with CrateDB's sharding recommendations."""
+    findings = []
+    if max_shard_bytes > MAX_SHARD_BYTES:
+        findings.append(
+            f"The largest shard holds {format_bytes(max_shard_bytes)}, above the recommended "
+            "shard size between 5 GB and 50 GB. Use more shards, or partition the table."
+        )
+    if max_shard_records > MAX_SHARD_RECORDS:
+        findings.append(
+            f"The largest shard holds {max_shard_records:,} records. Keep the number of "
+            "records on each shard below 200 million."
+        )
+    if avg_shard_bytes < MIN_SHARD_BYTES and shards > cpus:
+        advice = "Use fewer shards."
+        if partitions:
+            advice = "Use fewer shards per partition, or fewer partitions."
+        findings.append(
+            f"The table has {shards} shards with {format_bytes(avg_shard_bytes)} on average, "
+            f"below the recommended 5 GB, and more than the cluster's {cpus} CPUs, where 1 "
+            f"shard per CPU is the starting point. {advice}"
+        )
+    return findings
+
+
+def score_cluster(busiest_node_shards: int, max_shards_per_node: int) -> t.List[str]:
+    """Compare the busiest node's shard count with `cluster.max_shards_per_node`."""
+    if busiest_node_shards < SHARD_LIMIT_WARNING * max_shards_per_node:
+        return []
+    return [
+        f"The busiest node holds {busiest_node_shards} shards, at least 90 % of "
+        f"cluster.max_shards_per_node ({max_shards_per_node}). CrateDB rejects new tables "
+        "or partitions that would pass the limit."
+    ]
+
+
+def table_filter(
+    schema_column: str, table_column: str, schema: t.Optional[str], table: t.Optional[str]
+) -> t.Tuple[str, t.List[t.Any]]:
+    if schema is None:
+        condition, args = exclude_system_schemas(schema_column)
+    else:
+        condition, args = f"{schema_column} = ?", [schema]
+    conditions = [condition]
+    if table is not None:
+        conditions.append(f"{table_column} = ?")
+        args.append(table)
+    return " AND ".join(conditions), args
+
+
+def analyze_table_layout(
+    schema: t.Optional[str] = None, table: t.Optional[str] = None, max_tables: int = 10
+) -> TableLayoutReport:
+    """
+    Check the shards and partitions of tables against CrateDB's sharding
+    recommendations. Per table, return shard counts as they exist, shard sizes,
+    records per shard and partitions. `findings` flag shards above 50 GB or
+    200 million records, shards under 5 GB that outnumber the CPUs, and nodes
+    near `cluster.max_shards_per_node`. Return at most `max_tables` tables,
+    those with findings first, then the largest.
+    """
+    where, args = table_filter("t.table_schema", "t.table_name", schema, table)
+    tables = {
+        (row[0], row[1]): TableLayout(
+            schema_name=row[0],
+            name=row[1],
+            number_of_shards=row[2],
+            number_of_replicas=row[3],
+            partitions=row[4],
+        )
+        for row in query_rows(Queries.TABLE_LAYOUT.format(where=where), args)
+    }
+    report = TableLayoutReport(tables=[], truncated=False)
+    notes = []
+
+    # A user granted access to single schemas cannot read the `sys` tables.
+    try:
+        report.cpus = query_rows(Queries.CPUS)[0][0]
+        report.max_shards_per_node = query_rows(Queries.MAX_SHARDS_PER_NODE)[0][0]
+        busiest = query_rows(Queries.BUSIEST_NODE)
+        where, args = table_filter("schema_name", "table_name", schema, table)
+        shard_rows = query_rows(Queries.SHARD_LAYOUT.format(where=where), args)
+    except RuntimeError as e:
+        notes.append(
+            "Shard counts, sizes and findings are missing, because reading the sys tables "
+            f"failed: {e}"
+        )
+        shard_rows = []
+    else:
+        report.busiest_node_shards = busiest[0][0] if busiest else 0
+        report.findings = score_cluster(report.busiest_node_shards, report.max_shards_per_node)
+
+    storage_by_table = {(row[0], row[1]): row[2:] for row in shard_rows}
+    for key, layout in tables.items():
+        if key not in storage_by_table:
+            continue
+        (
+            layout.primary_shards,
+            layout.replica_shards,
+            layout.unassigned_shards,
+            layout.records,
+            layout.size_bytes,
+            avg_shard_bytes,
+            layout.max_shard_bytes,
+            layout.max_shard_records,
+        ) = storage_by_table[key]
+        layout.avg_shard_bytes = None if avg_shard_bytes is None else round(avg_shard_bytes)
+        layout.findings = score_layout(
+            layout.primary_shards + layout.replica_shards - layout.unassigned_shards,
+            layout.partitions,
+            avg_shard_bytes or 0,
+            layout.max_shard_bytes or 0,
+            layout.max_shard_records or 0,
+            report.cpus or 0,
+        )
+
+    ranked = sorted(
+        tables.values(),
+        key=lambda layout: (
+            not layout.findings,
+            -(layout.size_bytes or 0),
+            layout.schema_name,
+            layout.name,
+        ),
+    )
+    max_tables = max(1, min(max_tables, MAX_ROWS_CEILING))
+    dumped = [layout.model_dump() for layout in ranked]
+    shown = cap_rows(dumped, max_tables)
+    report.tables = ranked[: len(shown)]
+    report.truncated = len(shown) < len(ranked)
+    if report.truncated and not report.tables:
+        notes.append(
+            f"No tables are shown, because the first table alone holds {row_chars(dumped[0])} "
+            f"characters, more than the cap of {Settings.max_chars()}."
+        )
+    elif report.truncated:
+        notes.append(
+            f"Only {len(report.tables)} of {len(ranked)} tables are shown, those with findings "
+            "first, then the largest. Name a `schema` or `table` to see the others."
+        )
+    report.note = " ".join(notes) or None
+    return report
 
 
 # ------------------------------------------

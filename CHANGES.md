@@ -45,6 +45,8 @@ Changes:
   an `EXPLAIN` of a `SELECT`, `WITH` or `VALUES` statement
 - MCP: Added `diagnose_workload`, which lists slow, failed or running data statements,
   or the latencies per statement type, and says whether CrateDB records statements at all
+- MCP: Added `analyze_table_layout`, which reports the shards, shard sizes, records
+  per shard and partitions of tables, with findings against CrateDB's sharding guidance
 - Dependencies: Updated to `sqlparse>=0.6.1`, earlier versions had vulnerabilities
 - Security: Over HTTP, the server answers only requests addressed to localhost, its
   listening address or a host named in `CRATEDB_MCP_ALLOWED_HOSTS` (else 421), and
