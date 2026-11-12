@@ -10,6 +10,7 @@ from cratedb_mcp.settings import Settings
 from . import __appname__, __version__
 from .tool import (
     describe_table,
+    explain_query,
     fetch_cratedb_docs,
     get_cluster_health,
     get_cratedb_documentation_index,
@@ -79,6 +80,15 @@ class CrateDbMcp:
                 description=query_sql.__doc__,
                 title="Run SQL query",
                 annotations=query_annotations,
+                tags={"text-to-sql"},
+            )
+        )
+        self.mcp.add_tool(
+            Tool.from_function(
+                fn=explain_query,
+                description=explain_query.__doc__,
+                title="Explain query",
+                annotations=READ_ONLY,
                 tags={"text-to-sql"},
             )
         )

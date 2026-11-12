@@ -62,9 +62,9 @@ The CrateDB MCP Server provides two families of tools.
 
 :Text-to-SQL:
 
-  The tools `list_schemas`, `list_tables`, `describe_table` and
-  `query_sql` talk to a CrateDB database cluster to inquire database
-  and table metadata, and table content.
+  The tools `list_schemas`, `list_tables`, `describe_table`,
+  `query_sql` and `explain_query` talk to a CrateDB database cluster
+  to inquire database and table metadata, table content, and query plans.
 
 :Documentation inquiry:
 

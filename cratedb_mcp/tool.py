@@ -42,6 +42,29 @@ def query_sql(query: str) -> dict:
     return query_cratedb(query)
 
 
+def explain_query(
+    query: str, analyze: bool = False, verbose: bool = False, costs: bool = True
+) -> dict:
+    """
+    Show how CrateDB runs a SELECT query, to find out why it is slow.
+    `costs` adds the planner's row estimates, and `verbose` shows the plan
+    after each optimizer step. `analyze` runs the query and returns its
+    timings per shard, with the Lucene query each shard used. In that output,
+    `MatchAllDocsQuery` and `GenericFunctionQuery` mean a full table scan,
+    often a filter that is not pushed down to the index. With `analyze`,
+    CrateDB ignores `costs` and cannot show `verbose`.
+    """
+    if analyze and verbose:
+        raise ValueError("CrateDB cannot combine `analyze` and `verbose`; choose one.")
+    if not sql_is_permitted(query):
+        raise PermissionError("Only queries that have a SELECT statement are allowed.")
+    if analyze:
+        options = "ANALYZE true"
+    else:
+        options = f"COSTS {str(costs).lower()}, VERBOSE {str(verbose).lower()}"
+    return query_cratedb(f"EXPLAIN ({options}) {query}")
+
+
 SYSTEM_SCHEMAS = ("information_schema", "pg_catalog", "sys", "blob")
 TABLE_KINDS = {"BASE TABLE": "table", "VIEW": "view", "FOREIGN": "foreign table"}
 
