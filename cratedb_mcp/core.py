@@ -13,7 +13,6 @@ from .tool import (
     fetch_cratedb_docs,
     get_cluster_health,
     get_cratedb_documentation_index,
-    get_table_metadata,
     list_schemas,
     list_tables,
     query_sql,
@@ -106,15 +105,6 @@ class CrateDbMcp:
                 fn=describe_table,
                 description=describe_table.__doc__,
                 title="Describe table",
-                annotations=READ_ONLY,
-                tags={"text-to-sql"},
-            )
-        )
-        self.mcp.add_tool(
-            Tool.from_function(
-                fn=get_table_metadata,
-                description=get_table_metadata.__doc__,
-                title="Show table metadata",
                 annotations=READ_ONLY,
                 tags={"text-to-sql"},
             )

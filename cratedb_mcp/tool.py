@@ -141,17 +141,6 @@ def describe_table(schema: str, table: str) -> TableDescription:
     return description
 
 
-def get_table_metadata() -> dict:
-    """
-    Return table metadata for all tables stored in CrateDB.
-    Return an aggregation of schema:tables, e.g.: {'doc': [{name:'mytable', ...}, ...]}
-
-    The tables have metadata datapoints like replicas, shards,
-    name, version, total_shards, total_records.
-    """
-    return query_cratedb(Queries.TABLES_METADATA)
-
-
 # ------------------------------------------
 #          Documentation inquiry
 # ------------------------------------------
