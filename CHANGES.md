@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- OCI: Installed `mcpo` apart from the server, with the MCP SDK 1.x and the FastAPI
+  release it needs, so the MCPO image starts again
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of

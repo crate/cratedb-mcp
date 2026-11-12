@@ -95,6 +95,8 @@ FROM standard AS mcpo
 # MCP support for Open WebUI.
 # https://docs.openwebui.com/openapi-servers/mcp/
 # https://github.com/open-webui/mcpo
-RUN uv pip install mcpo
+# mcpo 0.0.20 needs MCP SDK 1.x and FastAPI before 0.145,
+# so it lives in a tool environment apart from the server's packages.
+RUN uv tool install mcpo --with "mcp<2" --with "fastapi<0.145"
 ENTRYPOINT []
 CMD ["mcpo", "--host", "0.0.0.0", "--port", "8000", "--", "cratedb-mcp", "serve", "--transport=stdio"]
