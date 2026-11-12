@@ -6,14 +6,21 @@ Upgrading from 0.1.x:
 - HTTP: set `CRATEDB_MCP_AUTH_TOKEN` and send it as `Authorization: Bearer <token>`, or set
   `CRATEDB_MCP_AUTH_DISABLED=true` for local work. Without either, the server does not
   start. stdio is unchanged.
-- HTTP: when clients reach the server by a name other than localhost, such as a Compose
-  service name or a public host name, list it in `CRATEDB_MCP_ALLOWED_HOSTS`. Other names
-  get 421.
+- HTTP: when clients reach the server by a name or IP address other than localhost, such
+  as a Compose service name, a public host name or the IP address of a Docker host, list
+  it in `CRATEDB_MCP_ALLOWED_HOSTS`. Others get 421.
+- HTTP: a browser page from another origin gets 403, unless `CRATEDB_MCP_ALLOWED_ORIGINS`
+  lists that origin.
 - Tools: `get_table_columns` and `get_table_metadata` are gone. Use `list_schemas`,
   `list_tables` and `describe_table`, and update prompts and allow-lists that name the
   old tools.
-- `query_sql` returns at most 100 rows unless `max_rows` or `CRATEDB_MCP_MAX_ROWS` asks
-  for more. Check `truncated` when a complete result matters.
+- Tools: `query_sql` returns at most 100 rows unless `max_rows` or `CRATEDB_MCP_MAX_ROWS`
+  asks for more, up to 1,000. Check `truncated` when a complete result matters.
+- Packaging: the server needs version 2 of the MCP SDK. Where an environment holds
+  `mcp<2`, install the server apart from it, for example with `uv tool install cratedb-mcp`.
+- Images: the `cratedb-mcpo` image is gone. With Open WebUI 0.6.31 or later, run the
+  standard image `ghcr.io/crate/cratedb-mcp` and add it as a connection of type
+  MCP (Streamable HTTP).
 
 Changes:
 - MCP: `fetch_cratedb_docs` reads every link listed in the documentation index,
