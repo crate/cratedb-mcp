@@ -3,6 +3,8 @@
 ## Unreleased
 - MCP: `fetch_cratedb_docs` reads every link listed in the documentation index,
   including pages outside the permitted hosts
+- MCP: Added a title and annotations to every tool, marking them read-only. `query_sql`
+  loses its read-only mark when `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` is set
 - Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28 and
   serves its stateless HTTP requests
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
