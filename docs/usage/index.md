@@ -28,8 +28,10 @@ Start MCP server with `stdio` transport (default).
 ```shell
 cratedb-mcp serve --transport=stdio
 ```
-Start MCP server with `http` transport (ex. `streamable-http`).
+Start MCP server with `http` transport (ex. `streamable-http`), with the bearer
+token it requires, see [Configure HTTP access](../configure/index.md#configure-http-access).
 ```shell
+export CRATEDB_MCP_AUTH_TOKEN="$(openssl rand -hex 32)"
 cratedb-mcp serve --transport=http
 ```
 Alternatively, use the `CRATEDB_MCP_TRANSPORT` environment variable instead of

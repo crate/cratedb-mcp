@@ -1,6 +1,7 @@
 from typing import Any, Optional
 
 from fastmcp import FastMCP
+from fastmcp.server.auth import TokenVerifier
 from fastmcp.tools import FunctionTool, Tool, ToolResult
 from mcp.types import TextContent, ToolAnnotations
 from starlette.requests import Request
@@ -55,12 +56,14 @@ class CrateDbMcp:
         mcp: Optional[FastMCP] = None,
         instructions: Optional[str] = None,
         conventions: Optional[str] = None,
+        auth: Optional[TokenVerifier] = None,
     ) -> None:
         prompt = InstructionsPrompt(instructions=instructions, conventions=conventions)
         self.mcp = mcp or FastMCP(
             name=__appname__,
             version=__version__,
             instructions=prompt.render(),
+            auth=auth,
         )
         self.add_tools()
         self.mcp.custom_route("/health", methods=["GET"])(self.health)

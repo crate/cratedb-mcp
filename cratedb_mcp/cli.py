@@ -1,9 +1,11 @@
 import logging
+import os
 import typing as t
 
 import click
 from pueblo.util.cli import boot_click
 
+from cratedb_mcp.auth import BearerTokenVerifier
 from cratedb_mcp.core import CrateDbMcp
 from cratedb_mcp.prompt import InstructionsPrompt
 
@@ -46,6 +48,29 @@ def http_security_options(
         "allowed_hosts": list(allowed_hosts) or None,
         "allowed_origins": list(allowed_origins) or None,
     }
+
+
+def http_auth(auth_disabled: bool) -> t.Optional[BearerTokenVerifier]:
+    """
+    Require the bearer token from `CRATEDB_MCP_AUTH_TOKEN` on HTTP requests.
+    """
+    if auth_disabled:
+        logger.warning(
+            "Authentication is disabled. Anyone who can reach the server can query the database."
+        )
+        return None
+    token = os.getenv("CRATEDB_MCP_AUTH_TOKEN")
+    if not token:
+        raise click.UsageError(
+            "Serving over HTTP requires a bearer token. Set CRATEDB_MCP_AUTH_TOKEN, "
+            "or set CRATEDB_MCP_AUTH_DISABLED=true for local work."
+        )
+    if token != token.strip():
+        raise click.UsageError(
+            "CRATEDB_MCP_AUTH_TOKEN begins or ends with whitespace, such as a trailing "
+            "newline, which clients do not send. Remove it."
+        )
+    return BearerTokenVerifier(token)
 
 
 @cli.command()
@@ -94,6 +119,13 @@ def http_security_options(
     help="A browser origin permitted to call the server (for sse, http)",
 )
 @click.option(
+    "--auth-disabled",
+    envvar="CRATEDB_MCP_AUTH_DISABLED",
+    is_flag=True,
+    default=False,
+    help="Serve without a bearer token, for local work only (for sse, http)",
+)
+@click.option(
     "--instructions",
     envvar="CRATEDB_MCP_INSTRUCTIONS",
     type=str,
@@ -116,6 +148,7 @@ def serve(
     path: t.Optional[str],
     allowed_hosts: t.Tuple[str, ...],
     allowed_origins: t.Tuple[str, ...],
+    auth_disabled: bool,
     instructions: t.Optional[str],
     conventions: t.Optional[str],
 ) -> None:
@@ -129,14 +162,16 @@ def serve(
             "Use the http transport instead."
         )
     transport_kwargs: t.Dict[str, t.Any] = {}
+    auth = None
     if transport in {"sse", "http", "streamable-http"}:
+        auth = http_auth(auth_disabled)
         transport_kwargs = {
             "host": host,
             "port": port,
             "path": path,
             **http_security_options(allowed_hosts, allowed_origins),
         }
-    mcp_cratedb = CrateDbMcp(instructions=instructions, conventions=conventions)
+    mcp_cratedb = CrateDbMcp(instructions=instructions, conventions=conventions, auth=auth)
     mcp_cratedb.mcp.run(transport=t.cast(transport_types, transport), **transport_kwargs)  # type: ignore[arg-type]
 
 

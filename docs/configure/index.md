@@ -25,8 +25,10 @@ the cache lifetime for documentation resources in seconds.
 ## Configure transport
 
 MCP servers can be started using different transport modes. The default transport
-is `stdio`, you can select `http` instead and supply it to the invocation like this:
+is `stdio`, you can select `http` instead. Over HTTP, the server requires a
+bearer token, see [Configure HTTP access](#configure-http-access).
 ```shell
+export CRATEDB_MCP_AUTH_TOKEN="$(openssl rand -hex 32)"
 cratedb-mcp serve --transport=http
 ```
 NB: The `http` transport was called `streamable-http` in earlier spec iterations.
@@ -60,7 +62,18 @@ export CRATEDB_MCP_MAX_CHARS=50000
 
 ## Configure HTTP access
 
-Over HTTP, the server checks the `Host` and `Origin` headers of every request,
+Over HTTP, the server requires a bearer token, and refuses to start without one.
+```shell
+export CRATEDB_MCP_AUTH_TOKEN="$(openssl rand -hex 32)"
+```
+Clients send it in the `Authorization` header of every request, as
+`Authorization: Bearer <token>`. A request without the right token gets
+`401 Unauthorized`. For local work only, you can serve without a token.
+```shell
+export CRATEDB_MCP_AUTH_DISABLED=true
+```
+
+The server checks the `Host` and `Origin` headers of every request,
 which protects it from DNS rebinding attacks. It answers requests addressed to
 `localhost`, `127.0.0.1`, `::1` or the address it listens on. A request
 addressed to any other name or IP address gets `421 Misdirected Request`. When
@@ -79,20 +92,31 @@ export CRATEDB_MCP_ALLOWED_ORIGINS="https://app.example.org"
 The CLI options `--allowed-host` and `--allowed-origin` do the same, and can
 be repeated.
 
-The server answers `GET /health` with `OK`, for liveness probes.
+The server answers `GET /health` with `OK`, without a token, for liveness probes.
+
+When several instances of the server run behind a load balancer, set
+`FASTMCP_STATELESS_HTTP=true` on each of them. Without it, a client on an older
+protocol such as 2025-11-25 opens a session on one instance and gets
+`404 Session not found` from the others.
 
 ## Security considerations
 
-If you want to prevent agents from modifying data, i.e., permit `SELECT` statements
-only, it is recommended to [create a read-only database user by using "GRANT DQL"].
+Connect the server with a dedicated database user that holds only what it
+needs. Grant it `DQL` on the schemas the model should read, see
+[create a read-only database user by using "GRANT DQL"], and limit how long
+its statements may run.
 ```sql
-CREATE USER "read-only" WITH (password = 'YOUR_PASSWORD');
-GRANT DQL TO "read-only";
+CREATE USER mcp WITH (password = 'YOUR_PASSWORD');
+GRANT DQL ON SCHEMA doc TO mcp;
+ALTER USER mcp SET (statement_timeout = '30s');
 ```
-Then, include relevant access credentials in the cluster URL.
+CrateDB then stops any statement of that user after 30 seconds. For a remote
+cluster, use `https` in the cluster URL.
 ```shell
-export CRATEDB_CLUSTER_URL="https://read-only:YOUR_PASSWORD@example.aks1.westeurope.azure.cratedb.net:4200"
+export CRATEDB_CLUSTER_URL="https://mcp:YOUR_PASSWORD@example.aks1.westeurope.azure.cratedb.net:4200"
 ```
+When the MCP server is reachable from outside, put it behind a reverse proxy.
+
 The MCP Server also prohibits non-SELECT statements on the application level.
 All other operations will raise a `PermissionError` exception, unless the
 `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a
