@@ -48,6 +48,37 @@ SELECT count(*) AS primary_shards,
 FROM sys.shards
 WHERE schema_name = ? AND table_name = ? AND "primary"
     """
+    STATS = """
+SELECT settings['stats']['enabled'], settings['stats']['jobs_log_size'], CURRENT_USER
+FROM sys.cluster
+    """
+    JOBS_LOG = """
+SELECT date_format(ended) AS ended,
+       CAST(ended AS BIGINT) - CAST(started AS BIGINT) AS duration_ms,
+       username, substr(stmt, 1, ?) AS stmt, error IS NOT NULL AS failed
+FROM sys.jobs_log
+WHERE {where}
+ORDER BY {order} DESC
+LIMIT ?
+    """
+    JOBS = """
+SELECT date_format(started) AS started,
+       CAST(CURRENT_TIMESTAMP AS BIGINT) - CAST(started AS BIGINT) AS running_ms,
+       username, substr(stmt, 1, ?) AS stmt
+FROM sys.jobs
+WHERE stmt ~ ? AND stmt <> ?
+ORDER BY started
+LIMIT ?
+    """
+    JOBS_METRICS = """
+SELECT node['name'] AS node, classification['type'] AS type,
+       classification['labels'] AS labels, total_count AS statements, failed_count AS failed,
+       sum_of_durations AS total_ms, percentiles['50'] AS p50_ms, percentiles['90'] AS p90_ms,
+       percentiles['99'] AS p99_ms, max AS max_ms
+FROM sys.jobs_metrics
+ORDER BY sum_of_durations DESC
+LIMIT ?
+    """
     HEALTH = """SELECT health,
            missing_shards,
            partition_ident,

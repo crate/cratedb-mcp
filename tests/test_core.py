@@ -21,7 +21,7 @@ def tool_hints():
 
 def test_tools_declare_title_and_read_only_hints():
     tools = tool_hints()
-    assert len(tools) == 8
+    assert len(tools) == 9
     for name, (title, hints) in tools.items():
         assert title, name
         assert hints["readOnlyHint"] is True, name
@@ -65,6 +65,7 @@ CALLS = {
     "describe_table": {"schema": "sys", "table": "summits"},
     "get_cratedb_documentation_index": {},
     "get_cluster_health": {},
+    "diagnose_workload": {"view": "slow"},
 }
 
 
@@ -86,6 +87,15 @@ RESULT_FIELDS = {
     },
     "get_cratedb_documentation_index": {"title", "link", "description", "markdown_enabled"},
     "get_cluster_health": CRATE_RESULT,
+    "diagnose_workload": {
+        "user",
+        "stats_enabled",
+        "jobs_log_size",
+        "cols",
+        "rows",
+        "truncated",
+        "note",
+    },
 }
 
 

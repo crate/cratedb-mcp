@@ -13,6 +13,7 @@ from cratedb_mcp.settings import Settings
 from . import __appname__, __version__
 from .tool import (
     describe_table,
+    diagnose_workload,
     explain_query,
     fetch_cratedb_docs,
     get_cluster_health,
@@ -167,6 +168,15 @@ class CrateDbMcp:
                 fn=get_cluster_health,
                 description=get_cluster_health.__doc__,
                 title="Show cluster health",
+                annotations=READ_ONLY,
+                tags={"health", "monitoring", "status"},
+            )
+        )
+        self.mcp.add_tool(
+            Tool.from_function(
+                fn=diagnose_workload,
+                description=diagnose_workload.__doc__,
+                title="Diagnose workload",
                 annotations=READ_ONLY,
                 tags={"health", "monitoring", "status"},
             )
