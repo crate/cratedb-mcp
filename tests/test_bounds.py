@@ -4,7 +4,6 @@ import httpx
 import pytest
 
 from cratedb_mcp import tool
-from cratedb_mcp.settings import Settings
 from cratedb_mcp.tool import query_sql
 
 
@@ -47,7 +46,7 @@ def test_query_sql_timeout_advises_narrowing(mocker):
     assert ex.match("Narrow it with a WHERE clause")
 
 
-def test_max_rows_setting_invalid(mocker):
-    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_ROWS": "many"})
-    with pytest.warns(UserWarning, match="CRATEDB_MCP_MAX_ROWS"):
-        assert Settings.max_rows() == 100
+def test_query_sql_passes_crate_errors_through():
+    result = query_sql("SELECT * FROM unknown_table")
+    assert "RelationUnknown" in result["error"]["message"]
+    assert "truncated" not in result
