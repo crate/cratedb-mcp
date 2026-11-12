@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28 and
+  serves its stateless HTTP requests
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
   MCP servers directly, so use the standard image `ghcr.io/crate/cratedb-mcp`
   with `--transport=streamable-http`.
