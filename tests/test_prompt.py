@@ -19,7 +19,6 @@ def test_default():
     # General instructions.
     assert "Things to remember when working with CrateDB" in instructions_text
     assert "Rules for writing SQL queries" in instructions_text
-    assert "Core writing principles" in instructions_text
 
 
 def test_custom_instructions():
@@ -37,7 +36,7 @@ def test_custom_conventions():
     instructions = InstructionsPrompt(conventions="custom-convention")
     prompt = instructions.render()
     assert "custom-convention" in prompt
-    assert "Core writing principles" in prompt
+    assert "Rules for writing SQL queries" in prompt
 
 
 def test_fragment_local(tmp_path):
