@@ -1,6 +1,21 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+
+Upgrading from 0.1.x:
+- HTTP: set `CRATEDB_MCP_AUTH_TOKEN` and send it as `Authorization: Bearer <token>`, or set
+  `CRATEDB_MCP_AUTH_DISABLED=true` for local work. Without either, the server does not
+  start. stdio is unchanged.
+- HTTP: when clients reach the server by a name other than localhost, such as a Compose
+  service name or a public host name, list it in `CRATEDB_MCP_ALLOWED_HOSTS`. Other names
+  get 421.
+- Tools: `get_table_columns` and `get_table_metadata` are gone. Use `list_schemas`,
+  `list_tables` and `describe_table`, and update prompts and allow-lists that name the
+  old tools.
+- `query_sql` returns at most 100 rows unless `max_rows` or `CRATEDB_MCP_MAX_ROWS` asks
+  for more. Check `truncated` when a complete result matters.
+
+Changes:
 - MCP: `fetch_cratedb_docs` reads every link listed in the documentation index,
   including pages outside the permitted hosts
 - MCP: Added `explain_query`, which shows how CrateDB plans or runs a SELECT query,
