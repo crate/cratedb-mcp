@@ -89,3 +89,6 @@ COPY release/oci/selftest.sh /usr/local/bin
 # Standard MCP server.
 # Specify the command to run the MCP server.
 ENTRYPOINT ["cratedb-mcp", "serve"]
+
+# The MCP Registry checks that this image belongs to the server it lists.
+LABEL io.modelcontextprotocol.server.name="io.github.crate/cratedb-mcp"

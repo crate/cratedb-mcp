@@ -1,0 +1,53 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.crate/cratedb-mcp",
+  "title": "CrateDB",
+  "description": "Query CrateDB with SQL, discover its tables, and look up its documentation.",
+  "websiteUrl": "https://cratedb-mcp.readthedocs.io/",
+  "repository": {
+    "url": "https://github.com/crate/cratedb-mcp",
+    "source": "github"
+  },
+  "version": "0.2.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "cratedb-mcp",
+      "version": "0.2.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "serve"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "CRATEDB_CLUSTER_URL",
+          "description": "URL of the CrateDB cluster, with credentials, for example https://user:password@host:4200/",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    },
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/crate/cratedb-mcp:0.2.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "CRATEDB_CLUSTER_URL",
+          "description": "URL of the CrateDB cluster, with credentials, for example https://user:password@host:4200/",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

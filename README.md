@@ -1,5 +1,7 @@
 # CrateDB MCP Server
 
+<!-- mcp-name: io.github.crate/cratedb-mcp -->
+
 [![Status][badge-status]][project-pypi]
 [![CI][badge-ci]][project-ci]
 [![Coverage][badge-coverage]][project-coverage]
