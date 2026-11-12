@@ -94,7 +94,7 @@ class Settings:
     @staticmethod
     def max_chars(chars: int = 50_000) -> int:
         """
-        Return how many characters of rows `query_sql` returns at most.
+        Return how many characters of rows `query_sql` and `explain_query` return at most.
         """
         try:
             return int(os.getenv("CRATEDB_MCP_MAX_CHARS", chars))

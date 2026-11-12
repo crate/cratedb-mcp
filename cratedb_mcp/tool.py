@@ -35,27 +35,41 @@ def query_rows(query: str, args: t.Optional[t.List[t.Any]] = None) -> t.List[t.L
 MAX_ROWS_CEILING = 1000
 
 
-def query_sql(query: str, max_rows: t.Optional[int] = None) -> dict:
-    """
-    Execute an SQL query on CrateDB and return the results.
-    Select only the columns you need (avoid `SELECT *`) and,
-    where appropriate, add a `LIMIT` clause to keep result sets concise.
-    The result holds at most 100 rows unless `max_rows` asks for more,
-    up to 1000. When rows are cut, `truncated` is true and `note` says why.
-    """
-    if not sql_is_permitted(query):
-        raise PermissionError("Only queries that have a SELECT statement are allowed.")
+def run_query(query: str) -> dict:
+    """Send a query written by the model, and answer a timeout with advice to narrow it."""
     try:
-        result = query_cratedb(query)
+        return query_cratedb(query)
     except httpx.TimeoutException as e:
         raise TimeoutError(
             f"The query did not finish within the {Settings.http_timeout():g}-second timeout. "
             "Narrow it with a WHERE clause, an aggregation or a LIMIT instead of running it again."
         ) from e
-    return bound_result(result, max_rows)
 
 
-def bound_result(result: dict, max_rows: t.Optional[int] = None) -> dict:
+def query_sql(query: str, max_rows: t.Optional[int] = None) -> dict:
+    """
+    Execute an SQL query on CrateDB and return the results.
+    Select only the columns you need (avoid `SELECT *`) and,
+    where appropriate, add a `LIMIT` clause to keep result sets concise.
+    The result holds at most 100 rows, or the server's configured cap,
+    unless `max_rows` asks for more, up to 1000. When rows are cut,
+    `truncated` is true and `note` says why.
+    """
+    if not sql_is_permitted(query):
+        raise PermissionError("Only queries that have a SELECT statement are allowed.")
+    return bound_result(run_query(query), max_rows)
+
+
+def row_chars(row: t.Any) -> int:
+    return len(json.dumps(row, default=str))
+
+
+def bound_result(
+    result: dict,
+    max_rows: t.Optional[int] = None,
+    char_advice: str = "Select fewer or shorter columns, or filter or aggregate the query.",
+    first_row_advice: str = "Select fewer columns or shorter values.",
+) -> dict:
     """Cut the rows of a query result to the row and character caps, and say when it did."""
     if "rows" not in result:
         return result
@@ -66,23 +80,29 @@ def bound_result(result: dict, max_rows: t.Optional[int] = None) -> dict:
     rows = result["rows"][:row_cap]
     size = 0
     for count, row in enumerate(rows):
-        size += len(json.dumps(row, default=str))
+        size += row_chars(row)
         if size > char_cap:
             rows = rows[:count]
             break
 
     bounded = {**result, "rows": rows, "truncated": len(rows) < len(result["rows"])}
     if bounded["truncated"]:
-        reason = (
-            f"the next row would pass {char_cap} characters"
-            if len(rows) < min(row_cap, len(result["rows"]))
-            else f"the cap is {row_cap} rows"
-        )
-        bounded["note"] = (
-            f"Only the first {len(rows)} of {len(result['rows'])} rows are shown, "
-            f"because {reason}. Filter or aggregate the query, "
-            f"or ask for up to {MAX_ROWS_CEILING} rows with max_rows."
-        )
+        shown = f"Only the first {len(rows)} of {len(result['rows'])} rows are shown"
+        if not rows:
+            bounded["note"] = (
+                f"No rows are shown, because the first row alone holds "
+                f"{row_chars(result['rows'][0])} characters, more than the cap of {char_cap}. "
+                f"{first_row_advice}"
+            )
+        elif len(rows) < min(row_cap, len(result["rows"])):
+            bounded["note"] = (
+                f"{shown}, because the next row would pass {char_cap} characters. {char_advice}"
+            )
+        else:
+            advice = "Filter or aggregate the query"
+            if row_cap < MAX_ROWS_CEILING:
+                advice += f", or ask for up to {MAX_ROWS_CEILING} rows with max_rows"
+            bounded["note"] = f"{shown}, because the cap is {row_cap} rows. {advice}."
     return bounded
 
 
@@ -106,7 +126,11 @@ def explain_query(
         options = "ANALYZE true"
     else:
         options = f"COSTS {str(costs).lower()}, VERBOSE {str(verbose).lower()}"
-    return query_cratedb(f"EXPLAIN ({options}) {query}")
+    advice = "Narrow the query."
+    if analyze:
+        advice = "Explain it without `analyze`, or narrow the query."
+    plan = run_query(f"EXPLAIN ({options}) {query}")
+    return bound_result(plan, MAX_ROWS_CEILING, advice, advice)
 
 
 SYSTEM_SCHEMAS = ("information_schema", "pg_catalog", "sys", "blob")
