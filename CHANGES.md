@@ -15,6 +15,11 @@
   `explain_query` keeps to the same character cap. `CRATEDB_MCP_MAX_ROWS` and
   `CRATEDB_MCP_MAX_CHARS` change the defaults
 - MCP: A query that times out tells the model to narrow it instead of retrying
+- Security: Over HTTP, the server answers only requests addressed to localhost, its
+  listening address or a host named in `CRATEDB_MCP_ALLOWED_HOSTS` (else 421), and
+  refuses foreign browser origins (403) unless named in `CRATEDB_MCP_ALLOWED_ORIGINS`
+- HTTP: Added `GET /health` for liveness probes
+- CLI: Deprecated the `sse` transport, which the MCP specification removed
 - Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28 and
   serves its stateless HTTP requests
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to

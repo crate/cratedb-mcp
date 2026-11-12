@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import fastmcp.server.server
@@ -123,10 +124,30 @@ def test_cli_valid_custom(mocker, capsys):
 
     # Verify the outcome.
     assert run_mock.call_count == 1
+    security = {"host_origin_protection": True, "allowed_hosts": None, "allowed_origins": None}
     assert run_mock.call_args in [
-        mock.call("http", host="127.0.0.1", port=65535, path=None),
-        mock.call("http", show_banner=mock.ANY, host="127.0.0.1", port=65535, path=None),
+        mock.call("http", host="127.0.0.1", port=65535, path=None, **security),
+        mock.call(
+            "http", show_banner=mock.ANY, host="127.0.0.1", port=65535, path=None, **security
+        ),
     ]
+
+
+def test_cli_allowed_hosts_env(mocker, capsys):
+    """
+    Verify `CRATEDB_MCP_ALLOWED_HOSTS` reaches the Host check, one name per word.
+    """
+    run_mock = mocker.patch.object(fastmcp.server.server.FastMCP, "run_async")
+    mocker.patch.dict(
+        os.environ, {"CRATEDB_MCP_ALLOWED_HOSTS": "mcp.example.org mcp.internal:8000"}
+    )
+
+    runner = CliRunner()
+    runner.invoke(cli, args=["serve", "--transport=http"], catch_exceptions=False)
+
+    assert run_mock.call_count == 1
+    assert run_mock.call_args.kwargs["host_origin_protection"] is True
+    assert run_mock.call_args.kwargs["allowed_hosts"] == ["mcp.example.org", "mcp.internal:8000"]
 
 
 def test_cli_invalid_transport_option(mocker, capsys):

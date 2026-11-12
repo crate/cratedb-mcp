@@ -28,10 +28,6 @@ Start MCP server with `stdio` transport (default).
 ```shell
 cratedb-mcp serve --transport=stdio
 ```
-Start MCP server with `sse` transport.
-```shell
-cratedb-mcp serve --transport=sse
-```
 Start MCP server with `http` transport (ex. `streamable-http`).
 ```shell
 cratedb-mcp serve --transport=http

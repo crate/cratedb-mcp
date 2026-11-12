@@ -25,22 +25,21 @@ the cache lifetime for documentation resources in seconds.
 ## Configure transport
 
 MCP servers can be started using different transport modes. The default transport
-is `stdio`, you can select another one of `{"stdio", "http", "sse", "streamable-http"}`
-and supply it to the invocation like this:
+is `stdio`, you can select `http` instead and supply it to the invocation like this:
 ```shell
-cratedb-mcp serve --transport=stdio
+cratedb-mcp serve --transport=http
 ```
 NB: The `http` transport was called `streamable-http` in earlier spec iterations.
+The `sse` transport is deprecated, because the MCP specification removed it.
 
-When using any of the HTTP-based options for serving the MCP interface, you can
-use the CLI options `--host`, `--port` and `--path` to specify the listening address.
-The default values are `localhost:8000`, where the SSE server responds to `/sse/`
-and `/messages/` and the HTTP server responds to `/mcp/` by default.
+When serving over HTTP, you can use the CLI options `--host`, `--port` and
+`--path` to specify the listening address. The default values are
+`127.0.0.1:8000`, and the server responds to `/mcp` by default.
 
 Alternatively, you can use environment variables instead of CLI options.
 ```shell
 export CRATEDB_MCP_TRANSPORT=http
-export CRATEDB_MCP_HOST=0.0.0.0
+export CRATEDB_MCP_HOST=127.0.0.1
 export CRATEDB_MCP_PORT=8000
 ```
 ```shell
@@ -58,6 +57,29 @@ says so in `truncated` and explains it in `note`.
 export CRATEDB_MCP_MAX_ROWS=100
 export CRATEDB_MCP_MAX_CHARS=50000
 ```
+
+## Configure HTTP access
+
+Over HTTP, the server checks the `Host` and `Origin` headers of every request,
+which protects it from DNS rebinding attacks. It answers requests addressed to
+`localhost`, `127.0.0.1`, `::1` or the address it listens on. A request
+addressed to any other name or IP address gets `421 Misdirected Request`. When
+clients reach the server by a name or IP address other than localhost, for
+example a service name in Docker Compose, a public host name behind a proxy, or
+the IP address of a host that maps a port to the server's container, list them,
+separated by spaces.
+```shell
+export CRATEDB_MCP_ALLOWED_HOSTS="cratedb-mcp mcp.example.org"
+```
+A browser sends an `Origin` header with its requests. When it does not match the
+host it calls, the server answers `403 Forbidden`, unless the origin is listed.
+```shell
+export CRATEDB_MCP_ALLOWED_ORIGINS="https://app.example.org"
+```
+The CLI options `--allowed-host` and `--allowed-origin` do the same, and can
+be repeated.
+
+The server answers `GET /health` with `OK`, for liveness probes.
 
 ## Security considerations
 

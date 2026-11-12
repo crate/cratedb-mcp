@@ -3,6 +3,8 @@ from typing import Any, Optional
 from fastmcp import FastMCP
 from fastmcp.tools import FunctionTool, Tool, ToolResult
 from mcp.types import TextContent, ToolAnnotations
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse
 
 from cratedb_mcp.prompt import InstructionsPrompt
 from cratedb_mcp.settings import Settings
@@ -61,6 +63,12 @@ class CrateDbMcp:
             instructions=prompt.render(),
         )
         self.add_tools()
+        self.mcp.custom_route("/health", methods=["GET"])(self.health)
+
+    @staticmethod
+    async def health(request: Request) -> PlainTextResponse:
+        """Answer liveness probes over HTTP."""
+        return PlainTextResponse("OK")
 
     def add_tools(self):
         """Register all CrateDB MCP tools with the FastMCP instance."""
