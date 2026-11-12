@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+
+## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of
   the CrateDB documentation
 - MCP: `fetch_cratedb_docs` follows redirects to permitted hosts, and raises an error
