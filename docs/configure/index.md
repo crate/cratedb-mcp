@@ -32,7 +32,7 @@ export CRATEDB_MCP_AUTH_TOKEN="$(openssl rand -hex 32)"
 cratedb-mcp serve --transport=http
 ```
 NB: The `http` transport was called `streamable-http` in earlier spec iterations.
-The `sse` transport is deprecated, because the MCP specification removed it.
+The `sse` transport is deprecated, as it is in the MCP specification.
 
 When serving over HTTP, you can use the CLI options `--host`, `--port` and
 `--path` to specify the listening address. The default values are

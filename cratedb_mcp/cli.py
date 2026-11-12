@@ -158,7 +158,7 @@ def serve(
     logger.info(f"CrateDB MCP server starting with transport: {transport}")
     if transport == "sse":
         logger.warning(
-            "The sse transport is deprecated, because the MCP specification removed it. "
+            "The sse transport is deprecated, as it is in the MCP specification. "
             "Use the http transport instead."
         )
     transport_kwargs: t.Dict[str, t.Any] = {}

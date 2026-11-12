@@ -22,7 +22,7 @@
   `CRATEDB_MCP_AUTH_TOKEN` and refuses to start without one, unless
   `CRATEDB_MCP_AUTH_DISABLED=true` is set
 - HTTP: Added `GET /health` for liveness probes
-- CLI: Deprecated the `sse` transport, which the MCP specification removed
+- CLI: Deprecated the `sse` transport, as the MCP specification does
 - Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28 and
   serves its stateless HTTP requests
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
