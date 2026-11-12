@@ -20,7 +20,7 @@ def tool_hints():
 
 def test_tools_declare_title_and_read_only_hints():
     tools = tool_hints()
-    assert len(tools) == 6
+    assert len(tools) == 8
     for name, (title, hints) in tools.items():
         assert title, name
         assert hints["readOnlyHint"] is True, name

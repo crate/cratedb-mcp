@@ -1,19 +1,21 @@
-from typing import Optional
+from typing import Any, Optional
 
 from fastmcp import FastMCP
-from fastmcp.tools import Tool
-from mcp.types import ToolAnnotations
+from fastmcp.tools import FunctionTool, Tool, ToolResult
+from mcp.types import TextContent, ToolAnnotations
 
 from cratedb_mcp.prompt import InstructionsPrompt
 from cratedb_mcp.settings import Settings
 
 from . import __appname__, __version__
 from .tool import (
+    describe_table,
     fetch_cratedb_docs,
     get_cluster_health,
     get_cratedb_documentation_index,
-    get_table_columns,
     get_table_metadata,
+    list_schemas,
+    list_tables,
     query_sql,
 )
 
@@ -29,6 +31,16 @@ READ_ONLY_OPEN_WORLD = ToolAnnotations(
     idempotentHint=True,
     openWorldHint=True,
 )
+
+
+class ListTool(FunctionTool):
+    """A tool returning a list, whose empty list still reaches the model as the text `[]`."""
+
+    def convert_result(self, raw_value: Any) -> ToolResult:
+        result = super().convert_result(raw_value)
+        if not result.content:
+            result.content = [TextContent(type="text", text="[]")]
+        return result
 
 
 class CrateDbMcp:
@@ -72,10 +84,28 @@ class CrateDbMcp:
             )
         )
         self.mcp.add_tool(
+            ListTool.from_function(
+                fn=list_schemas,
+                description=list_schemas.__doc__,
+                title="List schemas",
+                annotations=READ_ONLY,
+                tags={"text-to-sql"},
+            )
+        )
+        self.mcp.add_tool(
+            ListTool.from_function(
+                fn=list_tables,
+                description=list_tables.__doc__,
+                title="List tables",
+                annotations=READ_ONLY,
+                tags={"text-to-sql"},
+            )
+        )
+        self.mcp.add_tool(
             Tool.from_function(
-                fn=get_table_columns,
-                description=get_table_columns.__doc__,
-                title="List table columns",
+                fn=describe_table,
+                description=describe_table.__doc__,
+                title="Describe table",
                 annotations=READ_ONLY,
                 tags={"text-to-sql"},
             )

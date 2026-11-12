@@ -9,20 +9,44 @@ from cratedb_mcp.settings import Settings
 
 
 class Queries:
-    TABLES_COLUMNS = """
-SELECT
-    c.table_schema,
-    c.table_name,
-    c.column_name,
-    c.data_type,
-    c.is_nullable,
-    c.column_default
-FROM information_schema.columns c
-WHERE {where}
-ORDER BY
-    c.table_schema,
-    c.table_name,
-    c.ordinal_position
+    SCHEMAS = """
+SELECT table_schema,
+       count(*) FILTER (WHERE table_type = 'BASE TABLE') AS tables,
+       count(*) FILTER (WHERE table_type = 'VIEW') AS views
+FROM information_schema.tables
+{where}
+GROUP BY table_schema
+ORDER BY table_schema
+    """
+    TABLES = """
+SELECT table_name, table_type
+FROM information_schema.tables
+WHERE table_schema = ? {pattern}
+ORDER BY table_name
+    """
+    TABLE_TYPE = """
+SELECT table_type
+FROM information_schema.tables
+WHERE table_schema = ? AND table_name = ?
+    """
+    VIEW_DEFINITION = """
+SELECT view_definition
+FROM information_schema.views
+WHERE table_schema = ? AND table_name = ?
+    """
+    COLUMNS = """
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = ? AND table_name = ?
+ORDER BY ordinal_position
+    """
+    TABLE_STORAGE = """
+SELECT count(*) AS primary_shards,
+       sum(num_docs) AS records,
+       sum(size) AS size_bytes,
+       count(DISTINCT partition_ident) FILTER (WHERE partition_ident <> '') AS partitions
+FROM sys.shards
+WHERE schema_name = ? AND table_name = ? AND "primary"
     """
     TABLES_METADATA = """
 WITH partitions_health AS (SELECT table_name,

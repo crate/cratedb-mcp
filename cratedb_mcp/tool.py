@@ -1,4 +1,7 @@
+import typing as t
+
 import httpx
+from pydantic import BaseModel
 
 from cratedb_mcp.knowledge import DocumentationIndex, Queries
 from cratedb_mcp.settings import HTTP_URL, Settings
@@ -8,13 +11,24 @@ from cratedb_mcp.util.sql import sql_is_permitted
 # ------------------------------------------
 #              Text-to-SQL
 # ------------------------------------------
-def query_cratedb(query: str) -> dict:
+def query_cratedb(query: str, args: t.Optional[t.List[t.Any]] = None) -> dict:
     """Send the SQL `query` to the configured CrateDB server and return the result."""
     url = HTTP_URL
     if url.endswith("/"):
         url = url.removesuffix("/")
 
-    return httpx.post(f"{url}/_sql", json={"stmt": query}, timeout=Settings.http_timeout()).json()
+    payload: t.Dict[str, t.Any] = {"stmt": query}
+    if args is not None:
+        payload["args"] = args
+    return httpx.post(f"{url}/_sql", json=payload, timeout=Settings.http_timeout()).json()
+
+
+def query_rows(query: str, args: t.Optional[t.List[t.Any]] = None) -> t.List[t.List[t.Any]]:
+    """Run `query` with bound `args` and return its rows, raising CrateDB's error message."""
+    response = query_cratedb(query, args)
+    if "error" in response:
+        raise RuntimeError(response["error"]["message"])
+    return response["rows"]
 
 
 def query_sql(query: str) -> dict:
@@ -28,38 +42,103 @@ def query_sql(query: str) -> dict:
     return query_cratedb(query)
 
 
-def get_table_columns() -> dict:
+SYSTEM_SCHEMAS = ("information_schema", "pg_catalog", "sys", "blob")
+TABLE_KINDS = {"BASE TABLE": "table", "VIEW": "view", "FOREIGN": "foreign table"}
+
+
+class SchemaInfo(BaseModel):
+    schema_name: str
+    tables: int
+    views: int
+
+
+class TableRef(BaseModel):
+    name: str
+    kind: str
+
+
+class TableDescription(BaseModel):
+    schema_name: str
+    name: str
+    kind: str
+    definition: str
+    primary_shards: t.Optional[int] = None
+    records: t.Optional[int] = None
+    size_bytes: t.Optional[int] = None
+    partitions: t.Optional[int] = None
+
+
+def quote_identifier(name: str) -> str:
+    return '"' + name.replace('"', '""') + '"'
+
+
+def list_schemas(include_system: bool = False) -> t.List[SchemaInfo]:
     """
-    Return schema and column information for all tables stored in CrateDB from
-    its `information_schema` table. Use it to discover database entities you are
-    unfamiliar with, the column names are crucial for correctly formulating SQL
-    queries.
-
-    The returned fields are table_schema, table_name, column_name,
-    data_type, is_nullable, and column_default.
-
-    The returned sections are:
-    - user tables: includes all user-defined tables without system tables
-    - system tables: `information_schema`, `pg_catalog`, and `sys`.
-
+    List the schemas that hold tables or views, with how many of each.
+    Start here to find out where the data lives. The system schemas
+    information_schema, pg_catalog, sys and blob are left out unless
+    `include_system` is true.
     """
+    where, args = "", []
+    if not include_system:
+        where = f"WHERE table_schema NOT IN ({', '.join('?' * len(SYSTEM_SCHEMAS))})"
+        args = list(SYSTEM_SCHEMAS)
+    rows = query_rows(Queries.SCHEMAS.format(where=where), args)
+    return [SchemaInfo(schema_name=row[0], tables=row[1], views=row[2]) for row in rows]
 
-    variants = {
-        "user": """
-            table_schema != 'information_schema' AND
-            table_schema != 'pg_catalog' AND
-            table_schema != 'sys'
-        """,
-        "information_schema": "table_schema = 'information_schema'",
-        "pg_catalog": "table_schema = 'pg_catalog'",
-        "sys": "table_schema = 'sys'",
-    }
 
-    response = {}
-    for variant, where in variants.items():
-        query = Queries.TABLES_COLUMNS.format(where=where)
-        response[variant] = query_sql(query)
-    return response
+def list_tables(schema: str, pattern: t.Optional[str] = None) -> t.List[TableRef]:
+    """
+    List the tables and views of one schema, by name and kind.
+    `pattern` filters the names with SQL LIKE syntax, for example `sensor%`.
+    Use `describe_table` next to see the columns of one of them.
+    """
+    args = [schema]
+    condition = ""
+    if pattern:
+        condition = "AND table_name LIKE ?"
+        args.append(pattern)
+    rows = query_rows(Queries.TABLES.format(pattern=condition), args)
+    return [TableRef(name=row[0], kind=TABLE_KINDS.get(row[1], row[1].lower())) for row in rows]
+
+
+def describe_table(schema: str, table: str) -> TableDescription:
+    """
+    Describe one table or view. For a table, return its CREATE TABLE statement
+    (columns, types, primary key, sharding and partitioning) with its primary
+    shard count, record count, size in bytes and partition count. For a view,
+    return its query. For a system table, return its columns and types.
+    """
+    rows = query_rows(Queries.TABLE_TYPE, [schema, table])
+    if not rows:
+        raise ValueError(f"Table or view not found: {schema}.{table}")
+    kind = TABLE_KINDS.get(rows[0][0], rows[0][0].lower())
+
+    if kind == "view":
+        definition = query_rows(Queries.VIEW_DEFINITION, [schema, table])[0][0]
+        return TableDescription(schema_name=schema, name=table, kind=kind, definition=definition)
+
+    if kind != "table" or schema in SYSTEM_SCHEMAS:
+        columns = query_rows(Queries.COLUMNS, [schema, table])
+        definition = "\n".join(f"{name} {data_type}" for name, data_type in columns)
+        return TableDescription(schema_name=schema, name=table, kind=kind, definition=definition)
+
+    statement = f"SHOW CREATE TABLE {quote_identifier(schema)}.{quote_identifier(table)}"
+    description = TableDescription(
+        schema_name=schema, name=table, kind=kind, definition=query_rows(statement)[0][0]
+    )
+    # A user granted access to single schemas cannot read `sys.shards`.
+    try:
+        storage = query_rows(Queries.TABLE_STORAGE, [schema, table])[0]
+    except RuntimeError:
+        return description
+    (
+        description.primary_shards,
+        description.records,
+        description.size_bytes,
+        description.partitions,
+    ) = storage
+    return description
 
 
 def get_table_metadata() -> dict:
