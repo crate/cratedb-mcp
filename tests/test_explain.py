@@ -36,6 +36,17 @@ def test_explain_query_rejects_analyze_with_verbose():
     assert ex.match("cannot combine")
 
 
-def test_explain_query_rejects_writes():
-    with pytest.raises(PermissionError):
-        explain_query("INSERT INTO foobar (id) VALUES (42)")
+@pytest.mark.parametrize(
+    "query",
+    ["INSERT INTO foobar (id) VALUES (42)", "SHOW TABLES", "(ANALYZE true) SELECT 42"],
+)
+def test_explain_query_rejects_statements_it_cannot_explain(query):
+    with pytest.raises(PermissionError) as ex:
+        explain_query(query)
+    assert ex.match("Only one SELECT, WITH or VALUES statement can be explained")
+
+
+def test_explain_query_rejects_explain():
+    with pytest.raises(ValueError) as ex:
+        explain_query("EXPLAIN SELECT 42")
+    assert ex.match("without EXPLAIN")

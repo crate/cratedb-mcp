@@ -39,6 +39,24 @@ def test_query_sql_hints_follow_permit_all_statements(mocker):
     assert hints["idempotentHint"] is False
 
 
+def query_sql_description():
+    async def fetch():
+        async with Client(CrateDbMcp().mcp) as client:
+            return await client.list_tools()
+
+    return next(tool.description for tool in asyncio.run(fetch()) if tool.name == "query_sql")
+
+
+def test_query_sql_description_names_the_permitted_statements():
+    assert "Only one SELECT, WITH, VALUES or SHOW statement" in query_sql_description()
+
+
+def test_query_sql_description_leaves_out_the_statement_rule_when_all_are_permitted(mocker):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_PERMIT_ALL_STATEMENTS": "true"})
+    with pytest.warns(UserWarning, match="All types of SQL statements are permitted"):
+        assert "Only one" not in query_sql_description()
+
+
 CALLS = {
     "query_sql": {"query": "SELECT x FROM generate_series(1, 3) AS t(x)"},
     "explain_query": {"query": "SELECT 42", "analyze": True},

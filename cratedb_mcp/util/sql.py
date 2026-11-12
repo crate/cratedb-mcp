@@ -3,7 +3,7 @@ import logging
 import typing as t
 
 import sqlparse
-from sqlparse.tokens import Keyword
+from sqlparse.sql import Parenthesis
 
 from cratedb_mcp.settings import Settings
 
@@ -16,10 +16,6 @@ def sql_is_permitted(expression: str) -> bool:
 
     When the `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set,
     allow all types of statements. This is **not** recommended.
-
-    FIXME: Revisit implementation, it might be too naive or weak.
-           Issue:    https://github.com/crate/cratedb-mcp/issues/10
-           Question: Does SQLAlchemy provide a solid read-only mode, or any other library?
     """
     is_dql = SqlStatementClassifier(
         expression=expression, permit_all=Settings.permit_all_statements()
@@ -36,8 +32,9 @@ class SqlStatementClassifier:
     """
     Helper to classify an SQL statement.
 
-    Here, most importantly: Provide the `is_dql` property that
-    signals truthfulness for read-only SQL SELECT statements only.
+    Here, most importantly: Provide the `is_dql` property that signals
+    truthfulness for a single `SELECT`, `WITH`, `VALUES` or `SHOW` statement,
+    or an `EXPLAIN` of a `SELECT`, `WITH` or `VALUES` statement.
     """
 
     expression: str
@@ -71,55 +68,59 @@ class SqlStatementClassifier:
         if self.permit_all:
             return True
 
-        # Check if the expression is valid and if it's a DQL/SELECT statement,
-        # also trying to consider `SELECT ... INTO ...` and evasive
-        # `SELECT * FROM users; \uff1b DROP TABLE users` statements.
-        return self.is_select and not self.is_camouflage
+        if self.is_evasive:
+            return False
 
-    @property
-    def is_select(self) -> bool:
-        """
-        Whether the expression is an SQL SELECT statement.
-        """
-        return self.operation == "SELECT"
+        if self.keyword == "EXPLAIN":
+            explained = SqlStatementClassifier(self.explained)
+            return explained.keyword not in ("EXPLAIN", "SHOW") and explained.is_dql
+
+        return self.operation == "SELECT" or self.keyword in ("VALUES", "SHOW")
 
     @property
     def operation(self) -> str:
         """
         The SQL operation: SELECT, INSERT, UPDATE, DELETE, CREATE, etc.
+        After a `WITH` clause, the operation that follows it.
         """
         parsed = self.parse_sqlparse()
         return parsed[0].get_type().upper()
 
     @property
-    def is_camouflage(self) -> bool:
+    def keyword(self) -> str:
         """
-        Innocent-looking `SELECT` statements can evade filters.
+        The first keyword of the statement, after comments.
         """
-        return self.is_select_into or self.is_evasive
+        parsed = self.parse_sqlparse()
+        token = parsed[0].token_first(skip_cm=True) if parsed else None
+        if token is None:
+            return ""
+        return next(token.flatten()).normalized.upper()
 
     @property
-    def is_select_into(self) -> bool:
+    def explained(self) -> str:
         """
-        Use traditional `sqlparse` for catching `SELECT ... INTO ...` statements.
-        Examples:
-            SELECT * INTO foobar FROM bazqux
-            SELECT * FROM bazqux INTO foobar
+        The statement an `EXPLAIN` statement explains, without its options.
         """
-        # Flatten all tokens (including nested ones) and match on type+value.
         statement = self.parse_sqlparse()[0]
-        return any(
-            token.ttype is Keyword and token.value.upper() == "INTO"
-            for token in statement.flatten()
-        )
+        index = statement.token_index(statement.token_first(skip_cm=True))
+        index, token = statement.token_next(index, skip_cm=True)
+        while isinstance(token, Parenthesis) or (
+            token is not None and token.normalized.upper() in ("ANALYZE", "VERBOSE")
+        ):
+            index, token = statement.token_next(index, skip_cm=True)
+        if token is None:
+            return ""
+        return "".join(str(rest) for rest in statement.tokens[index:])
 
     @property
     def is_evasive(self) -> bool:
         """
-        Use traditional `sqlparse` for catching evasive SQL statements.
+        Whether the expression holds more than one statement.
 
-        A practice picked up from CodeRabbit was to reject multiple statements
-        to prevent potential SQL injections. Is it a viable suggestion?
+        `sqlparse` reads a backslash in a string as an escape and CrateDB does
+        not, so it may read one statement where CrateDB reads two. CrateDB runs
+        one statement per request and refuses such a text.
 
         Examples:
 

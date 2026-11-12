@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cratedb_mcp.knowledge import DocumentationIndex, Queries
 from cratedb_mcp.settings import HTTP_URL, Settings
-from cratedb_mcp.util.sql import sql_is_permitted
+from cratedb_mcp.util.sql import SqlStatementClassifier, sql_is_permitted
 
 
 def _is_none(value: t.Any) -> bool:
@@ -94,7 +94,10 @@ def query_sql(query: str, max_rows: t.Optional[int] = None) -> BoundedResult:
     `truncated` is true and `note` says why.
     """
     if not sql_is_permitted(query):
-        raise PermissionError("Only queries that have a SELECT statement are allowed.")
+        raise PermissionError(
+            "Only one SELECT, WITH, VALUES or SHOW statement, or an EXPLAIN of a SELECT, "
+            "WITH or VALUES statement, is allowed."
+        )
     return BoundedResult(**bound_result(run_query(query), max_rows))
 
 
@@ -158,8 +161,13 @@ def explain_query(
     """
     if analyze and verbose:
         raise ValueError("CrateDB cannot combine `analyze` and `verbose`; choose one.")
-    if not sql_is_permitted(query):
-        raise PermissionError("Only queries that have a SELECT statement are allowed.")
+    keyword = SqlStatementClassifier(query).keyword
+    if keyword == "EXPLAIN":
+        raise ValueError(
+            "Pass the query without EXPLAIN; `analyze`, `verbose` and `costs` set its options."
+        )
+    if keyword not in ("SELECT", "WITH", "VALUES") or not sql_is_permitted(query):
+        raise PermissionError("Only one SELECT, WITH or VALUES statement can be explained.")
     if analyze:
         options = "ANALYZE true"
     else:

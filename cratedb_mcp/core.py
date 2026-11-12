@@ -82,13 +82,19 @@ class CrateDbMcp:
             idempotentHint=read_only,
             openWorldHint=False,
         )
+        query_description = query_sql.__doc__ or ""
+        if read_only:
+            query_description += (
+                "Only one SELECT, WITH, VALUES or SHOW statement, or an EXPLAIN of a SELECT, "
+                "WITH or VALUES statement, runs per call.\n"
+            )
         # ------------------------------------------
         #              Text-to-SQL
         # ------------------------------------------
         self.mcp.add_tool(
             Tool.from_function(
                 fn=query_sql,
-                description=query_sql.__doc__,
+                description=query_description,
                 title="Run SQL query",
                 annotations=query_annotations,
                 tags={"text-to-sql"},
