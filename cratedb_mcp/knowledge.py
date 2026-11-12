@@ -153,16 +153,18 @@ class DocumentationIndex:
 
     def url_permitted(self, url: str) -> bool:
         """
-        Validate if a documentation URL is from a permitted domain.
+        Validate if a documentation URL is listed in the documentation index or is from a permitted domain.
 
-        Only URLs from CrateDB domains and specific GitHub repositories are allowed.
+        Only links from the documentation index, CrateDB domains, and specific GitHub repositories are allowed.
 
         Args:
             url: The URL to validate
 
         Returns:
-            bool: True if the URL is from a permitted domain, False otherwise
+            bool: True if the URL is permitted, False otherwise
         """
+        if any(item["link"] == url for item in self.items()):
+            return True
         for permitted_url in self.permitted_urls:
             if url.startswith(permitted_url):
                 return True
