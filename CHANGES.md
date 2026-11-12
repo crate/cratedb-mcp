@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+
+## v0.1.4 - 2026-11-12
 - OCI: Installed `mcpo` apart from the server, with the MCP SDK 1.x and the FastAPI
   release it needs, so the MCPO image starts again
 
