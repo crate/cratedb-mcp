@@ -1,3 +1,4 @@
+import json
 import typing as t
 
 import httpx
@@ -31,15 +32,58 @@ def query_rows(query: str, args: t.Optional[t.List[t.Any]] = None) -> t.List[t.L
     return response["rows"]
 
 
-def query_sql(query: str) -> dict:
+MAX_ROWS_CEILING = 1000
+
+
+def query_sql(query: str, max_rows: t.Optional[int] = None) -> dict:
     """
     Execute an SQL query on CrateDB and return the results.
     Select only the columns you need (avoid `SELECT *`) and,
     where appropriate, add a `LIMIT` clause to keep result sets concise.
+    The result holds at most 100 rows unless `max_rows` asks for more,
+    up to 1000. When rows are cut, `truncated` is true and `note` says why.
     """
     if not sql_is_permitted(query):
         raise PermissionError("Only queries that have a SELECT statement are allowed.")
-    return query_cratedb(query)
+    try:
+        result = query_cratedb(query)
+    except httpx.TimeoutException as e:
+        raise TimeoutError(
+            f"The query did not finish within the {Settings.http_timeout():g}-second timeout. "
+            "Narrow it with a WHERE clause, an aggregation or a LIMIT instead of running it again."
+        ) from e
+    return bound_result(result, max_rows)
+
+
+def bound_result(result: dict, max_rows: t.Optional[int] = None) -> dict:
+    """Cut the rows of a query result to the row and character caps, and say when it did."""
+    if "rows" not in result:
+        return result
+    row_cap = Settings.max_rows() if max_rows is None else max_rows
+    row_cap = max(1, min(row_cap, MAX_ROWS_CEILING))
+    char_cap = Settings.max_chars()
+
+    rows = result["rows"][:row_cap]
+    size = 0
+    for count, row in enumerate(rows):
+        size += len(json.dumps(row, default=str))
+        if size > char_cap:
+            rows = rows[:count]
+            break
+
+    bounded = {**result, "rows": rows, "truncated": len(rows) < len(result["rows"])}
+    if bounded["truncated"]:
+        reason = (
+            f"the next row would pass {char_cap} characters"
+            if len(rows) < min(row_cap, len(result["rows"]))
+            else f"the cap is {row_cap} rows"
+        )
+        bounded["note"] = (
+            f"Only the first {len(rows)} of {len(result['rows'])} rows are shown, "
+            f"because {reason}. Filter or aggregate the query, "
+            f"or ask for up to {MAX_ROWS_CEILING} rows with max_rows."
+        )
+    return bounded
 
 
 def explain_query(

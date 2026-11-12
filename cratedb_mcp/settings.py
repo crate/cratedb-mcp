@@ -74,3 +74,35 @@ class Settings:
                 stacklevel=2,
             )
             return ttl
+
+    @staticmethod
+    def max_rows(rows: int = 100) -> int:
+        """
+        Return how many rows `query_sql` returns unless the caller asks for more.
+        """
+        try:
+            return int(os.getenv("CRATEDB_MCP_MAX_ROWS", rows))
+        except ValueError as e:
+            warnings.warn(
+                f"Environment variable `CRATEDB_MCP_MAX_ROWS` invalid: {e}. "
+                f"Using default value: {rows}.",
+                category=UserWarning,
+                stacklevel=2,
+            )
+            return rows
+
+    @staticmethod
+    def max_chars(chars: int = 50_000) -> int:
+        """
+        Return how many characters of rows `query_sql` returns at most.
+        """
+        try:
+            return int(os.getenv("CRATEDB_MCP_MAX_CHARS", chars))
+        except ValueError as e:
+            warnings.warn(
+                f"Environment variable `CRATEDB_MCP_MAX_CHARS` invalid: {e}. "
+                f"Using default value: {chars}.",
+                category=UserWarning,
+                stacklevel=2,
+            )
+            return chars
