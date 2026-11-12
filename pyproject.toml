@@ -77,7 +77,7 @@ dependencies = [
   "cratedb-about>=0.0.4,<0.1.0",
   "fastmcp>=3.2,<3.5",
   "pueblo>=0.0.15,<0.2",
-  "sqlparse<0.6",
+  "sqlparse<0.7",
 ]
 optional-dependencies.develop = [
   "mypy<2.4",
