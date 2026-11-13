@@ -39,6 +39,8 @@ Changes:
   `explain_query` keeps to the same character cap. `CRATEDB_MCP_MAX_ROWS` and
   `CRATEDB_MCP_MAX_CHARS` change the defaults
 - MCP: A query that times out tells the model to narrow it instead of retrying
+- MCP: `query_sql`, `explain_query`, `get_cluster_health` and
+  `get_cratedb_documentation_index` declare the fields of their results
 - Security: Over HTTP, the server answers only requests addressed to localhost, its
   listening address or a host named in `CRATEDB_MCP_ALLOWED_HOSTS` (else 421), and
   refuses foreign browser origins (403) unless named in `CRATEDB_MCP_ALLOWED_ORIGINS`
