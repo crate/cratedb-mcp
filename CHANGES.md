@@ -10,6 +10,11 @@
   `get_table_metadata`, which returned every table at once
 - MCP: Added a title and annotations to every tool, marking them read-only. `query_sql`
   loses its read-only mark when `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` is set
+- MCP: `query_sql` returns at most 100 rows and 50,000 characters of rows, marks a cut
+  result with `truncated` and a `note`, and takes `max_rows` for up to 1,000 rows.
+  `explain_query` keeps to the same character cap. `CRATEDB_MCP_MAX_ROWS` and
+  `CRATEDB_MCP_MAX_CHARS` change the defaults
+- MCP: A query that times out tells the model to narrow it instead of retrying
 - Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28 and
   serves its stateless HTTP requests
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
