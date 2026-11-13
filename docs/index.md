@@ -77,7 +77,8 @@ The CrateDB MCP Server provides two families of tools.
 :Health status:
 
   The tool `get_cluster_health` returns cluster health information derived
-  from CrateDB's system tables.
+  from CrateDB's system tables, and `diagnose_workload` lists slow, failed
+  and running data statements and the latencies per statement type.
 :::
 
 :::{note}

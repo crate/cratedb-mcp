@@ -53,8 +53,9 @@ export CRATEDB_MCP_PATH=/path/in/url
 Every row `query_sql` returns lands in the model's context, so results are cut.
 By default a result holds at most 100 rows and 50,000 characters of rows. The
 model can ask for up to 1,000 rows with the `max_rows` argument. The character
-cap also bounds the plans `explain_query` returns. When rows are cut, the result
-says so in `truncated` and explains it in `note`.
+cap also bounds the plans `explain_query` returns, and both caps bound the
+statements `diagnose_workload` returns. When rows are cut, the result says so in
+`truncated` and explains it in `note`.
 ```shell
 export CRATEDB_MCP_MAX_ROWS=100
 export CRATEDB_MCP_MAX_CHARS=50000
@@ -110,8 +111,12 @@ CREATE USER mcp WITH (password = 'YOUR_PASSWORD');
 GRANT DQL ON SCHEMA doc TO mcp;
 ALTER USER mcp SET (statement_timeout = '30s');
 ```
-CrateDB then stops any statement of that user after 30 seconds. For a remote
-cluster, use `https` in the cluster URL.
+CrateDB then stops any statement of that user after 30 seconds.
+`diagnose_workload` reads the `sys` schema and needs `DQL` on it as well;
+without it, the tool answers with a note. With `DQL` alone, CrateDB shows a
+user only its own statements, so the `slow`, `failed` and `running` views list
+only statements run by the MCP server's user. For a remote cluster, use `https`
+in the cluster URL.
 ```shell
 export CRATEDB_CLUSTER_URL="https://mcp:YOUR_PASSWORD@example.aks1.westeurope.azure.cratedb.net:4200"
 ```

@@ -43,6 +43,8 @@ Changes:
   `get_cratedb_documentation_index` declare the fields of their results
 - MCP: `query_sql` runs `SHOW` and `VALUES` statements beside `SELECT` and `WITH`, and
   an `EXPLAIN` of a `SELECT`, `WITH` or `VALUES` statement
+- MCP: Added `diagnose_workload`, which lists slow, failed or running data statements,
+  or the latencies per statement type, and says whether CrateDB records statements at all
 - Dependencies: Updated to `sqlparse>=0.6.1`, earlier versions had vulnerabilities
 - Security: Over HTTP, the server answers only requests addressed to localhost, its
   listening address or a host named in `CRATEDB_MCP_ALLOWED_HOSTS` (else 421), and

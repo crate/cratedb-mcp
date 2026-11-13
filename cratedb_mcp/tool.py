@@ -62,12 +62,17 @@ def query_cratedb(query: str, args: t.Optional[t.List[t.Any]] = None) -> dict:
     return httpx.post(f"{url}/_sql", json=payload, timeout=Settings.http_timeout()).json()
 
 
-def query_rows(query: str, args: t.Optional[t.List[t.Any]] = None) -> t.List[t.List[t.Any]]:
-    """Run `query` with bound `args` and return its rows, raising CrateDB's error message."""
+def query_result(query: str, args: t.Optional[t.List[t.Any]] = None) -> dict:
+    """Run `query` with bound `args` and return its result, raising CrateDB's error message."""
     response = query_cratedb(query, args)
     if "error" in response:
         raise RuntimeError(response["error"]["message"])
-    return response["rows"]
+    return response
+
+
+def query_rows(query: str, args: t.Optional[t.List[t.Any]] = None) -> t.List[t.List[t.Any]]:
+    """Run `query` with bound `args` and return its rows."""
+    return query_result(query, args)["rows"]
 
 
 MAX_ROWS_CEILING = 1000
@@ -105,6 +110,17 @@ def row_chars(row: t.Any) -> int:
     return len(json.dumps(row, default=str))
 
 
+def cap_rows(rows: t.List[t.Any], row_cap: int) -> t.List[t.Any]:
+    """Keep the first rows, at most `row_cap` and no more than fit in the character cap."""
+    rows = rows[:row_cap]
+    size = 0
+    for count, row in enumerate(rows):
+        size += row_chars(row)
+        if size > Settings.max_chars():
+            return rows[:count]
+    return rows
+
+
 def bound_result(
     result: dict,
     max_rows: t.Optional[int] = None,
@@ -118,14 +134,7 @@ def bound_result(
     row_cap = max(1, min(row_cap, MAX_ROWS_CEILING))
     char_cap = Settings.max_chars()
 
-    rows = result["rows"][:row_cap]
-    size = 0
-    for count, row in enumerate(rows):
-        size += row_chars(row)
-        if size > char_cap:
-            rows = rows[:count]
-            break
-
+    rows = cap_rows(result["rows"], row_cap)
     bounded = {**result, "rows": rows, "truncated": len(rows) < len(result["rows"])}
     if bounded["truncated"]:
         shown = f"Only the first {len(rows)} of {len(result['rows'])} rows are shown"
@@ -324,3 +333,87 @@ def fetch_cratedb_docs(link: str) -> str:
 def get_cluster_health() -> CrateResult:
     """Return the health of the CrateDB cluster by querying `sys.health` ordered by severity."""
     return CrateResult(**query_cratedb(Queries.HEALTH))
+
+
+STATEMENT_CHARS = 1000
+MAX_SINCE_MINUTES = 525_600
+DATA_STATEMENT = r"(?is)\s*(SELECT|WITH|INSERT|UPDATE|DELETE)\b.*"
+
+
+class Workload(BaseModel):
+    model_config = ConfigDict(json_schema_extra=declare_present_types)
+
+    user: t.Optional[str] = absent()
+    stats_enabled: t.Optional[bool] = absent()
+    jobs_log_size: t.Optional[int] = absent()
+    cols: t.List[str]
+    rows: t.List[t.List[t.Any]]
+    truncated: bool
+    note: t.Optional[str] = absent()
+
+
+def cut_text(value: t.Any) -> t.Any:
+    if isinstance(value, str) and len(value) > STATEMENT_CHARS:
+        return value[:STATEMENT_CHARS] + "…"
+    return value
+
+
+def diagnose_workload(
+    view: t.Literal["slow", "failed", "running", "summary"] = "slow",
+    limit: int = 10,
+    since_minutes: t.Optional[int] = None,
+) -> Workload:
+    """
+    Statements that load the cluster. `slow`: finished, slowest first;
+    `failed`: newest first, without statements CrateDB could not parse or
+    resolve, such as one naming an unknown table; `running`: longest first.
+    These three hold only queries and INSERT, UPDATE and DELETE statements,
+    and only `user`'s own unless it is a superuser or has AL. `summary`:
+    latencies in ms per statement type and node. `limit` (default 10) goes
+    up to the row cap, 100 by default. `since_minutes` narrows `slow` and
+    `failed`. Nodes keep their last `jobs_log_size` statements, dropping all
+    past 5% of heap.
+    """
+    limit = max(1, min(limit, Settings.max_rows(), MAX_ROWS_CEILING))
+    fetched = STATEMENT_CHARS + 1
+    args: t.List[t.Any]
+    if view == "summary":
+        query, args = Queries.JOBS_METRICS, [limit]
+    elif view == "running":
+        # Leave this query out of its own answer.
+        query, args = Queries.JOBS, [fetched, DATA_STATEMENT, Queries.JOBS, limit]
+    else:
+        conditions = ["classification['type'] IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE')"]
+        args = [fetched]
+        if view == "failed":
+            conditions.append("error IS NOT NULL")
+        if since_minutes is not None:
+            conditions.append("CAST(ended AS BIGINT) >= CAST(CURRENT_TIMESTAMP AS BIGINT) - ?")
+            args.append(max(1, min(since_minutes, MAX_SINCE_MINUTES)) * 60_000)
+        order = "ended" if view == "failed" else "duration_ms"
+        query = Queries.JOBS_LOG.format(where=" AND ".join(conditions), order=order)
+        args.append(limit)
+
+    workload = Workload(cols=[], rows=[], truncated=False)
+    # A user granted access to single schemas cannot read the `sys` tables.
+    try:
+        workload.stats_enabled, workload.jobs_log_size, workload.user = query_rows(Queries.STATS)[0]
+        result = query_result(query, args)
+    except RuntimeError as e:
+        workload.note = f"No statements are shown, because reading the sys tables failed: {e}"
+        return workload
+    rows = [[cut_text(value) for value in row] for row in result["rows"]]
+    workload.cols = result["cols"]
+    workload.rows = cap_rows(rows, limit)
+    workload.truncated = len(workload.rows) < len(rows)
+    if workload.truncated and not workload.rows:
+        workload.note = (
+            f"No rows are shown, because the first row alone holds {row_chars(rows[0])} "
+            f"characters, more than the cap of {Settings.max_chars()}."
+        )
+    elif workload.truncated:
+        workload.note = (
+            f"Only {len(workload.rows)} of {len(rows)} rows are shown, because the "
+            f"next row would pass {Settings.max_chars()} characters."
+        )
+    return workload

@@ -78,7 +78,8 @@ class Settings:
     @staticmethod
     def max_rows(rows: int = 100) -> int:
         """
-        Return how many rows `query_sql` returns unless the caller asks for more.
+        Return how many rows `query_sql` returns unless the caller asks for more,
+        and how many `diagnose_workload` returns at most.
         """
         try:
             return int(os.getenv("CRATEDB_MCP_MAX_ROWS", rows))
@@ -94,7 +95,8 @@ class Settings:
     @staticmethod
     def max_chars(chars: int = 50_000) -> int:
         """
-        Return how many characters of rows `query_sql` and `explain_query` return at most.
+        Return how many characters of rows `query_sql`, `explain_query` and
+        `diagnose_workload` return at most.
         """
         try:
             return int(os.getenv("CRATEDB_MCP_MAX_CHARS", chars))
