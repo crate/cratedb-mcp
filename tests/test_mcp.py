@@ -1,6 +1,10 @@
+import asyncio
+
 import httpx
 import pytest
+from fastmcp import Client
 
+from cratedb_mcp.core import CrateDbMcp
 from cratedb_mcp.tool import (
     documentation_index,
     fetch_cratedb_docs,
@@ -10,6 +14,14 @@ from cratedb_mcp.tool import (
     get_table_metadata,
     query_sql,
 )
+
+
+def test_server_speaks_protocol_2026_07_28():
+    async def negotiate():
+        async with Client(CrateDbMcp().mcp) as client:
+            return client.protocol_version
+
+    assert asyncio.run(negotiate()) == "2026-07-28"
 
 
 def test_get_documentation_index():
