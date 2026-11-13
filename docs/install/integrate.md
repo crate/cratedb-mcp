@@ -140,3 +140,42 @@ configuration snippet may look like this.
   }
 }
 ```
+
+## HTTP
+:::{div}
+A client can connect to a server that runs over HTTP, for example in a
+container. It sends the bearer token from `CRATEDB_MCP_AUTH_TOKEN` in the
+`Authorization` header, see [Configure HTTP access](../configure/index.md#configure-http-access).
+:::
+Claude Code.
+```shell
+claude mcp add --transport http cratedb-mcp http://localhost:8000/mcp \
+  --header "Authorization: Bearer <token>"
+```
+Cursor, in `mcp.json`.
+```json
+{
+  "mcpServers": {
+    "cratedb-mcp": {
+      "url": "http://localhost:8000/mcp",
+      "headers": {
+        "Authorization": "Bearer <token>"
+      }
+    }
+  }
+}
+```
+VS Code, in `.vscode/mcp.json`.
+```json
+{
+  "servers": {
+    "cratedb-mcp": {
+      "type": "http",
+      "url": "http://localhost:8000/mcp",
+      "headers": {
+        "Authorization": "Bearer <token>"
+      }
+    }
+  }
+}
+```
