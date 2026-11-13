@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.2.0 - 2026-11-12
+
 Upgrading from 0.1.x:
 - HTTP: set `CRATEDB_MCP_AUTH_TOKEN` and send it as `Authorization: Bearer <token>`, or set
   `CRATEDB_MCP_AUTH_DISABLED=true` for local work. Without either, the server does not
