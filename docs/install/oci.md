@@ -7,7 +7,6 @@
 
 :::{div}
 OCI images for Docker or Podman are available on GHCR per [CrateDB MCP server OCI images].
-There is a standard OCI image and an MCPO image suitable for Open WebUI.
 
 See also [Docker Hub MCP Server] and [mcp hub].
 :::
@@ -50,6 +49,14 @@ docker run --rm --name=cratedb-mcp --network=demo \
   -e CRATEDB_MCP_TRANSPORT -e CRATEDB_MCP_HOST -e CRATEDB_MCP_PORT -e CRATEDB_CLUSTER_URL \
   ghcr.io/crate/cratedb-mcp:latest
 ```
+
+## Open WebUI
+
+:::{div}
+[Open WebUI] 0.6.31 and later connect to the server over Streamable HTTP. Add a
+connection of type "MCP (Streamable HTTP)" that points to the server's `/mcp` path,
+for example `http://cratedb-mcp:8000/mcp` when both containers share the `demo` network.
+:::
 
 ## GitHub Actions
 

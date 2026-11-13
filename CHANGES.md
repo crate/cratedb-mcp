@@ -1,6 +1,9 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
+  MCP servers directly, so use the standard image `ghcr.io/crate/cratedb-mcp`
+  with `--transport=streamable-http`.
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of
