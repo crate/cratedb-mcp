@@ -12,6 +12,7 @@ from cratedb_mcp.settings import Settings
 
 from . import __appname__, __version__
 from .tool import (
+    analyze_table_layout,
     describe_table,
     diagnose_workload,
     explain_query,
@@ -133,6 +134,15 @@ class CrateDbMcp:
                 fn=describe_table,
                 description=describe_table.__doc__,
                 title="Describe table",
+                annotations=READ_ONLY,
+                tags={"text-to-sql"},
+            )
+        )
+        self.mcp.add_tool(
+            Tool.from_function(
+                fn=analyze_table_layout,
+                description=analyze_table_layout.__doc__,
+                title="Analyze table layout",
                 annotations=READ_ONLY,
                 tags={"text-to-sql"},
             )

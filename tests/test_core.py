@@ -21,7 +21,7 @@ def tool_hints():
 
 def test_tools_declare_title_and_read_only_hints():
     tools = tool_hints()
-    assert len(tools) == 9
+    assert len(tools) == 10
     for name, (title, hints) in tools.items():
         assert title, name
         assert hints["readOnlyHint"] is True, name
@@ -66,6 +66,7 @@ CALLS = {
     "get_cratedb_documentation_index": {},
     "get_cluster_health": {},
     "diagnose_workload": {"view": "slow"},
+    "analyze_table_layout": {},
 }
 
 
@@ -96,6 +97,15 @@ RESULT_FIELDS = {
         "truncated",
         "note",
     },
+    "analyze_table_layout": {
+        "cpus",
+        "max_shards_per_node",
+        "busiest_node_shards",
+        "findings",
+        "tables",
+        "truncated",
+        "note",
+    },
 }
 
 
@@ -120,6 +130,7 @@ def test_tools_declare_named_result_fields():
         *CALLS.items(),
         ("query_sql", {"query": "SELECT x FROM generate_series(1, 150) AS t(x)"}),
         ("query_sql", {"query": "SELECT * FROM unknown_table"}),
+        ("analyze_table_layout", {"schema": "sys", "table": "summits"}),
     ],
 )
 def test_results_validate_against_declared_schema(name, arguments):

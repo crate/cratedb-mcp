@@ -48,6 +48,45 @@ SELECT count(*) AS primary_shards,
 FROM sys.shards
 WHERE schema_name = ? AND table_name = ? AND "primary"
     """
+    TABLE_LAYOUT = """
+SELECT t.table_schema, t.table_name, t.number_of_shards, t.number_of_replicas,
+       count(p.partition_ident) AS partitions
+FROM information_schema.tables t
+LEFT JOIN information_schema.table_partitions p
+       ON p.table_schema = t.table_schema AND p.table_name = t.table_name
+WHERE t.table_type = 'BASE TABLE' AND {where}
+GROUP BY t.table_schema, t.table_name, t.number_of_shards, t.number_of_replicas
+    """
+    SHARD_LAYOUT = """
+SELECT schema_name, table_name,
+       count(*) FILTER (WHERE "primary") AS primary_shards,
+       count(*) FILTER (WHERE NOT "primary") AS replica_shards,
+       count(*) FILTER (WHERE state = 'UNASSIGNED') AS unassigned_shards,
+       sum(num_docs) FILTER (WHERE "primary") AS records,
+       sum(size) FILTER (WHERE "primary") AS size_bytes,
+       avg(size) FILTER (WHERE "primary" AND state <> 'UNASSIGNED') AS avg_shard_bytes,
+       max(size) FILTER (WHERE "primary") AS max_shard_bytes,
+       max(num_docs) FILTER (WHERE "primary") AS max_shard_records
+FROM sys.shards
+WHERE {where}
+GROUP BY schema_name, table_name
+    """
+    CPUS = """
+SELECT sum(os_info['available_processors'])
+FROM sys.nodes
+    """
+    MAX_SHARDS_PER_NODE = """
+SELECT settings['cluster']['max_shards_per_node']
+FROM sys.cluster
+    """
+    BUSIEST_NODE = """
+SELECT count(*) AS shards
+FROM sys.shards
+WHERE node['id'] IS NOT NULL
+GROUP BY node['id']
+ORDER BY shards DESC
+LIMIT 1
+    """
     STATS = """
 SELECT settings['stats']['enabled'], settings['stats']['jobs_log_size'], CURRENT_USER
 FROM sys.cluster
