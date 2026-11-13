@@ -23,6 +23,8 @@ Upgrading from 0.1.x:
   MCP (Streamable HTTP).
 
 Changes:
+- Shipping: Published to the MCP Registry as `io.github.crate/cratedb-mcp`, with the
+  PyPI package and the OCI image
 - MCP: `fetch_cratedb_docs` reads every link listed in the documentation index,
   including pages outside the permitted hosts
 - MCP: Added `explain_query`, which shows how CrateDB plans or runs a SELECT query,
