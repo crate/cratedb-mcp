@@ -15,7 +15,6 @@
 [MCP]: https://modelcontextprotocol.io/introduction
 [MCP clients]: https://modelcontextprotocol.io/clients
 [mcp hub]: https://hub.docker.com/mcp
-[MCP support for Open WebUI]: https://docs.openwebui.com/openapi-servers/mcp/
-[MCP-to-OpenAPI proxy server (mcpo)]: https://github.com/open-webui/mcpo
 [MCP tools]: https://modelcontextprotocol.io/docs/concepts/tools
+[Open WebUI]: https://docs.openwebui.com/features/extensibility/mcp/
 [using Goose extensions]: https://block.github.io/goose/docs/getting-started/using-extensions/
