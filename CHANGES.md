@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- MCP: `fetch_cratedb_docs` reads every link listed in the documentation index,
+  including pages outside the permitted hosts
 - Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28 and
   serves its stateless HTTP requests
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
