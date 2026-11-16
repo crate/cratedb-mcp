@@ -1,6 +1,6 @@
 import io
-import os
 
+import httpx
 import pytest
 
 from cratedb_mcp.core import CrateDbMcp
@@ -60,21 +60,32 @@ def test_fragment_stdin(mocker):
     assert instructions.render() == "custom-instruction"
 
 
-def test_fragment_remote_success():
+def serve(mocker, response):
+    requests = []
+
+    def answer(transport, request):
+        requests.append(str(request.url))
+        return response
+
+    mocker.patch.object(httpx.HTTPTransport, "handle_request", answer)
+    return requests
+
+
+def test_fragment_remote_success(mocker):
     """
     Verify fragments are loaded from HTTP URLs successfully.
     """
-    httpbin_url = os.environ.get("GO_HTTPBIN_URL", "https://httpbin.org")
-    instructions = InstructionsPrompt(instructions=httpbin_url + "/uuid")
-    assert '"uuid"' in instructions.render()
+    requests = serve(mocker, httpx.Response(200, text="custom-instruction"))
+    instructions = InstructionsPrompt(instructions="https://example.org/instructions.md")
+    assert instructions.render() == "custom-instruction"
+    assert requests == ["https://example.org/instructions.md"]
 
 
-def test_fragment_remote_failure():
+def test_fragment_remote_failure(mocker):
     """
     Verify fragment-loading from HTTP URLs fails correctly.
     """
+    serve(mocker, httpx.Response(404))
     with pytest.raises(ValueError) as ex:
-        InstructionsPrompt(instructions="https://www.iana.org/404")
-    assert ex.match(
-        "Failed to load fragment 'https://www.iana.org/404': (Client error|Server error)"
-    )
+        InstructionsPrompt(instructions="https://example.org/404")
+    assert ex.match("Failed to load fragment 'https://example.org/404': Client error")

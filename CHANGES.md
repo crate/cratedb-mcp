@@ -33,6 +33,8 @@ Changes:
 - CLI: The server reads `CRATEDB_CLUSTER_URL` when it starts, and does not start when it
   is not an http or https URL with a host
 - CLI: The server does not start when `CRATEDB_MCP_HTTP_TIMEOUT` is not a number above zero
+- Tests: The software tests answer requests for documentation pages and remote
+  instructions from memory
 - CLI: The server starts without asking PyPI for a newer FastMCP release, unless
   `FASTMCP_CHECK_FOR_UPDATES` is set
 
