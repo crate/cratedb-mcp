@@ -23,6 +23,9 @@ Upgrading from 0.1.x:
 - Instructions: the text sent to clients is new and much shorter, and it sets no
   persona. If a setup relied on the old text, pass your own with `--instructions` or
   `CRATEDB_MCP_INSTRUCTIONS`.
+- Tools: a CrateDB error fails the call, with `isError` set and CrateDB's message and
+  error code as its text. Clients that read the `error` field of a `query_sql` or
+  `get_cluster_health` result check `isError` instead.
 
 Changes:
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
@@ -58,6 +61,9 @@ Changes:
   the general CrateDB text of `cratedb-about`. Pass `--instructions` to send another text.
 - MCP: Added a title and annotations to every tool, marking them read-only. `query_sql`
   loses its read-only mark when `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` is set
+- MCP: Every tool fails a call it cannot complete with the MCP error flag `isError` and
+  a message that says why it failed. CrateDB's errors are no longer returned as results
+- MCP: A query that times out tells the model to narrow it instead of retrying
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of

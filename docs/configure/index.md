@@ -68,7 +68,7 @@ Then, include relevant access credentials in the cluster URL.
 export CRATEDB_CLUSTER_URL="https://read-only:YOUR_PASSWORD@example.aks1.westeurope.azure.cratedb.net:4200"
 ```
 The MCP Server also prohibits non-SELECT statements on the application level.
-All other operations will raise a `PermissionError` exception, unless the
+A call with any other statement fails, unless the
 `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a
 truthy value.
 
