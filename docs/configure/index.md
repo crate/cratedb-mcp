@@ -55,6 +55,22 @@ export CRATEDB_MCP_PORT=8000
 export CRATEDB_MCP_PATH=/path/in/url
 ```
 
+## Configure result size
+
+Every row `query_sql` returns lands in the model's context, so results are cut.
+By default a result holds at most 100 rows and 50,000 characters of rows. The
+model can ask for up to 1,000 rows with the `max_rows` argument, or up to the
+configured row cap when it is larger. Both caps also
+bound what `get_cluster_health` returns. The character cap alone bounds the pages
+`get_cratedb_documentation_index` lists. When an answer is cut, it says so in
+`truncated` and explains why in `note`.
+```shell
+export CRATEDB_MCP_MAX_ROWS=100
+export CRATEDB_MCP_MAX_CHARS=50000
+```
+The server does not start when either cap is not a whole number above zero, or when
+`CRATEDB_MCP_HTTP_TIMEOUT` is not a number above zero.
+
 ## Security considerations
 
 If you want to prevent agents from modifying data, i.e., permit `SELECT` statements

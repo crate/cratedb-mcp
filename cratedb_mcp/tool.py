@@ -1,5 +1,6 @@
 import contextlib
 import contextvars
+import json
 import logging
 import time
 import typing as t
@@ -57,6 +58,11 @@ class CrateResult(BaseModel):
     duration: t.Optional[float] = absent()
 
 
+class BoundedResult(CrateResult):
+    truncated: t.Optional[bool] = absent()
+    note: t.Optional[str] = absent()
+
+
 # ------------------------------------------
 #              Text-to-SQL
 # ------------------------------------------
@@ -106,7 +112,8 @@ def query_result(query: str) -> dict:
             f"CrateDB did not answer within the {Settings.http_timeout():g}-second timeout."
         ) from e
     if "error" in result:
-        raise CrateError(f"{result['error']['message']} (error code {result['error']['code']})")
+        message = shorten(result["error"]["message"], Settings.max_chars())
+        raise CrateError(f"{message} (error code {result['error']['code']})")
     return result
 
 
@@ -133,17 +140,99 @@ def read_only_check() -> t.Iterator[None]:
         ) from e
 
 
-def query_sql(query: str) -> CrateResult:
+MAX_ROWS_CEILING = 1000
+
+
+def row_ceiling() -> int:
+    """Return the most rows `max_rows` may ask for: 1000, or the configured cap when larger."""
+    return max(MAX_ROWS_CEILING, Settings.max_rows())
+
+
+def query_sql(query: str, max_rows: t.Optional[int] = None) -> BoundedResult:
     """
     Execute an SQL query on CrateDB and return the results.
     Select only the columns you need (avoid `SELECT *`) and,
     where appropriate, add a `LIMIT` clause to keep result sets concise.
+    The result holds at most 100 rows, or the server's configured cap,
+    unless `max_rows` asks for more, up to 1000 or the configured cap,
+    whichever is larger. When rows are cut,
+    `truncated` is true and `note` says why.
     """
     with read_only_check():
         permitted = sql_is_permitted(query)
     if not permitted:
         raise ToolError("Only queries that have a SELECT statement are allowed.")
-    return CrateResult(**run_query(query))
+    return BoundedResult(**bound_result(run_query(query), max_rows))
+
+
+def row_chars(row: t.Any) -> int:
+    return len(json.dumps(row, default=str))
+
+
+def cap_rows(rows: t.List[t.Any], row_cap: int) -> t.List[t.Any]:
+    """Keep the first rows, at most `row_cap` and no more than fit in the character cap."""
+    rows = rows[:row_cap]
+    size = 0
+    for count, row in enumerate(rows):
+        size += row_chars(row)
+        if size > Settings.max_chars():
+            return rows[:count]
+    return rows
+
+
+def cut_note(rows: t.List[t.Any], kept: int, row_cap: int, noun: str) -> str:
+    """Say why only the first `kept` of `rows` are shown."""
+    char_cap = Settings.max_chars()
+    if not kept:
+        return (
+            f"No {noun}s are shown, because the first {noun} alone holds "
+            f"{row_chars(rows[0])} characters, more than the cap of {char_cap}."
+        )
+    shown = f"Only the first {kept} of {len(rows)} {noun}s are shown"
+    if kept < min(row_cap, len(rows)):
+        return f"{shown}, because the next {noun} would pass {char_cap} characters."
+    return f"{shown}, because the cap is {row_cap} {noun if row_cap == 1 else noun + 's'}."
+
+
+def bound_rows(
+    rows: t.List[t.Any],
+    noun: str,
+    advice: str = "",
+    row_cap: t.Optional[int] = None,
+    advice_on_shown: str = "",
+) -> t.Tuple[t.List[t.Any], t.Optional[str]]:
+    """
+    Keep the first rows within the row and character caps, and say why when some are cut.
+    `advice_on_shown` speaks of the rows shown, so it is left out when none is shown.
+    """
+    if row_cap is None:
+        row_cap = max(1, Settings.max_rows())
+    kept = cap_rows(rows, row_cap)
+    if len(kept) == len(rows):
+        return kept, None
+    note = [cut_note(rows, len(kept), row_cap, noun), advice_on_shown if kept else "", advice]
+    return kept, " ".join(filter(None, note))
+
+
+def bound_result(result: dict, max_rows: t.Optional[int] = None) -> dict:
+    """Cut the rows of a query result to the row and character caps, and say when it did."""
+    row_cap = Settings.max_rows() if max_rows is None else min(max_rows, row_ceiling())
+    row_cap = max(1, row_cap)
+
+    rows = cap_rows(result["rows"], row_cap)
+    bounded = {**result, "rows": rows, "truncated": len(rows) < len(result["rows"])}
+    if bounded["truncated"]:
+        if not rows:
+            advice = "Select fewer columns or shorter values."
+        elif len(rows) < min(row_cap, len(result["rows"])):
+            advice = "Select fewer or shorter columns, or filter or aggregate the query."
+        else:
+            advice = "Filter or aggregate the query"
+            if row_cap < row_ceiling():
+                advice += f", or ask for up to {row_ceiling()} rows with max_rows"
+            advice += "."
+        bounded["note"] = f"{cut_note(result['rows'], len(rows), row_cap, 'row')} {advice}"
+    return bounded
 
 
 def get_table_columns() -> dict:
@@ -206,12 +295,27 @@ class DocumentationLink(BaseModel):
     markdown_enabled: bool
 
 
-def get_cratedb_documentation_index() -> t.List[DocumentationLink]:
+class DocumentationPages(BaseModel):
+    model_config = ConfigDict(json_schema_extra=declare_present_types)
+
+    pages: t.List[DocumentationLink]
+    truncated: bool
+    note: t.Optional[str] = absent()
+
+
+def get_cratedb_documentation_index() -> DocumentationPages:
     """
     Return the table of contents for the curated CrateDB documentation index.
     Use it whenever you need to verify CrateDB-specific details or syntax.
     """
-    return [DocumentationLink(**item) for item in documentation_index.items()]
+    pages = [DocumentationLink(**item) for item in documentation_index.items()]
+    shown, note = bound_rows(
+        [page.model_dump() for page in pages],
+        "page",
+        row_cap=len(pages),
+        advice_on_shown="Choose from the pages shown.",
+    )
+    return DocumentationPages(pages=pages[: len(shown)], truncated=note is not None, note=note)
 
 
 def fetch_cratedb_docs(link: str) -> str:
@@ -226,6 +330,15 @@ def fetch_cratedb_docs(link: str) -> str:
 # ------------------------------------------
 #            Health / Status
 # ------------------------------------------
-def get_cluster_health() -> CrateResult:
+def get_cluster_health() -> BoundedResult:
     """Return the health of each table and partition from `sys.health`, most severe first."""
-    return CrateResult(**query_result(Queries.HEALTH))
+    result = query_result(Queries.HEALTH)
+    rows, note = bound_rows(
+        result["rows"],
+        "row",
+        "Query sys.health with query_sql, filtered by table_schema, table_name or health, "
+        "for the others.",
+        advice_on_shown="Rows come most severe first, so none of the others is worse than "
+        "the last one shown.",
+    )
+    return BoundedResult(**{**result, "rows": rows, "truncated": note is not None, "note": note})

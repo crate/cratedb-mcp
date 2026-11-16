@@ -48,9 +48,9 @@ CALLS = {
 
 CRATE_RESULT = {"cols", "rows", "rowcount", "duration"}
 RESULT_FIELDS = {
-    "query_sql": CRATE_RESULT,
-    "get_cratedb_documentation_index": {"result"},
-    "get_cluster_health": CRATE_RESULT,
+    "query_sql": CRATE_RESULT | {"truncated", "note"},
+    "get_cratedb_documentation_index": {"pages", "truncated", "note"},
+    "get_cluster_health": CRATE_RESULT | {"truncated", "note"},
     "fetch_cratedb_docs": {"result"},
 }
 
@@ -70,7 +70,10 @@ def test_tools_declare_named_result_fields():
 
 @pytest.mark.parametrize(
     ("name", "arguments"),
-    CALLS.items(),
+    [
+        *CALLS.items(),
+        ("query_sql", {"query": "SELECT x FROM generate_series(1, 150) AS t(x)"}),
+    ],
 )
 def test_results_validate_against_declared_schema(name, arguments):
     async def call():
@@ -81,3 +84,12 @@ def test_results_validate_against_declared_schema(name, arguments):
 
     schema, content = asyncio.run(call())
     jsonschema.validate(content, schema)
+
+
+def test_absent_result_fields_stay_out_of_the_answer():
+    async def call():
+        async with Client(CrateDbMcp().mcp) as client:
+            result = await client.call_tool("query_sql", {"query": "SELECT 42"})
+            return result.structured_content
+
+    assert set(asyncio.run(call())) == {"cols", "rows", "rowcount", "duration", "truncated"}

@@ -28,7 +28,7 @@ def test_server_speaks_protocol_2026_07_28():
 
 
 def test_get_documentation_index():
-    assert len(get_cratedb_documentation_index()) >= 3
+    assert len(get_cratedb_documentation_index().pages) >= 3
 
 
 def test_fetch_docs_forbidden():

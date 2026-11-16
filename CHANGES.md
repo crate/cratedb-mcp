@@ -26,6 +26,13 @@ Upgrading from 0.1.x:
 - Tools: a CrateDB error fails the call, with `isError` set and CrateDB's message and
   error code as its text. Clients that read the `error` field of a `query_sql` or
   `get_cluster_health` result check `isError` instead.
+- Tools: `query_sql` returns at most 100 rows. `CRATEDB_MCP_MAX_ROWS` changes the cap, and
+  `max_rows` asks for up to 1,000 rows, or the cap when it is larger. Check `truncated`
+  when a complete result matters.
+- Tools: `get_cratedb_documentation_index` returns an object with the pages in `pages`,
+  instead of a list. `get_cluster_health` returns at most 100 rows, the most severe
+  first, or as many as `CRATEDB_MCP_MAX_ROWS` sets. Check `truncated` when every row
+  matters.
 
 Changes:
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
@@ -66,6 +73,13 @@ Changes:
 - MCP: A query that times out tells the model to narrow it instead of retrying
 - MCP: `query_sql`, `get_cluster_health` and `get_cratedb_documentation_index` declare
   the fields of their results
+- MCP: `query_sql` returns at most 100 rows and 50,000 characters of rows, marks a cut
+  result with `truncated` and a `note`, and takes `max_rows` for up to 1,000 rows.
+  `CRATEDB_MCP_MAX_ROWS` and `CRATEDB_MCP_MAX_CHARS` change the defaults
+- CLI: The server does not start when `CRATEDB_MCP_MAX_ROWS` or `CRATEDB_MCP_MAX_CHARS` is
+  not a whole number above zero
+- MCP: `get_cluster_health` and `get_cratedb_documentation_index` cut their answers to the
+  result caps, and say so in `truncated` and `note`
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of

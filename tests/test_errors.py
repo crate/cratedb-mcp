@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 
 import httpx
 import pytest
@@ -110,3 +111,33 @@ def test_answer_that_is_not_json_fails_with_status_and_body_only(
     caplog.set_level(logging.DEBUG)
     assert call("query_sql", {"query": "SELECT 1"}) == (True, message)
     assert "s3cret-pw" not in caplog.text
+
+
+def test_long_crate_error_is_cut_to_the_character_cap(mocker):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_CHARS": "100"})
+    is_error, text = call("query_sql", {"query": "SELECT CAST(repeat('x', 1000) AS INTEGER)"})
+    message, code = text.rsplit(" (error code ", 1)
+    assert is_error is True
+    assert message.startswith("SQLParseException[Cannot cast `'xxx")
+    assert len(message) == 101
+    assert message.endswith("x…")
+    assert code == "4000)"
+
+
+@pytest.mark.parametrize(
+    ("name", "arguments", "note"),
+    [
+        (
+            "query_sql",
+            {"query": "SELECT x FROM generate_series(1, 150) AS t(x)"},
+            "Only the first 2 of 150 rows are shown",
+        ),
+        ("get_cratedb_documentation_index", {}, "Only the first 1 of "),
+    ],
+)
+def test_cut_result_succeeds_and_says_so(mocker, name, arguments, note):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_ROWS": "2", "CRATEDB_MCP_MAX_CHARS": "200"})
+    is_error, text = call(name, arguments)
+    assert is_error is False
+    assert '"truncated":true' in text
+    assert note in text

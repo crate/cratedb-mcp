@@ -43,12 +43,14 @@ def parse_cluster_url(address: str) -> httpx.URL:
 
 
 POSITIVE_NUMBERS = {
+    "CRATEDB_MCP_MAX_ROWS": int,
+    "CRATEDB_MCP_MAX_CHARS": int,
     "CRATEDB_MCP_HTTP_TIMEOUT": float,
 }
 
 
 def check_positive_numbers() -> None:
-    """Refuse an HTTP timeout that is not a number above zero."""
+    """Refuse a row cap, character cap or HTTP timeout that is not a number above zero."""
     for name, kind in POSITIVE_NUMBERS.items():
         value = os.getenv(name)
         if value is None:
@@ -56,7 +58,7 @@ def check_positive_numbers() -> None:
         try:
             number = kind(value)
         except ValueError:
-            fault = "it is not a number"
+            fault = "it is not a whole number" if kind is int else "it is not a number"
         else:
             if math.isnan(number):
                 fault = "it is not a number"
@@ -145,3 +147,35 @@ class Settings:
                 stacklevel=2,
             )
             return ttl
+
+    @staticmethod
+    def max_rows(rows: int = 100) -> int:
+        """
+        Return the row cap of the tools that cut their answers by rows.
+        """
+        try:
+            return int(os.getenv("CRATEDB_MCP_MAX_ROWS", rows))
+        except ValueError as e:
+            warnings.warn(
+                f"Environment variable `CRATEDB_MCP_MAX_ROWS` invalid: {e}. "
+                f"Using default value: {rows}.",
+                category=UserWarning,
+                stacklevel=2,
+            )
+            return rows
+
+    @staticmethod
+    def max_chars(chars: int = 50_000) -> int:
+        """
+        Return the character cap of the tools that cut their answers.
+        """
+        try:
+            return int(os.getenv("CRATEDB_MCP_MAX_CHARS", chars))
+        except ValueError as e:
+            warnings.warn(
+                f"Environment variable `CRATEDB_MCP_MAX_CHARS` invalid: {e}. "
+                f"Using default value: {chars}.",
+                category=UserWarning,
+                stacklevel=2,
+            )
+            return chars

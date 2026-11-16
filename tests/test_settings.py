@@ -95,6 +95,12 @@ def test_cluster_address_that_is_no_http_url_with_a_host_is_refused(cluster_url,
 @pytest.mark.parametrize(
     ("name", "value", "fault"),
     [
+        ("CRATEDB_MCP_MAX_ROWS", "0", "it is zero or negative"),
+        ("CRATEDB_MCP_MAX_ROWS", "-5", "it is zero or negative"),
+        ("CRATEDB_MCP_MAX_ROWS", "many", "it is not a whole number"),
+        ("CRATEDB_MCP_MAX_CHARS", "0", "it is zero or negative"),
+        ("CRATEDB_MCP_MAX_CHARS", "-5", "it is zero or negative"),
+        ("CRATEDB_MCP_MAX_CHARS", "1.5", "it is not a whole number"),
         ("CRATEDB_MCP_HTTP_TIMEOUT", "0", "it is zero or negative"),
         ("CRATEDB_MCP_HTTP_TIMEOUT", "-5", "it is zero or negative"),
         ("CRATEDB_MCP_HTTP_TIMEOUT", "soon", "it is not a number"),
@@ -114,6 +120,8 @@ def test_limit_that_is_not_a_number_above_zero_stops_the_start(mocker, name, val
 def test_limits_that_are_numbers_above_zero_let_the_server_start(mocker):
     run_mock = mocker.patch.object(fastmcp.server.server.FastMCP, "run_async")
     limits = {
+        "CRATEDB_MCP_MAX_ROWS": "5",
+        "CRATEDB_MCP_MAX_CHARS": "1000",
         "CRATEDB_MCP_HTTP_TIMEOUT": "0.5",
     }
     mocker.patch.dict(os.environ, limits)
@@ -124,7 +132,7 @@ def test_limits_that_are_numbers_above_zero_let_the_server_start(mocker):
 @pytest.mark.parametrize("args", ["--help", "show-prompt"])
 def test_help_and_prompt_work_with_broken_settings(mocker, cluster_url, args):
     cluster_url(BROKEN_ADDRESSES["slash"][0])
-    limits = ("CRATEDB_MCP_HTTP_TIMEOUT",)
+    limits = ("CRATEDB_MCP_MAX_ROWS", "CRATEDB_MCP_MAX_CHARS", "CRATEDB_MCP_HTTP_TIMEOUT")
     mocker.patch.dict(os.environ, dict.fromkeys(limits, "0"))
     assert CliRunner().invoke(cli, args=args).exit_code == 0
 
@@ -143,3 +151,17 @@ def test_settings_http_timeout_env_invalid(mocker):
     with pytest.warns(UserWarning) as record:
         assert Settings.http_timeout() == 30.0
     assert "Environment variable `CRATEDB_MCP_HTTP_TIMEOUT` invalid" in record[0].message.args[0]
+
+
+def test_settings_max_rows_env_invalid(mocker):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_ROWS": "many"})
+    with pytest.warns(UserWarning) as record:
+        assert Settings.max_rows() == 100
+    assert "Environment variable `CRATEDB_MCP_MAX_ROWS` invalid" in record[0].message.args[0]
+
+
+def test_settings_max_chars_env_invalid(mocker):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_CHARS": "lots"})
+    with pytest.warns(UserWarning) as record:
+        assert Settings.max_chars() == 50_000
+    assert "Environment variable `CRATEDB_MCP_MAX_CHARS` invalid" in record[0].message.args[0]
