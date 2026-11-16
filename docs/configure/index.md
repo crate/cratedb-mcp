@@ -74,10 +74,13 @@ truthy value.
 
 ## System prompt customizations
 
-The CrateDB MCP server allows users to adjust the system prompt by either
-redefining the baseline instructions or extending them with custom conventions.
-Additional conventions can capture domain-specific details—such as information
-required for particular ER data models —- or any other guidelines you develop
+The CrateDB MCP server sends a short built-in instructions text to every client
+when it connects. The text says what the server is, and lists the differences
+between CrateDB and PostgreSQL that cause wrong or slow answers. It sets no persona.
+Users can adjust it by either redefining the baseline instructions or extending
+them with custom conventions.
+Additional conventions can capture domain-specific details, such as information
+required for particular ER data models, or any other guidelines you develop
 over time.
 
 If you want to **add** custom conventions to the system prompt,
@@ -86,7 +89,7 @@ use the `--conventions` option.
 cratedb-mcp serve --conventions="conventions-custom.md"
 ```
 
-If you want to **replace** the standard built-in instructions prompt completely,
+If you want to **replace** the built-in instructions text completely,
 use the `--instructions` option.
 ```shell
 cratedb-mcp serve --instructions="instructions-custom.md"
@@ -95,7 +98,7 @@ cratedb-mcp serve --instructions="instructions-custom.md"
 Alternatively, use the `CRATEDB_MCP_INSTRUCTIONS` and `CRATEDB_MCP_CONVENTIONS`
 environment variables instead of the CLI options.
 
-To retrieve the standard system prompt, use the `show-prompt` subcommand. By
+To retrieve the built-in instructions text, use the `show-prompt` subcommand. By
 redirecting the output to a file, you can subsequently edit its contents and
 reuse it with the MCP server using the command outlined above.
 ```shell

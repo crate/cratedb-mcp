@@ -20,6 +20,9 @@ Upgrading from 0.1.x:
   documentation index.
 - Packaging: the server needs version 2 of the MCP SDK. Where an environment holds
   `mcp<2`, install the server apart from it, for example with `uv tool install cratedb-mcp`.
+- Instructions: the text sent to clients is new and much shorter, and it sets no
+  persona. If a setup relied on the old text, pass your own with `--instructions` or
+  `CRATEDB_MCP_INSTRUCTIONS`.
 
 Changes:
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
@@ -51,6 +54,8 @@ Changes:
   serves its stateless HTTP requests
 - CLI: The server starts without asking PyPI for a newer FastMCP release, unless
   `FASTMCP_CHECK_FOR_UPDATES` is set
+- Instructions: The server sends its own short instructions text and no longer adds
+  the general CrateDB text of `cratedb-about`. Pass `--instructions` to send another text.
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of
