@@ -1,11 +1,19 @@
 # ruff: noqa: E501
+import collections
+import sys
+import threading
+import time
 import typing as t
 
 import cachetools
+import httpx
 from cratedb_about import CrateDbKnowledgeOutline
-from cratedb_about.util import get_cache_client
 
 from cratedb_mcp.settings import Settings
+from cratedb_mcp.util.http_client import shared_client
+
+CACHED_PAGES = 200
+CACHED_BYTES = 16_000_000
 
 
 class Queries:
@@ -139,10 +147,36 @@ class DocumentationIndex:
     ]
 
     def __init__(self):
-        self.client = get_cache_client(ttl=self.settings.docs_cache_ttl())
+        self.pages = PageCache()
 
         # Load documentation outline.
         self.outline = CrateDbKnowledgeOutline.load()
+
+    def fetch(self, link: str) -> str:
+        """
+        Return the text of the documentation page at `link`, kept from an earlier call or
+        fetched from its site.
+        """
+        if not self.url_permitted(link):
+            raise ValueError(f"Link is not permitted: {link}")
+        address = str(httpx.URL(link).copy_with(fragment=None))
+        text = self.pages.get(address)
+        if text is None:
+            text = self.download(httpx.URL(address))
+            self.pages.put(address, text)
+        return text
+
+    def download(self, url: httpx.URL) -> str:
+        """
+        Fetch the page at `url`, following its redirects to a permitted address.
+        """
+        response = documentation_client.get(
+            url, timeout=Settings.http_timeout(), follow_redirects=True
+        )
+        if not self.url_permitted(str(response.url)):
+            raise ValueError(f"Link redirects to a location that is not permitted: {response.url}")
+        response.raise_for_status()
+        return response.text
 
     @cachetools.cached(cache=cachetools.TTLCache(maxsize=1, ttl=settings.docs_cache_ttl() - 5))
     def items(self):
@@ -167,3 +201,44 @@ class DocumentationIndex:
             if url.startswith(permitted_url):
                 return True
         return False
+
+
+class PageCache:
+    """
+    The text of fetched pages by address, each served for `CRATEDB_MCP_DOCS_CACHE_TTL`
+    seconds after it was fetched. Beyond CACHED_PAGES pages, or CACHED_BYTES bytes of
+    addresses and text in memory, the page read least recently goes.
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._pages: t.OrderedDict[str, t.Tuple[float, str]] = collections.OrderedDict()
+        self._bytes = 0
+
+    def get(self, address: str) -> t.Optional[str]:
+        with self._lock:
+            if address not in self._pages:
+                return None
+            expires, text = self._pages[address]
+            if time.monotonic() >= expires:
+                self._drop(address)
+                return None
+            self._pages.move_to_end(address)
+            return text
+
+    def put(self, address: str, text: str) -> None:
+        expires = time.monotonic() + Settings.docs_cache_ttl()
+        with self._lock:
+            if address in self._pages:
+                self._drop(address)
+            self._pages[address] = (expires, text)
+            self._bytes += sys.getsizeof(address) + sys.getsizeof(text)
+            while len(self._pages) > CACHED_PAGES or self._bytes > CACHED_BYTES:
+                self._drop(next(iter(self._pages)))
+
+    def _drop(self, address: str) -> None:
+        _, text = self._pages.pop(address)
+        self._bytes -= sys.getsizeof(address) + sys.getsizeof(text)
+
+
+documentation_client = shared_client(limits=httpx.Limits(max_keepalive_connections=0))

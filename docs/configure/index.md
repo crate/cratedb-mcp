@@ -20,7 +20,9 @@ the timeout for HTTP requests to CrateDB and its documentation resources
 in seconds.
 
 The `CRATEDB_MCP_DOCS_CACHE_TTL` environment variable (default: 3600) defines
-the cache lifetime for documentation resources in seconds.
+the cache lifetime for documentation resources in seconds. The server keeps the
+documentation pages it fetched in memory for that long, at most 200 pages and 16 MB,
+and in no file.
 
 ## Configure transport
 

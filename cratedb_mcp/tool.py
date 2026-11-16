@@ -95,15 +95,7 @@ def fetch_cratedb_docs(link: str) -> str:
     fetch the full content of that documentation page. Content
     can be quoted verbatim when answering questions about CrateDB.
     """
-    if not documentation_index.url_permitted(link):
-        raise ValueError(f"Link is not permitted: {link}")
-    response = documentation_index.client.get(
-        link, timeout=Settings.http_timeout(), follow_redirects=True
-    )
-    if not documentation_index.url_permitted(str(response.url)):
-        raise ValueError(f"Link redirects to a location that is not permitted: {response.url}")
-    response.raise_for_status()
-    return response.text
+    return documentation_index.fetch(link)
 
 
 # ------------------------------------------

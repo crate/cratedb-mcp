@@ -6,12 +6,17 @@ Upgrading from 0.1.x:
 - Images: the `cratedb-mcpo` image is gone. With Open WebUI 0.6.31 or later, run the
   standard image `ghcr.io/crate/cratedb-mcp` and add it as a connection of type
   MCP (Streamable HTTP).
+- Tools: `fetch_cratedb_docs` keeps the pages it fetched in memory, and no longer in the
+  cache file of `cratedb-about`, such as `~/.cache/cratedb-about/.hishel.sqlite`. Delete
+  that file unless the `cratedb-about` command uses it.
 
 Changes:
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
   MCP servers directly, so use the standard image `ghcr.io/crate/cratedb-mcp`
   with `--transport=streamable-http`.
 - OCI: The image built from a release tag reports exactly the tag's version
+- MCP: The server keeps fetched documentation pages in memory for
+  `CRATEDB_MCP_DOCS_CACHE_TTL` seconds, and in no file
 - CLI: The server starts without asking PyPI for a newer FastMCP release, unless
   `FASTMCP_CHECK_FOR_UPDATES` is set
 
