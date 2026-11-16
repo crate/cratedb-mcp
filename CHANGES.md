@@ -18,6 +18,8 @@ Upgrading from 0.1.x:
   seconds above zero. Remove the setting or correct it.
 - Tools: `fetch_cratedb_docs` no longer fetches a GitHub page that is not a link of the
   documentation index.
+- Packaging: the server needs version 2 of the MCP SDK. Where an environment holds
+  `mcp<2`, install the server apart from it, for example with `uv tool install cratedb-mcp`.
 
 Changes:
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
@@ -45,6 +47,8 @@ Changes:
   cratedb.com and docs.cratedb.com. It checks the address of every redirect before it
   follows it, reads only uncompressed text, at most 1 MB of it, and ends each call within
   `CRATEDB_MCP_HTTP_TIMEOUT` once it is connected, the redirects included
+- Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28 and
+  serves its stateless HTTP requests
 - CLI: The server starts without asking PyPI for a newer FastMCP release, unless
   `FASTMCP_CHECK_FOR_UPDATES` is set
 
