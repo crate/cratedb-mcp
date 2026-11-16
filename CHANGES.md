@@ -17,6 +17,8 @@ Changes:
 - OCI: The image built from a release tag reports exactly the tag's version
 - MCP: The server keeps fetched documentation pages in memory for
   `CRATEDB_MCP_DOCS_CACHE_TTL` seconds, and in no file
+- CLI: `python -m cratedb_mcp` runs the `cratedb-mcp` command, with the same
+  subcommands and options, instead of exiting without a word
 - CLI: The server starts without asking PyPI for a newer FastMCP release, unless
   `FASTMCP_CHECK_FOR_UPDATES` is set
 

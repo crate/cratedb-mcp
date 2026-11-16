@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from cratedb_mcp.__main__ import mcp
+from cratedb_mcp.core import CrateDbMcp
 from cratedb_mcp.prompt import InstructionsPrompt
 
 
@@ -11,7 +11,7 @@ def test_default():
     """
     The default instructions are bundled from general and MCP-related instructions.
     """
-    instructions_text = mcp.instructions
+    instructions_text = CrateDbMcp().mcp.instructions
 
     # MCP instructions.
     assert "Tool instructions" in instructions_text

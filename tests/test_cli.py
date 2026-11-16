@@ -1,11 +1,15 @@
 import os
+import runpy
+import sys
 from unittest import mock
 
 import fastmcp.server.server
+import pytest
 from click.testing import CliRunner
 
 from cratedb_mcp import __version__
 from cratedb_mcp.cli import cli
+from cratedb_mcp.prompt import InstructionsPrompt
 
 
 def test_cli_version():
@@ -148,6 +152,24 @@ def test_cli_starts_without_fastmcp_update_check(mocker):
 
 def test_cli_keeps_a_configured_fastmcp_update_check(mocker):
     assert update_check_after_serve(mocker, configured="stable") == "stable"
+
+
+def run_as_module(mocker, *args):
+    """Run `python -m cratedb_mcp` and return its exit code."""
+    mocker.patch.object(sys, "argv", ["cratedb_mcp", *args])
+    mocker.patch.dict(sys.modules)
+    sys.modules.pop("cratedb_mcp.__main__", None)
+    with pytest.raises(SystemExit) as ex:
+        runpy.run_module("cratedb_mcp", run_name="__main__")
+    return ex.value.code
+
+
+def test_module_runs_the_cli_with_its_subcommands(mocker, capsys):
+    """
+    Verify `python -m cratedb_mcp show-prompt` prints what `cratedb-mcp show-prompt` prints.
+    """
+    assert run_as_module(mocker, "show-prompt") == 0
+    assert capsys.readouterr().out.strip() == InstructionsPrompt().render()
 
 
 def test_cli_invalid_transport_option(mocker, capsys):
