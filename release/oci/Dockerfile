@@ -26,7 +26,9 @@ RUN --mount=type=cache,id=apt-cache-${TARGETARCH}${TARGETVARIANT},target=/var/ca
 RUN pip install build
 
 COPY . ${BUILD}
-RUN python -m build --wheel ${BUILD}
+# Restore the tracked files the build context leaves out, so that a tagged tree builds
+# the tag's version.
+RUN git -C ${BUILD} ls-files --deleted -z | xargs -0 -r git -C ${BUILD} checkout -- && python -m build --wheel ${BUILD}
 
 
 FROM python:3.14-slim-trixie AS standard
