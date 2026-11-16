@@ -71,8 +71,8 @@ The CrateDB MCP Server provides two families of tools.
   The tools `get_cratedb_documentation_index` and `fetch_cratedb_docs`
   look up guidelines specific to CrateDB topics,
   to provide the most accurate information possible.
-  Relevant information is pulled from <https://cratedb.com/docs>, curated per
-  [cratedb-outline.yaml] through the [cratedb-about] package.
+  They use the documentation index of the [cratedb-about] package, curated per
+  [cratedb-outline.yaml].
 
 :Health status:
 

@@ -37,6 +37,8 @@ Changes:
   instructions from memory
 - Shipping: Pushing a release tag creates the GitHub release, with the tag's section of
   this file as its notes
+- MCP: `fetch_cratedb_docs` reads every link listed in the documentation index,
+  including pages outside the permitted hosts
 - CLI: The server starts without asking PyPI for a newer FastMCP release, unless
   `FASTMCP_CHECK_FOR_UPDATES` is set
 
