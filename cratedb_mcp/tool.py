@@ -1,15 +1,39 @@
+import contextvars
+import logging
+import time
+
 import httpx
 
 from cratedb_mcp.knowledge import DocumentationIndex, Queries
 from cratedb_mcp.settings import HTTP_URL, Settings
 from cratedb_mcp.util.sql import sql_is_permitted
 
+logger = logging.getLogger(__name__)
+
+calling_tool: contextvars.ContextVar[str] = contextvars.ContextVar("calling_tool", default="-")
+
 
 # ------------------------------------------
 #              Text-to-SQL
 # ------------------------------------------
 def query_cratedb(query: str) -> dict:
-    """Send the SQL `query` to the configured CrateDB server and return the result."""
+    """Send the SQL `query` to the configured CrateDB server and return its answer."""
+    started = time.monotonic()
+    answer = None
+    try:
+        answer = read_answer(query)
+        return answer
+    finally:
+        took = (time.monotonic() - started) * 1000
+        if answer is None or "error" in answer:
+            logger.info("%s: CrateDB call failed after %d ms", calling_tool.get(), took)
+        else:
+            rows = len(answer.get("rows", ()))
+            logger.info("%s: CrateDB call took %d ms, %d rows", calling_tool.get(), took, rows)
+
+
+def read_answer(query: str) -> dict:
+    """Send the SQL `query` to the configured CrateDB server and read its answer."""
     url = HTTP_URL
     if url.endswith("/"):
         url = url.removesuffix("/")

@@ -1,6 +1,12 @@
+import asyncio
+import logging
+import re
+
 import httpx
 import pytest
+from fastmcp import Client
 
+from cratedb_mcp.core import CrateDbMcp
 from cratedb_mcp.tool import (
     fetch_cratedb_docs,
     get_cluster_health,
@@ -92,3 +98,20 @@ def test_get_table_metadata():
 
 def test_get_cluster_health():
     assert "missing_shards" in str(get_cluster_health())
+
+
+def test_log_names_tool_duration_and_rows_and_leaves_the_statement_to_debug(caplog):
+    async def run():
+        async with Client(CrateDbMcp().mcp) as client:
+            await client.call_tool("query_sql", {"query": "SELECT 'marker-7f3a'"})
+            await client.call_tool(
+                "query_sql", {"query": "SELECT * FROM doc.missing_7f3a"}, raise_on_error=False
+            )
+
+    caplog.set_level(logging.INFO)
+    asyncio.run(run())
+    assert "7f3a" not in caplog.text
+    lines = [record.getMessage() for record in caplog.records if record.name == "cratedb_mcp.tool"]
+    assert len(lines) == 2
+    assert re.fullmatch(r"query_sql: CrateDB call took \d+ ms, 1 rows", lines[0])
+    assert re.fullmatch(r"query_sql: CrateDB call failed after \d+ ms", lines[1])

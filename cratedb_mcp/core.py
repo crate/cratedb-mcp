@@ -1,12 +1,15 @@
 from typing import Optional
 
 from fastmcp import FastMCP
-from fastmcp.tools import Tool
+from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
+from fastmcp.tools import Tool, ToolResult
+from mcp.types import CallToolRequestParams
 
 from cratedb_mcp.prompt import InstructionsPrompt
 
 from . import __appname__, __version__
 from .tool import (
+    calling_tool,
     fetch_cratedb_docs,
     get_cluster_health,
     get_cratedb_documentation_index,
@@ -14,6 +17,21 @@ from .tool import (
     get_table_metadata,
     query_sql,
 )
+
+
+class NameCallingTool(Middleware):
+    """Name the tool in the log lines of the calls to CrateDB it makes."""
+
+    async def on_call_tool(
+        self,
+        context: MiddlewareContext[CallToolRequestParams],
+        call_next: CallNext[CallToolRequestParams, ToolResult],
+    ) -> ToolResult:
+        token = calling_tool.set(context.message.name)
+        try:
+            return await call_next(context)
+        finally:
+            calling_tool.reset(token)
 
 
 class CrateDbMcp:
@@ -34,6 +52,7 @@ class CrateDbMcp:
             instructions=prompt.render(),
         )
         self.add_tools()
+        self.mcp.add_middleware(NameCallingTool())
 
     def add_tools(self):
         """Register all CrateDB MCP tools with the FastMCP instance."""

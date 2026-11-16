@@ -1,3 +1,4 @@
+import asyncio
 import os
 import runpy
 import sys
@@ -6,6 +7,8 @@ from unittest import mock
 import fastmcp.server.server
 import pytest
 from click.testing import CliRunner
+from fastmcp import Client
+from fastmcp.client.transports import StdioTransport
 
 from cratedb_mcp import __version__
 from cratedb_mcp.cli import cli
@@ -170,6 +173,44 @@ def test_module_runs_the_cli_with_its_subcommands(mocker, capsys):
     """
     assert run_as_module(mocker, "show-prompt") == 0
     assert capsys.readouterr().out.strip() == InstructionsPrompt().render()
+
+
+@pytest.mark.parametrize(
+    ("args", "debug_env", "shown"),
+    [
+        (["serve"], None, False),
+        (["--debug", "serve"], None, True),
+        (["serve"], "true", True),
+        (["serve"], "false", False),
+    ],
+)
+def test_log_shows_statement_text_only_with_debug(tmp_path, args, debug_env, shown):
+    """
+    Verify `python -m cratedb_mcp --debug serve` and `CRATEDB_MCP_DEBUG=true` log the
+    start of each statement, and that no run logs the lines of the HTTP libraries.
+    """
+    env = dict(os.environ)
+    env.pop("CRATEDB_MCP_DEBUG", None)
+    if debug_env is not None:
+        env["CRATEDB_MCP_DEBUG"] = debug_env
+    log = tmp_path / "server.log"
+    server = StdioTransport(
+        command=sys.executable,
+        args=["-m", "cratedb_mcp", *args],
+        env=env,
+        keep_alive=False,
+        log_file=log,
+    )
+
+    async def call():
+        async with Client(server) as client:
+            await client.call_tool("query_sql", {"query": "SELECT 'a5e1d'"}, raise_on_error=False)
+
+    asyncio.run(call())
+    text = log.read_text()
+    assert ("Permitted SQL expression: SELECT 'a5e1d'" in text) is shown
+    assert "[httpx" not in text
+    assert "[httpcore" not in text
 
 
 def test_cli_invalid_transport_option(mocker, capsys):

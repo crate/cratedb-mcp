@@ -25,9 +25,9 @@ def sql_is_permitted(expression: str) -> bool:
         expression=expression, permit_all=Settings.permit_all_statements()
     ).is_dql
     if is_dql:
-        logger.info(f"Permitted SQL expression: {expression and expression[:50]}...")
+        logger.debug(f"Permitted SQL expression: {expression and expression[:50]}...")
     else:
-        logger.warning(f"Denied SQL expression: {expression and expression[:50]}...")
+        logger.debug(f"Denied SQL expression: {expression and expression[:50]}...")
     return is_dql
 
 
