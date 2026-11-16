@@ -2,6 +2,7 @@ import logging
 import typing as t
 
 import click
+import fastmcp
 from pueblo.util.cli import boot_click
 
 from cratedb_mcp.core import CrateDbMcp
@@ -30,6 +31,15 @@ def cli(ctx: click.Context) -> None:
 
 transport_types = t.Literal["stdio", "sse", "http", "streamable-http"]
 transport_choices = t.get_args(transport_types)
+
+
+def turn_off_update_check() -> None:
+    """
+    Start without FastMCP's request to PyPI for a newer FastMCP release,
+    unless `FASTMCP_CHECK_FOR_UPDATES` is set.
+    """
+    if "check_for_updates" not in fastmcp.settings.model_fields_set:
+        fastmcp.settings.check_for_updates = "off"
 
 
 @cli.command()
@@ -96,6 +106,7 @@ def serve(
             "port": port,
             "path": path,
         }
+    turn_off_update_check()
     mcp_cratedb = CrateDbMcp(instructions=instructions, conventions=conventions)
     mcp_cratedb.mcp.run(transport=t.cast(transport_types, transport), **transport_kwargs)  # type: ignore[arg-type]
 

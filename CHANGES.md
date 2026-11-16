@@ -12,6 +12,8 @@ Changes:
   MCP servers directly, so use the standard image `ghcr.io/crate/cratedb-mcp`
   with `--transport=streamable-http`.
 - OCI: The image built from a release tag reports exactly the tag's version
+- CLI: The server starts without asking PyPI for a newer FastMCP release, unless
+  `FASTMCP_CHECK_FOR_UPDATES` is set
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of

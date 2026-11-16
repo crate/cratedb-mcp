@@ -38,3 +38,6 @@ cratedb-mcp serve --transport=http
 ```
 Alternatively, use the `CRATEDB_MCP_TRANSPORT` environment variable instead of
 the `--transport` option.
+
+The server starts without asking PyPI for a newer FastMCP release, unless
+`FASTMCP_CHECK_FOR_UPDATES` is set to `stable` or `prerelease`.

@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import fastmcp.server.server
@@ -127,6 +128,26 @@ def test_cli_valid_custom(mocker, capsys):
         mock.call("http", host="127.0.0.1", port=65535, path=None),
         mock.call("http", show_banner=mock.ANY, host="127.0.0.1", port=65535, path=None),
     ]
+
+
+def update_check_after_serve(mocker, configured=None):
+    mocker.patch.object(fastmcp.server.server.FastMCP, "run_async")
+    mocker.patch.dict(os.environ)
+    os.environ.pop("FASTMCP_CHECK_FOR_UPDATES", None)
+    if configured:
+        os.environ["FASTMCP_CHECK_FOR_UPDATES"] = configured
+    settings = type(fastmcp.settings)()
+    mocker.patch.object(fastmcp, "settings", settings)
+    CliRunner().invoke(cli, args="serve", catch_exceptions=False)
+    return settings.check_for_updates
+
+
+def test_cli_starts_without_fastmcp_update_check(mocker):
+    assert update_check_after_serve(mocker) == "off"
+
+
+def test_cli_keeps_a_configured_fastmcp_update_check(mocker):
+    assert update_check_after_serve(mocker, configured="stable") == "stable"
 
 
 def test_cli_invalid_transport_option(mocker, capsys):
