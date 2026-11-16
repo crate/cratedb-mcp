@@ -56,6 +56,8 @@ Changes:
   `FASTMCP_CHECK_FOR_UPDATES` is set
 - Instructions: The server sends its own short instructions text and no longer adds
   the general CrateDB text of `cratedb-about`. Pass `--instructions` to send another text.
+- MCP: Added a title and annotations to every tool, marking them read-only. `query_sql`
+  loses its read-only mark when `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` is set
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of

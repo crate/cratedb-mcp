@@ -30,8 +30,8 @@ to your CrateDB clusters and the CrateDB knowledge base, enabling seamless
 interaction through natural language.
 
 It serves as a bridge between AI tools and your analytics database,
-allowing you to analyze data, the cluster state, troubleshoot issues, and
-perform operations using conversational prompts.
+allowing you to analyze data and the cluster state, and troubleshoot issues
+using conversational prompts.
 
 
 [development documentation]: https://cratedb-mcp.readthedocs.io/sandbox.html

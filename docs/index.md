@@ -77,8 +77,8 @@ The CrateDB MCP Server provides two families of tools.
 
 :Health status:
 
-  The tool `get_cluster_health` returns cluster health information derived
-  from CrateDB's system tables.
+  The tool `get_cluster_health` returns the health of each table and
+  partition from `sys.health`, most severe first.
 :::
 
 :::{note}

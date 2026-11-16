@@ -132,5 +132,5 @@ def fetch_cratedb_docs(link: str) -> str:
 #            Health / Status
 # ------------------------------------------
 def get_cluster_health() -> dict:
-    """Return the health of the CrateDB cluster by querying `sys.health` ordered by severity."""
+    """Return the health of each table and partition from `sys.health`, most severe first."""
     return query_cratedb(Queries.HEALTH)
