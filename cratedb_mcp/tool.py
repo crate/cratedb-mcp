@@ -1,11 +1,12 @@
 import contextvars
 import logging
 import time
+import typing as t
 
 import httpx
 
 from cratedb_mcp.knowledge import DocumentationIndex, Queries
-from cratedb_mcp.settings import HTTP_URL, Settings
+from cratedb_mcp.settings import Settings
 from cratedb_mcp.util.sql import sql_is_permitted
 
 logger = logging.getLogger(__name__)
@@ -32,13 +33,18 @@ def query_cratedb(query: str) -> dict:
             logger.info("%s: CrateDB call took %d ms, %d rows", calling_tool.get(), took, rows)
 
 
+def sql_endpoint() -> t.Tuple[httpx.URL, t.Optional[t.Tuple[str, str]]]:
+    """Return the URL of CrateDB's SQL endpoint without the user part, and the credentials."""
+    cluster = Settings.cluster_url()
+    path = cluster.path.rstrip("/") + "/_sql"
+    url = cluster.copy_with(userinfo=b"", path=path)
+    return url, (cluster.username, cluster.password) if cluster.userinfo else None
+
+
 def read_answer(query: str) -> dict:
     """Send the SQL `query` to the configured CrateDB server and read its answer."""
-    url = HTTP_URL
-    if url.endswith("/"):
-        url = url.removesuffix("/")
-
-    return httpx.post(f"{url}/_sql", json={"stmt": query}, timeout=Settings.http_timeout()).json()
+    url, auth = sql_endpoint()
+    return httpx.post(url, json={"stmt": query}, auth=auth, timeout=Settings.http_timeout()).json()
 
 
 def query_sql(query: str) -> dict:

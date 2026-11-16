@@ -7,6 +7,7 @@ from pueblo.util.cli import boot_click
 
 from cratedb_mcp.core import CrateDbMcp
 from cratedb_mcp.prompt import InstructionsPrompt
+from cratedb_mcp.settings import InvalidSetting, Settings, check_positive_numbers
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +107,11 @@ def serve(
     """
     Start MCP server.
     """
+    try:
+        Settings.cluster_url()
+        check_positive_numbers()
+    except InvalidSetting as e:
+        raise click.UsageError(str(e)) from None
     logger.info(f"CrateDB MCP server starting with transport: {transport}")
     transport_kwargs = {}
     if transport in {"sse", "http", "streamable-http"}:

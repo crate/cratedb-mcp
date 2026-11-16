@@ -14,6 +14,9 @@ export CRATEDB_CLUSTER_URL="https://<username>:<password>@<example>.aks1.westeur
 ```shell
 export CRATEDB_CLUSTER_URL="http://crate:crate@localhost:4200/"
 ```
+The server reads the address when it starts, and does not start when it is not an
+`http` or `https` URL with a host. A user name or password that holds characters
+such as `/`, `#`, `?` or `@` must be percent-encoded, such as `/` as `%2F`.
 
 The `CRATEDB_MCP_HTTP_TIMEOUT` environment variable (default: 30.0) defines
 the timeout for HTTP requests to CrateDB and its documentation resources
