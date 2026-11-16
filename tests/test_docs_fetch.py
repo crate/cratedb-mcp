@@ -29,7 +29,9 @@ def fetch(link):
             )
 
     result = asyncio.run(call())
-    return result.is_error, result.content[0].text
+    if result.is_error:
+        return True, result.content[0].text
+    return False, result.structured_content["text"]
 
 
 def moved(location, status=302):
@@ -183,7 +185,8 @@ def test_answer_named_uncompressed_is_returned(docs_site, encoding):
 
 
 @pytest.mark.parametrize("charset", ["punycode", "x-unknown-to-python"])
-def test_page_is_decoded_as_utf_8_whatever_charset_it_declares(docs_site, charset):
+def test_page_is_decoded_as_utf_8_whatever_charset_it_declares(docs_site, mocker, charset):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_CHARS": "10000000"})
     text = "Größe – 大小 😀 " * 40_000
     headers = {"Content-Type": f"text/plain; charset={charset}"}
     body = text.encode() + b"\xff"

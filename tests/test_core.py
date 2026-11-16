@@ -51,7 +51,7 @@ RESULT_FIELDS = {
     "query_sql": CRATE_RESULT | {"truncated", "note"},
     "get_cratedb_documentation_index": {"pages", "truncated", "note"},
     "get_cluster_health": CRATE_RESULT | {"truncated", "note"},
-    "fetch_cratedb_docs": {"result"},
+    "fetch_cratedb_docs": {"text", "truncated", "note"},
 }
 
 

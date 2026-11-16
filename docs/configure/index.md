@@ -62,8 +62,10 @@ By default a result holds at most 100 rows and 50,000 characters of rows. The
 model can ask for up to 1,000 rows with the `max_rows` argument, or up to the
 configured row cap when it is larger. Both caps also
 bound what `get_cluster_health` returns. The character cap alone bounds the pages
-`get_cratedb_documentation_index` lists. When an answer is cut, it says so in
-`truncated` and explains why in `note`.
+`get_cratedb_documentation_index` lists and the page text `fetch_cratedb_docs`
+returns. When an answer is cut, it says so in `truncated` and
+explains why in `note`. A longer documentation page comes in parts, and the `note`
+of each part names the `start` argument that reads the next one.
 ```shell
 export CRATEDB_MCP_MAX_ROWS=100
 export CRATEDB_MCP_MAX_CHARS=50000

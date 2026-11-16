@@ -235,6 +235,18 @@ def bound_result(result: dict, max_rows: t.Optional[int] = None) -> dict:
     return bounded
 
 
+def fit_text(text: str, fits: t.Callable[[str], bool], mark: str = "…") -> str:
+    """Return the longest start of `text` that still fits when ended with `mark`, or ""."""
+    kept, longest = 0, min(len(text), Settings.max_chars())
+    while kept < longest:
+        middle = (kept + longest + 1) // 2
+        if fits(text[:middle] + mark):
+            kept = middle
+        else:
+            longest = middle - 1
+    return text[:kept] + mark if kept else ""
+
+
 def get_table_columns() -> dict:
     """
     Return schema and column information for all tables stored in CrateDB from
@@ -318,13 +330,42 @@ def get_cratedb_documentation_index() -> DocumentationPages:
     return DocumentationPages(pages=pages[: len(shown)], truncated=note is not None, note=note)
 
 
-def fetch_cratedb_docs(link: str) -> str:
+class DocumentationPage(BaseModel):
+    model_config = ConfigDict(json_schema_extra=declare_present_types)
+
+    text: str
+    truncated: bool
+    note: t.Optional[str] = absent()
+
+
+def page_part(text: str, start: int) -> DocumentationPage:
+    """Cut a page to the character cap from `start`, and say where the next part starts."""
+    if start and start >= len(text):
+        raise ToolError(f"The page holds {len(text)} characters, so `start` must be lower.")
+    char_cap = Settings.max_chars()
+    rest = text[start:]
+    if row_chars(rest) <= char_cap:
+        return DocumentationPage(text=rest, truncated=False)
+    part = fit_text(rest, lambda part: row_chars(part) <= char_cap, mark="")
+    if not part:
+        note = f"No text is shown, because the cap of {char_cap} characters leaves no room for it."
+    else:
+        end = start + len(part)
+        note = (
+            f"Only characters {start} to {end} of {len(text)} are shown, to keep the answer "
+            f"under the limit. Call again with start={end} to read on."
+        )
+    return DocumentationPage(text=part, truncated=True, note=note)
+
+
+def fetch_cratedb_docs(link: str, start: int = 0) -> DocumentationPage:
     """
     Given a `link` returned by `get_cratedb_documentation_index`,
-    fetch the full content of that documentation page. Content
-    can be quoted verbatim when answering questions about CrateDB.
+    fetch the content of that documentation page. Content can be
+    quoted verbatim when answering questions about CrateDB. A long
+    page comes in parts; `note` says which `start` reads on.
     """
-    return documentation_index.fetch(link)
+    return page_part(documentation_index.fetch(link), max(0, start))
 
 
 # ------------------------------------------

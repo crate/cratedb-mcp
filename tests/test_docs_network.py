@@ -157,7 +157,7 @@ async def fetch(client, name):
     result = await client.call_tool(
         "fetch_cratedb_docs", {"link": SITE + name}, raise_on_error=False
     )
-    text = result.content[0].text
+    text = result.content[0].text if result.is_error else result.structured_content["text"]
     return result.is_error, text, time.monotonic() - started
 
 

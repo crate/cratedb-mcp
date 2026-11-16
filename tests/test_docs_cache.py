@@ -16,18 +16,48 @@ LINK = "https://docs.cratedb.com/projects/crate-reference/en/latest/_sources/sql
 GUIDE = "https://docs.cratedb.com/projects/guide/"
 
 
-def read(link):
+def read(link, start=None):
+    arguments = {"link": link} if start is None else {"link": link, "start": start}
+
     async def call():
         async with Client(CrateDbMcp().mcp) as client:
-            return await client.call_tool(
-                "fetch_cratedb_docs", {"link": link}, raise_on_error=False
-            )
+            return await client.call_tool("fetch_cratedb_docs", arguments, raise_on_error=False)
 
     return asyncio.run(call())
 
 
 def text(link):
-    return read(link).content[0].text
+    result = read(link)
+    return result.content[0].text if result.is_error else result.structured_content["text"]
+
+
+def test_a_long_page_is_read_in_parts_from_one_fetch(docs_site, mocker):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_CHARS": "40"})
+    page = docs_site.page
+    first = read(LINK).structured_content
+    assert first == {
+        "text": page[:38],
+        "truncated": True,
+        "note": "Only characters 0 to 38 of 60 are shown, to keep the answer under the limit. "
+        "Call again with start=38 to read on.",
+    }
+    assert read(LINK, start=38).structured_content == {"text": page[38:], "truncated": False}
+    assert docs_site.requests == [LINK]
+
+
+def test_a_start_past_the_end_of_the_page_fails(docs_site):
+    result = read(LINK, start=60)
+    assert result.is_error is True
+    assert result.content[0].text == "The page holds 60 characters, so `start` must be lower."
+
+
+def test_a_cap_without_room_for_any_text_says_so(docs_site, mocker):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_CHARS": "2"})
+    assert read(LINK).structured_content == {
+        "text": "",
+        "truncated": True,
+        "note": "No text is shown, because the cap of 2 characters leaves no room for it.",
+    }
 
 
 def test_a_page_is_fetched_again_once_its_lifetime_has_passed(docs_site, mocker):
@@ -98,7 +128,7 @@ def test_forty_calls_at_once_get_their_pages(docs_site):
     async def call_all():
         async with Client(CrateDbMcp().mcp) as client:
             calls = [client.call_tool("fetch_cratedb_docs", {"link": link}) for link in links]
-            return [result.content[0].text for result in await asyncio.gather(*calls)]
+            return [result.structured_content["text"] for result in await asyncio.gather(*calls)]
 
     assert asyncio.run(call_all()) == links
     fetched = len(docs_site.requests)
@@ -126,7 +156,7 @@ def test_a_kept_page_is_served_while_another_page_is_fetched(docs_site):
             took = time.monotonic() - started
             released.set()
             await pending
-            return kept.content[0].text, took
+            return kept.structured_content["text"], took
 
     kept, took = asyncio.run(scenario())
     assert kept == docs_site.page
@@ -139,7 +169,7 @@ FETCH_A_PAGE = (
     "httpx.HTTPTransport.handle_request = "
     "lambda self, request: httpx.Response(200, text='a page'); "
     "from cratedb_mcp.tool import fetch_cratedb_docs as f; "
-    "assert f('https://docs.cratedb.com/projects/guide/') == 'a page'"
+    "assert f('https://docs.cratedb.com/projects/guide/').text == 'a page'"
 )
 
 

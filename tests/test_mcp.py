@@ -41,14 +41,14 @@ def test_fetch_docs_permitted_github_index_link(docs_site):
     response = fetch_cratedb_docs(
         "https://raw.githubusercontent.com/crate/crate/refs/heads/master/README.rst"
     )
-    assert "initcap" in response
+    assert "initcap" in response.text
 
 
 def test_fetch_docs_permitted_docs_cratedb_com(docs_site):
     response = fetch_cratedb_docs(
         "https://docs.cratedb.com/projects/crate-reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt"
     )
-    assert "initcap" in response
+    assert "initcap" in response.text
 
 
 def test_fetch_docs_missing_page(docs_site):

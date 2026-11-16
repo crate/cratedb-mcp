@@ -33,6 +33,10 @@ Upgrading from 0.1.x:
   instead of a list. `get_cluster_health` returns at most 100 rows, the most severe
   first, or as many as `CRATEDB_MCP_MAX_ROWS` sets. Check `truncated` when every row
   matters.
+- Tools: `fetch_cratedb_docs` returns an object with the page in `text`, instead of the
+  text alone. A long page comes in parts of at most `CRATEDB_MCP_MAX_CHARS` characters,
+  50,000 by default: while `truncated` is true, call again with the `start` that `note`
+  names.
 
 Changes:
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
@@ -80,6 +84,9 @@ Changes:
   not a whole number above zero
 - MCP: `get_cluster_health` and `get_cratedb_documentation_index` cut their answers to the
   result caps, and say so in `truncated` and `note`
+- MCP: `fetch_cratedb_docs` returns a long page in parts of at most
+  `CRATEDB_MCP_MAX_CHARS` characters (50,000 by default), and takes `start` to read the
+  next part, which `note` names
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of
