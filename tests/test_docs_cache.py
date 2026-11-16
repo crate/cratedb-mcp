@@ -51,8 +51,11 @@ def test_an_address_with_another_fragment_shares_the_page_and_another_query_does
     "answer",
     [
         lambda: httpx.Response(404),
+        lambda: httpx.Response(
+            200, headers={"Content-Type": "text/plain"}, content=iter([b"x" * 600_000] * 2)
+        ),
     ],
-    ids=["failed"],
+    ids=["failed", "cut-off"],
 )
 def test_a_failed_or_cut_off_fetch_keeps_nothing(docs_site, answer):
     docs_site.pages[LINK] = answer

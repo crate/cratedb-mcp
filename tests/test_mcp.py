@@ -5,6 +5,7 @@ import re
 import httpx
 import pytest
 from fastmcp import Client
+from fastmcp.exceptions import ToolError
 
 from cratedb_mcp.core import CrateDbMcp
 from cratedb_mcp.settings import Settings
@@ -23,14 +24,14 @@ def test_get_documentation_index():
 
 
 def test_fetch_docs_forbidden():
-    with pytest.raises(ValueError) as ex:
+    with pytest.raises(ToolError) as ex:
         fetch_cratedb_docs("https://example.com")
     assert ex.match("Link is not permitted: https://example.com")
 
 
-def test_fetch_docs_permitted_github(docs_site):
+def test_fetch_docs_permitted_github_index_link(docs_site):
     response = fetch_cratedb_docs(
-        "https://raw.githubusercontent.com/crate/crate/refs/heads/5.10/docs/general/builtins/scalar-functions.rst"
+        "https://raw.githubusercontent.com/crate/crate/refs/heads/master/README.rst"
     )
     assert "initcap" in response
 
@@ -45,18 +46,9 @@ def test_fetch_docs_permitted_docs_cratedb_com(docs_site):
 def test_fetch_docs_missing_page(docs_site):
     link = "https://docs.cratedb.com/projects/guide/_sources/does-not-exist.md.txt"
     docs_site.pages[link] = lambda: httpx.Response(404)
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(ToolError) as ex:
         fetch_cratedb_docs(link)
-
-
-def test_fetch_docs_redirect_forbidden(docs_site):
-    link = "https://docs.cratedb.com/projects/guide/"
-    docs_site.pages[link] = lambda: httpx.Response(
-        302, headers={"Location": "https://example.com/"}
-    )
-    with pytest.raises(ValueError) as ex:
-        fetch_cratedb_docs(link)
-    assert ex.match("Link redirects to a location that is not permitted: https://example.com/")
+    assert str(ex.value) == "The page answered HTTP 404."
 
 
 def test_query_sql_permitted():

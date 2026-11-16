@@ -20,7 +20,10 @@ such as `/`, `#`, `?` or `@` must be percent-encoded, such as `/` as `%2F`.
 
 The `CRATEDB_MCP_HTTP_TIMEOUT` environment variable (default: 30.0) defines
 the timeout for HTTP requests to CrateDB and its documentation resources
-in seconds.
+in seconds. `fetch_cratedb_docs` ends each call within this time, the redirects
+of the page included, once a connection to the site stands. Finding the site takes
+as long as the system's name lookup, and connecting to it up to this time for each
+address its name resolves to.
 
 The `CRATEDB_MCP_DOCS_CACHE_TTL` environment variable (default: 3600) defines
 the cache lifetime for documentation resources in seconds. The server keeps the
