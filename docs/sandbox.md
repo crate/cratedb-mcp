@@ -51,6 +51,14 @@ git tag v0.0.1
 git push && git push --tags
 ```
 
+Pushing the tag sets off the rest of the release:
+
+- The Python package is published to PyPI.
+- The OCI image is published to `ghcr.io/crate/cratedb-mcp`.
+- The GitHub release is created, with the tag's section of `CHANGES.md` as its notes,
+  followed by the pull requests GitHub lists for the tag. Where a release exists already,
+  the workflow leaves it alone, so edit its notes on GitHub.
+
 
 [poethepoet]: https://pypi.org/project/poethepoet/
 [versioningit]: https://pypi.org/project/versioningit/

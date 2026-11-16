@@ -35,6 +35,8 @@ Changes:
 - CLI: The server does not start when `CRATEDB_MCP_HTTP_TIMEOUT` is not a number above zero
 - Tests: The software tests answer requests for documentation pages and remote
   instructions from memory
+- Shipping: Pushing a release tag creates the GitHub release, with the tag's section of
+  this file as its notes
 - CLI: The server starts without asking PyPI for a newer FastMCP release, unless
   `FASTMCP_CHECK_FOR_UPDATES` is set
 

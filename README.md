@@ -46,7 +46,6 @@ perform operations using conversational prompts.
 [Issues]: https://github.com/crate/cratedb-mcp/issues
 [License]: https://github.com/crate/cratedb-mcp/blob/main/LICENSE
 [Source code]: https://github.com/crate/cratedb-mcp
-[Releases]: https://github.com/surister/cratedb-mcp/releases
 
 [badge-ci]: https://github.com/crate/cratedb-mcp/actions/workflows/tests.yml/badge.svg
 [badge-bluesky]: https://img.shields.io/badge/Bluesky-0285FF?logo=bluesky&logoColor=fff&label=Follow%20%40CrateDB
