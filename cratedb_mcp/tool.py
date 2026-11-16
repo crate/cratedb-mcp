@@ -6,6 +6,7 @@ import typing as t
 
 import httpx
 from fastmcp.exceptions import ToolError
+from pydantic import BaseModel, ConfigDict, Field
 from sqlparse.exceptions import SQLParseError
 
 from cratedb_mcp.knowledge import DocumentationIndex, Queries
@@ -27,6 +28,33 @@ class StatementTimeout(ToolError):
 
 def shorten(text: str, limit: int) -> str:
     return text if len(text) <= limit else text[:limit] + "…"
+
+
+def _is_none(value: t.Any) -> bool:
+    return value is None
+
+
+def absent() -> t.Any:
+    return Field(default=None, exclude_if=_is_none)
+
+
+def declare_present_types(schema: t.Dict[str, t.Any]) -> None:
+    """Declare only the types a field holds when present: absent fields are left out, never null."""
+    schema.pop("additionalProperties", None)
+    for prop in schema["properties"].values():
+        prop.pop("default", None)
+        if "anyOf" in prop:
+            (kept,) = [option for option in prop.pop("anyOf") if option != {"type": "null"}]
+            prop.update(kept)
+
+
+class CrateResult(BaseModel):
+    model_config = ConfigDict(extra="allow", json_schema_extra=declare_present_types)
+
+    cols: t.Optional[t.List[str]] = absent()
+    rows: t.Optional[t.List[t.List[t.Any]]] = absent()
+    rowcount: t.Optional[int] = absent()
+    duration: t.Optional[float] = absent()
 
 
 # ------------------------------------------
@@ -105,7 +133,7 @@ def read_only_check() -> t.Iterator[None]:
         ) from e
 
 
-def query_sql(query: str) -> dict:
+def query_sql(query: str) -> CrateResult:
     """
     Execute an SQL query on CrateDB and return the results.
     Select only the columns you need (avoid `SELECT *`) and,
@@ -115,7 +143,7 @@ def query_sql(query: str) -> dict:
         permitted = sql_is_permitted(query)
     if not permitted:
         raise ToolError("Only queries that have a SELECT statement are allowed.")
-    return run_query(query)
+    return CrateResult(**run_query(query))
 
 
 def get_table_columns() -> dict:
@@ -171,12 +199,19 @@ def get_table_metadata() -> dict:
 documentation_index = DocumentationIndex()
 
 
-def get_cratedb_documentation_index() -> list:
+class DocumentationLink(BaseModel):
+    title: str
+    link: str
+    description: str
+    markdown_enabled: bool
+
+
+def get_cratedb_documentation_index() -> t.List[DocumentationLink]:
     """
     Return the table of contents for the curated CrateDB documentation index.
     Use it whenever you need to verify CrateDB-specific details or syntax.
     """
-    return documentation_index.items()
+    return [DocumentationLink(**item) for item in documentation_index.items()]
 
 
 def fetch_cratedb_docs(link: str) -> str:
@@ -191,6 +226,6 @@ def fetch_cratedb_docs(link: str) -> str:
 # ------------------------------------------
 #            Health / Status
 # ------------------------------------------
-def get_cluster_health() -> dict:
+def get_cluster_health() -> CrateResult:
     """Return the health of each table and partition from `sys.health`, most severe first."""
-    return query_result(Queries.HEALTH)
+    return CrateResult(**query_result(Queries.HEALTH))

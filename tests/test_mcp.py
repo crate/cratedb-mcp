@@ -60,7 +60,7 @@ def test_fetch_docs_missing_page(docs_site):
 
 
 def test_query_sql_permitted():
-    assert query_sql("SELECT 42")["rows"] == [[42]]
+    assert query_sql("SELECT 42").rows == [[42]]
 
 
 def test_query_sql_trailing_slash(mocker):
@@ -68,7 +68,7 @@ def test_query_sql_trailing_slash(mocker):
     cluster = Settings.cluster_url()
     address = cluster.copy_with(path=cluster.path.rstrip("/") + "/")
     mocker.patch.object(Settings, "cluster_url", return_value=address)
-    assert query_sql("SELECT 42")["rows"] == [[42]]
+    assert query_sql("SELECT 42").rows == [[42]]
 
 
 def test_query_sql_forbidden_easy():
@@ -102,7 +102,7 @@ def test_get_table_metadata():
 
 
 def test_get_cluster_health():
-    assert "missing_shards" in str(get_cluster_health())
+    assert "missing_shards" in get_cluster_health().cols
 
 
 def test_log_names_tool_duration_and_rows_and_leaves_the_statement_to_debug(caplog):

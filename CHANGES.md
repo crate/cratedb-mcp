@@ -64,6 +64,8 @@ Changes:
 - MCP: Every tool fails a call it cannot complete with the MCP error flag `isError` and
   a message that says why it failed. CrateDB's errors are no longer returned as results
 - MCP: A query that times out tells the model to narrow it instead of retrying
+- MCP: `query_sql`, `get_cluster_health` and `get_cratedb_documentation_index` declare
+  the fields of their results
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of
