@@ -78,6 +78,8 @@ Changes:
   refuses foreign browser origins (403) unless named in `CRATEDB_MCP_ALLOWED_ORIGINS`
 - HTTP: Added `GET /health` for liveness probes
 - CLI: Deprecated the `sse` transport, as the MCP specification does
+- Shipping: Published to the MCP Registry as `io.github.crate/cratedb-mcp`, with the
+  PyPI package and the OCI image
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of
