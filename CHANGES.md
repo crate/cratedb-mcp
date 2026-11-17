@@ -10,6 +10,9 @@ Upgrading from 0.1.x:
   the host name Open WebUI connects to in `CRATEDB_MCP_ALLOWED_HOSTS`.
 - Packaging: the server needs version 2 of the MCP SDK. Where an environment holds
   `mcp<2`, install the server apart from it, for example with `uv tool install cratedb-mcp`.
+- Instructions: the text sent to clients is new and much shorter, and it sets no
+  persona. If a setup relied on the old text, pass your own with `--instructions` or
+  `CRATEDB_MCP_INSTRUCTIONS`.
 - Tools: a CrateDB error fails the call, with `isError` set and CrateDB's message and
   error code as its text. Clients that read the `error` field of a `query_sql` or
   `get_cluster_health` result check `isError` instead.
@@ -38,6 +41,8 @@ Changes:
 - Tests: The software tests answer requests for documentation pages and remote
   instructions from memory
 - Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28
+- Instructions: The server sends its own short instructions text and no longer adds
+  the general CrateDB text of `cratedb-about`. Pass `--instructions` to send another text.
 - MCP: Added a title and annotations to every tool, marking them read-only. `query_sql`
   loses its read-only mark when `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` is set
 - MCP: Every tool fails a call it cannot complete with the MCP error flag `isError` and
