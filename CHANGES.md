@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Changes:
+- Tests: The software tests answer requests for documentation pages and remote
+  instructions from memory
+
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of
   the CrateDB documentation
