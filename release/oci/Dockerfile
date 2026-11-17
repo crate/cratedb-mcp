@@ -89,13 +89,3 @@ COPY release/oci/selftest.sh /usr/local/bin
 # Standard MCP server.
 # Specify the command to run the MCP server.
 ENTRYPOINT ["cratedb-mcp", "serve"]
-
-
-FROM standard AS mcpo
-# MCP support for Open WebUI.
-# https://docs.openwebui.com/openapi-servers/mcp/
-# https://github.com/open-webui/mcpo
-# mcpo 0.0.21 requires an MCP SDK below 2, which the server cannot run with.
-RUN uv pip install "mcpo<0.0.21"
-ENTRYPOINT []
-CMD ["mcpo", "--host", "0.0.0.0", "--port", "8000", "--", "cratedb-mcp", "serve", "--transport=stdio"]

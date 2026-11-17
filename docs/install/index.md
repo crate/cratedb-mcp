@@ -30,15 +30,6 @@ OCI images for Docker or Podman are available on GHCR.
 Image: `ghcr.io/crate/cratedb-mcp`
 :::
 
-:::{grid-item-card} {octicon}`star;2em` &nbsp; MCPO
-:link: install-mcpo
-:link-type: ref
-+++
-The CrateDB MCPO OCI image supports Open WebUI out of the box.
-
-Image: `ghcr.io/crate/cratedb-mcpo`
-:::
-
 ::::
 
 :::{toctree}
@@ -49,5 +40,4 @@ Image: `ghcr.io/crate/cratedb-mcpo`
 package
 integrate
 OCI <oci>
-MCPO <mcpo>
 :::
