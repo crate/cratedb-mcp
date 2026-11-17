@@ -119,7 +119,7 @@ export CRATEDB_CLUSTER_URL="https://mcp:YOUR_PASSWORD@example.aks1.westeurope.az
 When the MCP server is reachable from outside, put it behind a reverse proxy.
 
 The MCP Server also prohibits non-SELECT statements on the application level.
-All other operations will raise a `PermissionError` exception, unless the
+A call with any other statement fails, unless the
 `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a
 truthy value.
 
