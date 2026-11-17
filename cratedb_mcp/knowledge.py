@@ -9,10 +9,12 @@ from cratedb_about import CrateDbKnowledgeOutline
 from fastmcp.exceptions import ToolError
 
 from cratedb_mcp.settings import Settings
+from cratedb_mcp.util.http_client import read_at_most, uncompressed_client
 
 logger = logging.getLogger(__name__)
 
 MAX_REDIRECTS = 5
+MAX_PAGE_BYTES = 1_000_000
 CACHED_CHARS = 16_000_000
 
 
@@ -174,25 +176,30 @@ class DocumentationIndex:
         )
 
 
-documentation_client = httpx.Client()
+documentation_client = uncompressed_client()
 
 
 def read_page(url: httpx.URL, timeout: float) -> t.Union[str, httpx.URL]:
     """
     Request `url` once, and return the text of the page, or the address it redirects to.
-    A page has to be text.
+    A page has to be uncompressed text of at most MAX_PAGE_BYTES.
     """
     with documentation_client.stream("GET", url, timeout=timeout) as response:
         if response.next_request is not None:
             return response.next_request.url
         check_page(response)
-        body = response.read()
+        body = read_at_most(response, MAX_PAGE_BYTES)
+        if body is None:
+            raise ToolError(f"The page is larger than the {MAX_PAGE_BYTES:,} bytes the tool reads.")
         return body.decode("utf-8", errors="replace")
 
 
 def check_page(response: httpx.Response) -> None:
-    """Fail unless `response` is a success that brings text."""
+    """Fail unless `response` is a success that brings uncompressed text."""
     if not response.is_success:
         raise ToolError(f"The page answered HTTP {response.status_code}.")
     if not response.headers.get("content-type", "").lower().startswith("text/"):
         raise ToolError("The page is not text, so the tool does not return it.")
+    encodings = response.headers.get_list("content-encoding", split_commas=True)
+    if any(encoding.strip().lower() not in ("", "identity") for encoding in encodings):
+        raise ToolError("The page is compressed, so the tool does not read it.")

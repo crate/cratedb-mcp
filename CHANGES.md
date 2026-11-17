@@ -32,6 +32,8 @@ Upgrading from 0.1.x:
   matters.
 - Tools: `get_cluster_health` returns at most 1,000 rows, the most severe first.
   `CRATEDB_MCP_MAX_ROWS` changes the cap. Check `truncated` when every row matters.
+- Tools: an answer from CrateDB larger than 5 MB fails the call. Where a query returned
+  more, add a `LIMIT`, select fewer columns or aggregate.
 - Tools: `get_table_columns` and `get_table_metadata` are gone. Use `list_schemas`,
   `list_tables` and `describe_table`, and update prompts and allow-lists that name the
   old tools.
@@ -60,7 +62,8 @@ Changes:
   instructions from memory
 - MCP: `fetch_cratedb_docs` fetches the links of the documentation index and pages on
   cratedb.com and docs.cratedb.com. It checks the address of every redirect before it
-  follows it, reads only text, and decodes every page as UTF-8
+  follows it, reads only uncompressed text, at most 1 MB of it, and decodes every page
+  as UTF-8
 - Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28
 - Instructions: The server sends its own short instructions text and no longer adds
   the general CrateDB text of `cratedb-about`. Pass `--instructions` to send another text.
@@ -78,6 +81,9 @@ Changes:
   not a whole number above zero
 - MCP: `get_cluster_health` cuts its answer to the result caps, says so in `truncated`
   and `note`, and counts its rows in `rows_returned`
+- MCP: The server reads at most 5 MB of CrateDB's answer to a statement. A larger answer
+  fails the call, and for `query_sql` tells the model to add a `LIMIT`, select fewer
+  columns or aggregate
 - MCP: Added `list_schemas`, `list_tables` and `describe_table`, which find tables
   step by step and return typed results. Removed `get_table_columns` and
   `get_table_metadata`, which returned every table at once
@@ -87,7 +93,9 @@ Changes:
   release before it is removed
 - MCP: Added `explain_query`, which shows how CrateDB plans or runs a SELECT query,
   with switches for `analyze`, `verbose` and `costs`
-- MCP: `explain_query` cuts a longer plan to the same character cap as `query_sql`
+- MCP: `explain_query` cuts a longer plan to the same character cap as `query_sql`, and
+  for an answer larger than 5 MB tells the model to add a `LIMIT`, select fewer columns
+  or aggregate
 - MCP: `query_sql` runs `SHOW` and `VALUES` statements beside `SELECT` and `WITH`, and
   an `EXPLAIN` of a `SELECT`, `WITH` or `VALUES` statement
 - MCP: A statement the read-only check cannot analyze, because it has more than 10,000

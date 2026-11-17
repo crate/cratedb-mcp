@@ -139,3 +139,16 @@ def test_crate_refuses_select_into(probe, text):
 
 def test_get_cluster_health():
     assert "missing_shards" in get_cluster_health().cols
+
+
+def test_calls_to_crate_ask_for_an_uncompressed_answer(answer_with):
+    sent = []
+
+    def answer(request):
+        sent.append(request.headers)
+        return httpx.Response(200, json={"cols": [], "rows": [], "rowcount": 0})
+
+    answer_with(answer)
+    query_cratedb("SELECT 1")
+    (headers,) = sent
+    assert headers["Accept-Encoding"] == "identity"
