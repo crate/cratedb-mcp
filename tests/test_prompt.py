@@ -7,7 +7,6 @@ import httpx
 import pytest
 from fastmcp import Client
 
-from cratedb_mcp.__main__ import mcp
 from cratedb_mcp.core import CrateDbMcp
 from cratedb_mcp.prompt import InstructionsPrompt
 
@@ -18,7 +17,7 @@ def test_default():
     """
     The default instructions are the text of the bundled file and nothing else.
     """
-    assert mcp.instructions == BUILTIN
+    assert CrateDbMcp().mcp.instructions == BUILTIN
 
 
 def test_default_names_registered_tools():

@@ -23,6 +23,8 @@ uv tool install --upgrade cratedb-mcp
   sessions or MCP client programs / AI assistants.
 - If you are unable to use `uv tool install`, you can use `uvx cratedb-mcp`
   to acquire the package and run the application ephemerally.
+- In an environment that holds the package, `python -m cratedb_mcp` runs the same
+  program, with the same subcommands and options as `cratedb-mcp`.
 :::
 
 
