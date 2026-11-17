@@ -28,19 +28,18 @@ the cache lifetime for documentation resources in seconds.
 ## Configure transport
 
 MCP servers can be started using different transport modes. The default transport
-is `stdio`, you can select another one of `{"stdio", "http", "sse", "streamable-http"}`.
-Over HTTP, the server requires a
+is `stdio`, you can select `http` instead. Over HTTP, the server requires a
 bearer token, see [Configure HTTP access](#configure-http-access).
 ```shell
 export CRATEDB_MCP_AUTH_TOKEN="$(openssl rand -hex 32)"
 cratedb-mcp serve --transport=http
 ```
 NB: The `http` transport was called `streamable-http` in earlier spec iterations.
+The `sse` transport is deprecated, as it is in the MCP specification.
 
-When using any of the HTTP-based options for serving the MCP interface, you can
-use the CLI options `--host`, `--port` and `--path` to specify the listening address.
-The default values are `127.0.0.1:8000`, where the SSE server responds to `/sse/`
-and `/messages/` and the HTTP server responds to `/mcp` by default.
+When serving over HTTP, you can use the CLI options `--host`, `--port` and
+`--path` to specify the listening address. The default values are
+`127.0.0.1:8000`, and the server responds to `/mcp` by default.
 
 Alternatively, you can use environment variables instead of CLI options.
 ```shell

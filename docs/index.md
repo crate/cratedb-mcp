@@ -14,8 +14,8 @@
 
 :::{div}
 The CrateDB MCP Server is compatible with AI assistants that support the Model
-Context Protocol (MCP), either using standard input/output (`stdio`),
-server-sent events (`sse`), or HTTP Streams (`http`, earlier `streamable-http`).
+Context Protocol (MCP), either using standard input/output (`stdio`)
+or HTTP Streams (`http`, earlier `streamable-http`).
 
 To use the MCP server, you need a [client that supports][MCP clients] the
 protocol. The most notable ones are ChatGPT, Claude, Cline Bot, Cursor,
