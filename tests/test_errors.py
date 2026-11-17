@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 
 import httpx
@@ -8,6 +9,7 @@ from sqlparse.exceptions import SQLParseError
 
 from cratedb_mcp import tool
 from cratedb_mcp.core import CrateDbMcp
+from cratedb_mcp.settings import Settings
 
 
 def call(name, arguments):
@@ -106,12 +108,15 @@ def test_timeout_fails_the_call_with_advice_only_for_the_model_query(
     ids=["unauthorized", "proxy-page", "empty", "long"],
 )
 def test_answer_that_is_not_json_fails_with_status_and_body_only(
-    mocker, answer_with, status, body, content_type, message
+    mocker, answer_with, caplog, status, body, content_type, message
 ):
-    mocker.patch.object(tool, "HTTP_URL", "http://mcp:s3cret-pw@crate.example:4200")
+    address = httpx.URL("http://mcp:s3cret-pw@crate.example:4200")
+    mocker.patch.object(Settings, "cluster_url", return_value=address)
     response = httpx.Response(status, content=body, headers={"Content-Type": content_type})
     answer_with(lambda request: response)
+    caplog.set_level(logging.DEBUG)
     assert call("query_sql", {"query": "SELECT 1"}) == (True, message)
+    assert "s3cret-pw" not in caplog.text
 
 
 @pytest.mark.parametrize(
