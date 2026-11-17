@@ -4,6 +4,7 @@ import os
 import httpx
 import pytest
 from fastmcp import Client
+from sqlparse.exceptions import SQLParseError
 
 from cratedb_mcp import tool
 from cratedb_mcp.core import CrateDbMcp
@@ -29,13 +30,8 @@ def call(name, arguments):
         (
             "query_sql",
             {"query": "DELETE FROM doc.unknown_table"},
-            "Only queries that have a SELECT statement are allowed.",
-        ),
-        (
-            "query_sql",
-            {"query": "SELECT " + "(" * 200 + "1" + ")" * 200},
-            "The read-only check cannot analyze this statement: Maximum grouping depth "
-            "exceeded (100). Shorten it, or split it into smaller queries.",
+            "Only one SELECT, WITH, VALUES or SHOW statement, or an EXPLAIN of a SELECT, WITH or "
+            "VALUES statement, is allowed.",
         ),
         (
             "describe_table",
@@ -46,7 +42,6 @@ def call(name, arguments):
     ids=[
         "crate-error",
         "refused-statement",
-        "unanalyzable-statement",
         "unknown-table",
     ],
 )
@@ -104,6 +99,42 @@ def test_answer_that_is_not_json_fails_with_status_and_body_only(
     response = httpx.Response(status, content=body, headers={"Content-Type": content_type})
     answer_with(lambda request: response)
     assert call("query_sql", {"query": "SELECT 1"}) == (True, message)
+
+
+@pytest.mark.parametrize(
+    ("query", "message"),
+    [
+        (
+            "SELECT id FROM doc.t1 WHERE id IN (" + ", ".join(map(str, range(5000))) + ")",  # noqa: S608
+            "The read-only check cannot analyze this statement: it holds more than 10,000 "
+            "tokens in one list or clause, and every value, name, operator and comma counts. "
+            "For a long list of values, filter by a range, join against a table, or run "
+            "several smaller queries.",
+        ),
+        (
+            "SELECT " + "(" * 200 + "1" + ")" * 200,
+            "The read-only check cannot analyze this statement: it nests parentheses or "
+            "subqueries more than 100 levels deep. Flatten the nesting, or split it into "
+            "smaller queries.",
+        ),
+    ],
+    ids=["tokens", "depth"],
+)
+def test_statement_over_a_parser_limit_names_the_limit_and_never_reaches_crate(
+    mocker, query, message
+):
+    sent = mocker.patch.object(tool, "query_cratedb")
+    assert call("query_sql", {"query": query}) == (True, message)
+    sent.assert_not_called()
+
+
+def test_parser_failure_without_a_named_limit_keeps_the_parser_text(mocker):
+    mocker.patch.object(tool, "sql_is_permitted", side_effect=SQLParseError("Cannot parse."))
+    assert call("query_sql", {"query": "SELECT 1"}) == (
+        True,
+        "The read-only check cannot analyze this statement: Cannot parse. "
+        "Shorten it, or split it into smaller queries.",
+    )
 
 
 def test_long_crate_error_is_cut_to_the_character_cap(mocker):

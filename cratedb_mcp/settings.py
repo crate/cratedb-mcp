@@ -33,7 +33,7 @@ class Settings:
     @staticmethod
     def permit_all_statements() -> bool:
         """
-        Whether to permit all statements. By default, only SELECT operations are permitted.
+        Whether to permit all statements. By default, only read statements are permitted.
         """
         permitted = False
         try:
