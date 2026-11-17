@@ -89,6 +89,17 @@ feature provided as-is without warranty or support guarantees. Enterprise
 customers should use this feature at their own discretion.
 :::
 
+### Values
+
+A tool returns each value as CrateDB sends it, with three exceptions. A TIMESTAMP value
+comes back as ISO 8601 text, with milliseconds when they are not zero, such as
+`2025-02-06T05:15:36.123Z`. A TIMESTAMP WITHOUT TIME ZONE value has no `Z`. A DATE value
+comes back as the date alone, such as `2025-07-01`, and a year outside 1 to 9999 comes as a
+sign and at least five digits, such as `+10000-01-01`. A NUMERIC value comes back as text
+with every digit CrateDB sends, because most clients read a JSON number as a float,
+which keeps about 16 digits. Values inside an OBJECT column stay as CrateDB sends them,
+because CrateDB reports no types for them.
+
 ### Errors and limits
 
 When a tool cannot do what it was asked, the call fails: its result carries the
