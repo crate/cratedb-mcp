@@ -1,9 +1,14 @@
 import os
 
+import httpx
 import pytest
 
+from cratedb_mcp import tool
 from cratedb_mcp.tool import (
+    describe_table,
     get_cluster_health,
+    list_schemas,
+    list_tables,
     query_cratedb,
     query_sql,
 )
@@ -116,3 +121,34 @@ def test_cluster_health_cuts_rows_at_the_row_cap(mocker, partitions):
     assert result.note.startswith(
         f"Only 2 of {total} rows are shown, because an answer holds at most 2 of them."
     )
+
+
+def test_list_tables_cuts_tables_at_the_row_cap(mocker):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_ROWS": "3"})
+    result = list_tables("sys")
+    assert len(result.tables) == 3
+    assert result.truncated is True
+
+
+def test_list_schemas_cuts_schemas_at_the_character_cap(mocker, answer_with):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_CHARS": "100"})
+    rows = [["doc", 3, 0], ["sensors", 12, 2], ["weather", 4, 0]]
+    answer = {"cols": ["table_schema", "tables", "views"], "rows": rows, "rowcount": 3}
+    answer_with(lambda request: httpx.Response(200, json=answer))
+    result = list_schemas()
+    assert [schema.schema_name for schema in result.schemas] == ["doc", "sensors"]
+    assert result.truncated is True
+    assert result.note == (
+        "Only 2 of 3 schemas are shown, because an answer holds at most 100 characters. "
+        "Query information_schema.tables with query_sql for the others."
+    )
+
+
+@pytest.mark.parametrize("chars", ["300", "3"], ids=["cut", "no-room"])
+def test_describe_table_cuts_a_definition_above_the_character_cap(mocker, chars):
+    full = describe_table("sys", "nodes").definition
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_CHARS": chars})
+    description = describe_table("sys", "nodes")
+    assert full.startswith(description.definition.removesuffix("…"))
+    assert tool.row_chars(description.definition) <= int(chars)
+    assert description.truncated is True

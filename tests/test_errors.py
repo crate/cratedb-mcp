@@ -37,11 +37,17 @@ def call(name, arguments):
             "The read-only check cannot analyze this statement: Maximum grouping depth "
             "exceeded (100). Shorten it, or split it into smaller queries.",
         ),
+        (
+            "describe_table",
+            {"schema": "doc", "table": "unknown_table"},
+            "Table or view not found: doc.unknown_table",
+        ),
     ],
     ids=[
         "crate-error",
         "refused-statement",
         "unanalyzable-statement",
+        "unknown-table",
     ],
 )
 def test_failed_call_sets_the_error_flag_and_carries_the_message(name, arguments, message):
@@ -59,6 +65,8 @@ PLAIN_TIMEOUT = "CrateDB did not answer within the 30-second timeout."
     ("name", "arguments", "message"),
     [
         ("query_sql", {"query": "SELECT 42"}, NARROW_TIMEOUT),
+        ("list_schemas", {}, PLAIN_TIMEOUT),
+        ("describe_table", {"schema": "doc", "table": "t"}, PLAIN_TIMEOUT),
         ("get_cluster_health", {}, PLAIN_TIMEOUT),
     ],
 )
@@ -113,6 +121,9 @@ def test_long_crate_error_is_cut_to_the_character_cap(mocker):
     ("name", "arguments"),
     [
         ("query_sql", {"query": "SELECT x FROM generate_series(1, 150) AS t(x)"}),
+        ("list_schemas", {"include_system": True}),
+        ("list_tables", {"schema": "sys"}),
+        ("describe_table", {"schema": "sys", "table": "nodes"}),
     ],
 )
 def test_cut_result_succeeds_and_says_so(mocker, name, arguments):
