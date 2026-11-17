@@ -28,10 +28,20 @@ def call(name, arguments):
             "RelationUnknown[Relation 'doc.unknown_table' unknown] (error code 4041)",
         ),
         (
+            "explain_query",
+            {"query": "SELECT * FROM doc.unknown_table"},
+            "RelationUnknown[Relation 'doc.unknown_table' unknown] (error code 4041)",
+        ),
+        (
             "query_sql",
             {"query": "DELETE FROM doc.unknown_table"},
             "Only one SELECT, WITH, VALUES or SHOW statement, or an EXPLAIN of a SELECT, WITH or "
             "VALUES statement, is allowed.",
+        ),
+        (
+            "explain_query",
+            {"query": "SELECT 42", "analyze": True, "verbose": True},
+            "CrateDB cannot combine `analyze` and `verbose`; choose one.",
         ),
         (
             "describe_table",
@@ -41,7 +51,9 @@ def call(name, arguments):
     ],
     ids=[
         "crate-error",
+        "crate-error-in-explain",
         "refused-statement",
+        "invalid-arguments",
         "unknown-table",
     ],
 )
@@ -60,6 +72,7 @@ PLAIN_TIMEOUT = "CrateDB did not answer within the 30-second timeout."
     ("name", "arguments", "message"),
     [
         ("query_sql", {"query": "SELECT 42"}, NARROW_TIMEOUT),
+        ("explain_query", {"query": "SELECT 42", "analyze": True}, NARROW_TIMEOUT),
         ("list_schemas", {}, PLAIN_TIMEOUT),
         ("describe_table", {"schema": "doc", "table": "t"}, PLAIN_TIMEOUT),
         ("get_cluster_health", {}, PLAIN_TIMEOUT),

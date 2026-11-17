@@ -58,7 +58,8 @@ By default a result holds at most 1,000 rows and 50,000 characters of rows, and
 `rows_returned` says how many rows it holds. The model can ask for fewer rows with
 the `limit` argument, never for more. Both caps also
 bound what `list_schemas`, `list_tables` and `get_cluster_health` return. The
-character cap alone bounds the definition `describe_table` returns. When an
+character cap alone bounds the plans
+`explain_query` returns and the definition `describe_table` returns. When an
 answer is cut, it says so in `truncated` and explains why in `note`.
 ```shell
 export CRATEDB_MCP_MAX_ROWS=1000
@@ -120,6 +121,7 @@ user holds `DQL` on single schemas only, as in the example.
 | Tool | Needs | With `DQL` on single schemas |
 |---|---|---|
 | `query_sql` | `DQL` on the tables it queries | Rows of those tables. For any other table, CrateDB's error, such as `Schema 'sys' unknown` |
+| `explain_query` | `DQL` on the tables it explains | Plans for those tables, also with `analyze`. For any other table, CrateDB's error |
 | `list_schemas` | `DQL` on a schema, to list it | Only those schemas, also with `include_system` |
 | `list_tables` | `DQL` on the schema | The tables and views of those schemas, and none for any other schema |
 | `describe_table` | `DQL` on the table, and on `sys` for its shard, record, size and partition counts | The definition, without the counts, and a note that says so. A table in any other schema is not found |

@@ -62,6 +62,9 @@ Changes:
   caps, and say so in `truncated` and `note`
 - MCP: In the releases after this one, a tool is marked as deprecated for one minor
   release before it is removed
+- MCP: Added `explain_query`, which shows how CrateDB plans or runs a SELECT query,
+  with switches for `analyze`, `verbose` and `costs`
+- MCP: `explain_query` cuts a longer plan to the same character cap as `query_sql`
 - MCP: `query_sql` runs `SHOW` and `VALUES` statements beside `SELECT` and `WITH`, and
   an `EXPLAIN` of a `SELECT`, `WITH` or `VALUES` statement
 - MCP: A statement the read-only check cannot analyze, because it has more than 10,000
