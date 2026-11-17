@@ -1,3 +1,6 @@
+:::{include} ../_links.md
+:::
+
 (configure)=
 
 # Configuration
@@ -25,40 +28,97 @@ the cache lifetime for documentation resources in seconds.
 ## Configure transport
 
 MCP servers can be started using different transport modes. The default transport
-is `stdio`, you can select another one of `{"stdio", "http", "sse", "streamable-http"}`
-and supply it to the invocation like this:
+is `stdio`, you can select another one of `{"stdio", "http", "sse", "streamable-http"}`.
+Over HTTP, the server requires a
+bearer token, see [Configure HTTP access](#configure-http-access).
 ```shell
-cratedb-mcp serve --transport=stdio
+export CRATEDB_MCP_AUTH_TOKEN="$(openssl rand -hex 32)"
+cratedb-mcp serve --transport=http
 ```
 NB: The `http` transport was called `streamable-http` in earlier spec iterations.
 
 When using any of the HTTP-based options for serving the MCP interface, you can
 use the CLI options `--host`, `--port` and `--path` to specify the listening address.
-The default values are `localhost:8000`, where the SSE server responds to `/sse/`
-and `/messages/` and the HTTP server responds to `/mcp/` by default.
+The default values are `127.0.0.1:8000`, where the SSE server responds to `/sse/`
+and `/messages/` and the HTTP server responds to `/mcp` by default.
 
 Alternatively, you can use environment variables instead of CLI options.
 ```shell
 export CRATEDB_MCP_TRANSPORT=http
-export CRATEDB_MCP_HOST=0.0.0.0
+export CRATEDB_MCP_HOST=127.0.0.1
 export CRATEDB_MCP_PORT=8000
 ```
 ```shell
 export CRATEDB_MCP_PATH=/path/in/url
 ```
 
+## Configure HTTP access
+
+Over HTTP, the server requires a bearer token, and refuses to start without one.
+```shell
+export CRATEDB_MCP_AUTH_TOKEN="$(openssl rand -hex 32)"
+```
+Clients send it in the `Authorization` header of every request, as
+`Authorization: Bearer <token>`. A request without the right token gets
+`401 Unauthorized`. For local work only, you can serve without a token.
+```shell
+export CRATEDB_MCP_AUTH_DISABLED=true
+```
+
+The server checks the `Host` and `Origin` headers of every request,
+which protects it from DNS rebinding attacks. It answers requests addressed to
+`localhost`, `127.0.0.1`, `::1` or the address it listens on. A request
+addressed to any other name or IP address gets `421 Misdirected Request`. When
+clients reach the server by a name or IP address other than localhost, for
+example a service name in Docker Compose, a public host name behind a proxy, or
+the IP address of a host that maps a port to the server's container, list them,
+separated by spaces.
+```shell
+export CRATEDB_MCP_ALLOWED_HOSTS="cratedb-mcp mcp.example.org"
+```
+A browser sends an `Origin` header with its requests. When it does not match the
+host it calls, the server answers `403 Forbidden`, unless the origin is listed.
+```shell
+export CRATEDB_MCP_ALLOWED_ORIGINS="https://app.example.org"
+```
+The CLI options `--allowed-host` and `--allowed-origin` do the same, and can
+be repeated.
+
+The server answers `GET /health` with `OK`, without a token, for liveness probes.
+
 ## Security considerations
 
-If you want to prevent agents from modifying data, i.e., permit `SELECT` statements
-only, it is recommended to [create a read-only database user by using "GRANT DQL"].
+:::{div}
+Connect the server with a dedicated database user that holds only what it
+needs. Grant it `DQL` on the schemas the model should read, see
+[create a read-only database user by using "GRANT DQL"], and limit how long
+its statements may run.
+:::
 ```sql
-CREATE USER "read-only" WITH (password = 'YOUR_PASSWORD');
-GRANT DQL TO "read-only";
+CREATE USER mcp WITH (password = 'YOUR_PASSWORD');
+GRANT DQL ON SCHEMA doc TO mcp;
+ALTER USER mcp SET (statement_timeout = '30s');
 ```
-Then, include relevant access credentials in the cluster URL.
+CrateDB then stops any statement of that user after 30 seconds.
+
+Each tool needs the rights below. The last column shows what it returns when the
+user holds `DQL` on single schemas only, as in the example.
+
+| Tool | Needs | With `DQL` on single schemas |
+|---|---|---|
+| `query_sql` | `DQL` on the tables it queries | Rows of those tables. For any other table, CrateDB's error, such as `Schema 'sys' unknown` |
+| `get_table_columns` | `DQL` on the tables | The columns of the tables in those schemas, and empty sections for `information_schema`, `pg_catalog` and `sys` |
+| `get_table_metadata` | `DQL` on the tables, and on `sys` | CrateDB's error `Schema 'sys' unknown` |
+| `get_cratedb_documentation_index` | No right on the database | The documentation index |
+| `fetch_cratedb_docs` | No right on the database | The documentation page |
+| `get_cluster_health` | `DQL` on `sys` | CrateDB's error `Schema 'sys' unknown` |
+
+For a remote cluster, use `https` in the cluster URL.
 ```shell
-export CRATEDB_CLUSTER_URL="https://read-only:YOUR_PASSWORD@example.aks1.westeurope.azure.cratedb.net:4200"
+export CRATEDB_CLUSTER_URL="https://mcp:YOUR_PASSWORD@example.aks1.westeurope.azure.cratedb.net:4200"
 ```
+When the MCP server is reachable from outside, put it behind a reverse proxy.
+
 The MCP Server also prohibits non-SELECT statements on the application level.
 All other operations will raise a `PermissionError` exception, unless the
 `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a

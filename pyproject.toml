@@ -147,6 +147,7 @@ lint.select = [
 lint.per-file-ignores."docs/conf.py" = [ "A001", "ERA001" ]
 lint.per-file-ignores."tests/*" = [
   "S101", # Allow use of `assert`.
+  "S106", # Allow fixed tokens.
 ]
 
 [tool.mypy]
