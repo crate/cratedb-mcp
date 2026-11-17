@@ -86,6 +86,12 @@ feature provided as-is without warranty or support guarantees. Enterprise
 customers should use this feature at their own discretion.
 :::
 
+### Errors
+
+When a tool cannot do what it was asked, the call fails: its result carries the
+MCP error flag `isError` and a message that says why it failed, such as CrateDB's
+error message with its error code.
+
 
 :::{toctree}
 :caption: Handbook

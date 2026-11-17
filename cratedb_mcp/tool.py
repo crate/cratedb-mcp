@@ -1,8 +1,25 @@
+import contextlib
+import typing as t
+
 import httpx
+from fastmcp.exceptions import ToolError
+from sqlparse.exceptions import SQLParseError
 
 from cratedb_mcp.knowledge import DocumentationIndex, Queries
 from cratedb_mcp.settings import HTTP_URL, Settings
 from cratedb_mcp.util.sql import sql_is_permitted
+
+
+class CrateError(ToolError):
+    """An error CrateDB answered to a statement."""
+
+
+class StatementTimeout(ToolError):
+    """CrateDB did not answer a statement within the HTTP timeout."""
+
+
+def shorten(text: str, limit: int) -> str:
+    return text if len(text) <= limit else text[:limit] + "…"
 
 
 # ------------------------------------------
@@ -14,7 +31,50 @@ def query_cratedb(query: str) -> dict:
     if url.endswith("/"):
         url = url.removesuffix("/")
 
-    return httpx.post(f"{url}/_sql", json={"stmt": query}, timeout=Settings.http_timeout()).json()
+    response = httpx.post(f"{url}/_sql", json={"stmt": query}, timeout=Settings.http_timeout())
+    try:
+        return response.json()
+    except ValueError as e:
+        text = shorten(response.text.strip(), 200)
+        raise ToolError(
+            f"CrateDB answered HTTP {response.status_code}" + (f": {text}" if text else ".")
+        ) from e
+
+
+def query_result(query: str) -> dict:
+    """Run `query` and return its result, raising CrateDB's error."""
+    try:
+        result = query_cratedb(query)
+    except httpx.TimeoutException as e:
+        raise StatementTimeout(
+            f"CrateDB did not answer within the {Settings.http_timeout():g}-second timeout."
+        ) from e
+    if "error" in result:
+        raise CrateError(f"{result['error']['message']} (error code {result['error']['code']})")
+    return result
+
+
+def run_query(query: str) -> dict:
+    """Run a query written by the model, and advise narrowing one that is too slow."""
+    try:
+        return query_result(query)
+    except StatementTimeout as e:
+        raise ToolError(
+            f"The query did not finish within the {Settings.http_timeout():g}-second timeout. "
+            "Narrow it with a WHERE clause, an aggregation or a LIMIT instead of running it again."
+        ) from e
+
+
+@contextlib.contextmanager
+def read_only_check() -> t.Iterator[None]:
+    """Fail the call when the read-only check cannot analyze a statement."""
+    try:
+        yield
+    except SQLParseError as e:
+        raise ToolError(
+            f"The read-only check cannot analyze this statement: {str(e).rstrip('.')}. "
+            "Shorten it, or split it into smaller queries."
+        ) from e
 
 
 def query_sql(query: str) -> dict:
@@ -23,9 +83,11 @@ def query_sql(query: str) -> dict:
     Select only the columns you need (avoid `SELECT *`) and,
     where appropriate, add a `LIMIT` clause to keep result sets concise.
     """
-    if not sql_is_permitted(query):
-        raise PermissionError("Only queries that have a SELECT statement are allowed.")
-    return query_cratedb(query)
+    with read_only_check():
+        permitted = sql_is_permitted(query)
+    if not permitted:
+        raise ToolError("Only queries that have a SELECT statement are allowed.")
+    return run_query(query)
 
 
 def get_table_columns() -> dict:
@@ -58,7 +120,7 @@ def get_table_columns() -> dict:
     response = {}
     for variant, where in variants.items():
         query = Queries.TABLES_COLUMNS.format(where=where)
-        response[variant] = query_sql(query)
+        response[variant] = query_result(query)
     return response
 
 
@@ -70,7 +132,7 @@ def get_table_metadata() -> dict:
     The tables have metadata datapoints like replicas, shards,
     name, version, total_shards, total_records.
     """
-    return query_cratedb(Queries.TABLES_METADATA)
+    return query_result(Queries.TABLES_METADATA)
 
 
 # ------------------------------------------
@@ -111,4 +173,4 @@ def fetch_cratedb_docs(link: str) -> str:
 # ------------------------------------------
 def get_cluster_health() -> dict:
     """Return the health of each table and partition from `sys.health`, most severe first."""
-    return query_cratedb(Queries.HEALTH)
+    return query_result(Queries.HEALTH)
