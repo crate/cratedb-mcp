@@ -43,6 +43,7 @@ Changes:
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
   MCP servers directly, so use the standard image `ghcr.io/crate/cratedb-mcp`
   with `--transport=streamable-http`.
+- OCI: The image built from a release tag reports exactly the tag's version
 - CLI: The server reads `CRATEDB_CLUSTER_URL` when it starts, and does not start when it
   is not an http or https URL with a host
 - CLI: The server does not start when `CRATEDB_MCP_HTTP_TIMEOUT` is not a number above zero
