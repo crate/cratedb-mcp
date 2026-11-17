@@ -73,6 +73,10 @@ export CRATEDB_MCP_MAX_CHARS=50000
 The server does not start when either cap is not a whole number above zero, or when
 `CRATEDB_MCP_HTTP_TIMEOUT` is not a number above zero.
 
+To cut a result, the server reads CrateDB's answer, and it reads at most 5 MB
+of it. A larger answer fails the call. For `query_sql` and `explain_query`, the
+message tells the model to add a `LIMIT`, select fewer columns or aggregate.
+
 ## Configure HTTP access
 
 Over HTTP, the server requires a bearer token, and refuses to start without one.

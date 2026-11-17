@@ -10,7 +10,11 @@ from sqlparse.exceptions import SQLParseError
 
 from cratedb_mcp.knowledge import DocumentationIndex, Queries
 from cratedb_mcp.settings import Settings
+from cratedb_mcp.util.http_client import read_at_most, uncompressed_client
 from cratedb_mcp.util.sql import SqlStatementClassifier, sql_is_permitted
+
+MAX_RESPONSE_BYTES = 5_000_000
+cratedb_client = uncompressed_client()
 
 
 class CrateError(ToolError):
@@ -19,6 +23,10 @@ class CrateError(ToolError):
 
 class StatementTimeout(ToolError):
     """CrateDB did not answer a statement within the HTTP timeout."""
+
+
+class AnswerTooLarge(ToolError):
+    """CrateDB's answer is larger than the server reads."""
 
 
 def shorten(text: str, limit: int) -> str:
@@ -75,19 +83,26 @@ def sql_endpoint() -> t.Tuple[httpx.URL, t.Optional[t.Tuple[str, str]]]:
 
 
 def query_cratedb(query: str, args: t.Optional[t.List[t.Any]] = None) -> dict:
-    """Send the SQL `query` to the configured CrateDB server and return the result."""
+    """Send the SQL `query` to the configured CrateDB server and return its answer."""
+    timeout = Settings.http_timeout()
     url, auth = sql_endpoint()
     payload: t.Dict[str, t.Any] = {"stmt": query}
     if args is not None:
         payload["args"] = args
-    response = httpx.post(url, json=payload, auth=auth, timeout=Settings.http_timeout())
-    try:
-        return response.json()
-    except ValueError as e:
-        text = shorten(response.text.strip(), 200)
-        raise ToolError(
-            f"CrateDB answered HTTP {response.status_code}" + (f": {text}" if text else ".")
-        ) from e
+    with cratedb_client.stream("POST", url, json=payload, auth=auth, timeout=timeout) as response:
+        body = read_at_most(response, MAX_RESPONSE_BYTES)
+        if body is None:
+            raise AnswerTooLarge(
+                f"The answer from CrateDB is larger than the {MAX_RESPONSE_BYTES:,} bytes "
+                "the server reads."
+            )
+        try:
+            return json.loads(body)
+        except ValueError as e:
+            text = shorten(body.decode(errors="replace").strip(), 200)
+            raise ToolError(
+                f"CrateDB answered HTTP {response.status_code}" + (f": {text}" if text else ".")
+            ) from e
 
 
 def query_result(query: str, args: t.Optional[t.List[t.Any]] = None) -> dict:
@@ -110,13 +125,18 @@ def query_rows(query: str, args: t.Optional[t.List[t.Any]] = None) -> t.List[t.L
 
 
 def run_query(query: str) -> dict:
-    """Run a query written by the model, and advise narrowing one that is too slow."""
+    """Run a query written by the model, and advise narrowing one that is too slow or too large."""
     try:
         return query_result(query)
     except StatementTimeout as e:
         raise ToolError(
             f"The query did not finish within the {Settings.http_timeout():g}-second timeout. "
             "Narrow it with a WHERE clause, an aggregation or a LIMIT instead of running it again."
+        ) from e
+    except AnswerTooLarge as e:
+        raise ToolError(
+            f"The result is larger than the {MAX_RESPONSE_BYTES:,} bytes the server reads. "
+            "Add a LIMIT, select fewer columns, or aggregate the query."
         ) from e
 
 
