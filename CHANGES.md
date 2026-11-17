@@ -13,6 +13,12 @@ Upgrading from 0.1.x:
 - Tools: a CrateDB error fails the call, with `isError` set and CrateDB's message and
   error code as its text. Clients that read the `error` field of a `query_sql` or
   `get_cluster_health` result check `isError` instead.
+- Tools: `query_sql` returns at most 1,000 rows. `CRATEDB_MCP_MAX_ROWS` changes the cap,
+  and `limit` asks for fewer rows. Together the rows hold at most 50,000 characters, and
+  `CRATEDB_MCP_MAX_CHARS` changes that cap. Check `truncated` when a complete result
+  matters.
+- Tools: `get_cluster_health` returns at most 1,000 rows, the most severe first.
+  `CRATEDB_MCP_MAX_ROWS` changes the cap. Check `truncated` when every row matters.
 - HTTP: set `CRATEDB_MCP_AUTH_TOKEN` and send it as `Authorization: Bearer <token>`, or set
   `CRATEDB_MCP_AUTH_DISABLED=true` for local work. Without either, the server does not
   start. stdio is unchanged.
@@ -36,6 +42,12 @@ Changes:
 - MCP: A query that times out tells the model to narrow it instead of retrying
 - MCP: `query_sql`, `get_cluster_health` and `get_cratedb_documentation_index` declare
   the fields of their results
+- MCP: `query_sql` returns at most 1,000 rows and 50,000 characters of rows, counts its
+  rows in `rows_returned`, marks a cut result with `truncated` and a `note`, and takes
+  `limit` for fewer rows. `CRATEDB_MCP_MAX_ROWS` and `CRATEDB_MCP_MAX_CHARS` change the
+  defaults
+- MCP: `get_cluster_health` cuts its answer to the result caps, says so in `truncated`
+  and `note`, and counts its rows in `rows_returned`
 - Security: Over HTTP, the server requires the bearer token from
   `CRATEDB_MCP_AUTH_TOKEN` and refuses to start without one, unless
   `CRATEDB_MCP_AUTH_DISABLED=true` is set
