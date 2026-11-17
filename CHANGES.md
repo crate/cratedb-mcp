@@ -11,6 +11,8 @@ Upgrading from 0.1.x:
 - Tools: `fetch_cratedb_docs` keeps the pages it fetched in memory, and no longer in the
   cache file of `cratedb-about`, such as `~/.cache/cratedb-about/.hishel.sqlite`. Delete
   that file unless the `cratedb-about` command uses it.
+- Logs: the log shows statement text only when the server runs with `--debug` or with
+  `CRATEDB_MCP_DEBUG=true` set, as in `cratedb-mcp --debug serve`.
 - Settings: the server does not start when `CRATEDB_CLUSTER_URL` is not an http or https
   URL with a host. Percent-encode `/`, `#`, `?` and `@` in a user name or password, such
   as `/` as `%2F`.
@@ -58,6 +60,9 @@ Changes:
   `CRATEDB_MCP_DOCS_CACHE_TTL` seconds, and in no file
 - CLI: `python -m cratedb_mcp` runs the `cratedb-mcp` command, with the same
   subcommands and options, instead of exiting without a word
+- MCP: The log holds the statement text only at debug level
+- CLI: Added `--debug` and the `CRATEDB_MCP_DEBUG` environment variable, which log at
+  debug level, with the first 50 characters of each statement the model sends
 - CLI: The server reads `CRATEDB_CLUSTER_URL` when it starts, and does not start when it
   is not an http or https URL with a host
 - CLI: The server does not start when `CRATEDB_MCP_HTTP_TIMEOUT` is not a number above zero
