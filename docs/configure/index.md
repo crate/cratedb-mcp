@@ -51,6 +51,19 @@ export CRATEDB_MCP_PORT=8000
 export CRATEDB_MCP_PATH=/path/in/url
 ```
 
+## Configure result size
+
+Every row `query_sql` returns lands in the model's context, so results are cut.
+By default a result holds at most 1,000 rows and 50,000 characters of rows, and
+`rows_returned` says how many rows it holds. The model can ask for fewer rows with
+the `limit` argument, never for more. Both caps also
+bound what `get_cluster_health` returns. When an
+answer is cut, it says so in `truncated` and explains why in `note`.
+```shell
+export CRATEDB_MCP_MAX_ROWS=1000
+export CRATEDB_MCP_MAX_CHARS=50000
+```
+
 ## Configure HTTP access
 
 Over HTTP, the server requires a bearer token, and refuses to start without one.
