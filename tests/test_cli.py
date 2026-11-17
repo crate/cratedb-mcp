@@ -1,6 +1,7 @@
 from unittest import mock
 
 import fastmcp.server.server
+import httpx2
 from click.testing import CliRunner
 
 from cratedb_mcp import __version__
@@ -127,6 +128,21 @@ def test_cli_valid_custom(mocker, capsys):
         mock.call("http", host="127.0.0.1", port=65535, path=None),
         mock.call("http", show_banner=mock.ANY, host="127.0.0.1", port=65535, path=None),
     ]
+
+
+def test_serve_logs_no_request_line_of_httpx2(mocker, caplog):
+    """
+    Verify `cratedb-mcp serve` logs no request line of httpx2, the HTTP library through
+    which FastMCP asks PyPI for a newer release at start.
+    """
+    mocker.patch.object(fastmcp.server.server.FastMCP, "run_async")
+    CliRunner().invoke(cli, args="serve", catch_exceptions=False)
+
+    transport = httpx2.MockTransport(lambda request: httpx2.Response(200))
+    with httpx2.Client(transport=transport) as client:
+        client.get("https://pypi.org/pypi/fastmcp/json")
+
+    assert "HTTP Request" not in caplog.text
 
 
 def test_cli_invalid_transport_option(mocker, capsys):

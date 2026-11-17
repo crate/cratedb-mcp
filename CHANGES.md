@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+Upgrading from 0.1.x:
+- Packaging: the server needs version 2 of the MCP SDK. Where an environment holds
+  `mcp<2`, install the server apart from it, for example with `uv tool install cratedb-mcp`.
+
 Changes:
 - Tests: The software tests answer requests for documentation pages and remote
   instructions from memory
+- Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of
