@@ -3,6 +3,8 @@
 ## Unreleased
 - MCP: Added `diagnose_workload`, which lists slow, failed or running data statements,
   or the latencies per statement type, and says whether CrateDB records statements at all
+- MCP: Added `analyze_table_layout`, which reports the shards, shard sizes, records
+  per shard and partitions of tables, with findings against CrateDB's sharding guidance
 
 ## v0.2.0 - 2026-11-12
 
