@@ -62,8 +62,8 @@ Every row `query_sql` returns lands in the model's context, so results are cut.
 By default a result holds at most 1,000 rows and 50,000 characters of rows, and
 `rows_returned` says how many rows it holds. The model can ask for fewer rows with
 the `limit` argument, never for more. Both caps also
-bound what `list_schemas`, `list_tables` and `get_cluster_health` return. The
-character cap alone bounds the plans
+bound what `list_schemas`, `list_tables`, `get_cluster_health` and
+`diagnose_workload` return. The character cap alone bounds the plans
 `explain_query` returns and the definition `describe_table` returns. When an
 answer is cut, it says so in `truncated` and explains why in `note`.
 ```shell
@@ -139,6 +139,11 @@ user holds `DQL` on single schemas only, as in the example.
 | `get_cratedb_documentation_index` | No right on the database | The documentation index |
 | `fetch_cratedb_docs` | No right on the database | The documentation page |
 | `get_cluster_health` | `DQL` on `sys` | CrateDB's error `Schema 'sys' unknown` |
+| `diagnose_workload` | `DQL` on `sys` | CrateDB's error `Schema 'sys' unknown` |
+
+With `DQL`, CrateDB shows a user only its own statements, so the `slow`,
+`failed` and `running` views of `diagnose_workload` list only statements run by
+the MCP server's user.
 
 For a remote cluster, use `https` in the cluster URL.
 ```shell

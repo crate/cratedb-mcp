@@ -1,6 +1,8 @@
 # CrateDB MCP changelog
 
 ## Unreleased
+- MCP: Added `diagnose_workload`, which lists slow, failed or running data statements,
+  or the latencies per statement type, and says whether CrateDB records statements at all
 
 ## v0.2.0 - 2026-11-12
 

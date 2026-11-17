@@ -33,6 +33,7 @@ mcpt call list_schemas --params '{"include_system":true}' cratedb-mcp serve
 mcpt call list_tables --params '{"schema":"sys"}' cratedb-mcp serve
 mcpt call describe_table --params '{"schema":"sys","table":"summits"}' cratedb-mcp serve
 mcpt call get_cluster_health cratedb-mcp serve
+mcpt call diagnose_workload --params '{"view":"failed"}' cratedb-mcp serve
 
 # Exercise the documentation server tools.
 mcpt call get_cratedb_documentation_index cratedb-mcp serve

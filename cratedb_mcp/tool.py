@@ -588,3 +588,77 @@ def get_cluster_health() -> BoundedResult:
         "for the others.",
     )
     return BoundedResult(**{**result, "rows": rows, "truncated": note is not None, "note": note})
+
+
+STATEMENT_CHARS = 1000
+MAX_SINCE_MINUTES = 525_600
+DATA_STATEMENT = r"(?is)(\s|--[^\n]*\n|/\*.*?\*/)*(SELECT|WITH|INSERT|UPDATE|DELETE)\b.*"
+
+
+class Workload(BaseModel):
+    model_config = ConfigDict(json_schema_extra=declare_present_types)
+
+    user: t.Optional[str] = absent()
+    stats_enabled: t.Optional[bool] = absent()
+    jobs_log_size: t.Optional[int] = absent()
+    cols: t.List[str]
+    rows: t.List[t.List[t.Any]]
+    truncated: bool
+    rows_returned: int
+    note: t.Optional[str] = absent()
+
+
+def cut_text(value: t.Any) -> t.Any:
+    return shorten(value, STATEMENT_CHARS) if isinstance(value, str) else value
+
+
+def diagnose_workload(
+    view: t.Literal["slow", "failed", "running", "summary"] = "slow",
+    limit: int = 10,
+    since_minutes: t.Optional[int] = None,
+) -> Workload:
+    """
+    Statements that load the cluster. `slow`: finished, slowest first;
+    `failed`: newest first, without statements CrateDB could not parse or
+    resolve, such as one naming an unknown table; `running`: longest first.
+    These three hold only queries and INSERT, UPDATE and DELETE statements,
+    and only `user`'s own unless it is a superuser or has AL. `summary`:
+    latencies in ms per statement type and node. `limit` (default 10) goes
+    up to the row cap, 1000 by default. `since_minutes` narrows `slow` and
+    `failed`. Nodes keep their last `jobs_log_size` statements, dropping all
+    past 5% of heap.
+    """
+    limit = max(1, min(limit, Settings.max_rows()))
+    fetched = STATEMENT_CHARS + 1
+    args: t.List[t.Any]
+    if view == "summary":
+        query, args = Queries.JOBS_METRICS, [limit]
+    elif view == "running":
+        # Leave this query out of its own answer.
+        query, args = Queries.JOBS, [fetched, DATA_STATEMENT, Queries.JOBS, limit]
+    else:
+        conditions = ["classification['type'] IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE')"]
+        args = [fetched]
+        if view == "failed":
+            conditions.append("error IS NOT NULL")
+        if since_minutes is not None:
+            conditions.append("CAST(ended AS BIGINT) >= CAST(CURRENT_TIMESTAMP AS BIGINT) - ?")
+            args.append(max(1, min(since_minutes, MAX_SINCE_MINUTES)) * 60_000)
+        order = "ended" if view == "failed" else "duration_ms"
+        query = Queries.JOBS_LOG.format(where=" AND ".join(conditions), order=order)
+        args.append(limit)
+
+    workload = Workload(cols=[], rows=[], truncated=False, rows_returned=0)
+    workload.stats_enabled, workload.jobs_log_size, workload.user = query_rows(Queries.STATS)[0]
+    if not workload.stats_enabled:
+        workload.note = (
+            "No statements are shown, because CrateDB records none while stats.enabled is false."
+        )
+        return workload
+    result = query_result(query, args)
+    rows = [[cut_text(value) for value in row] for row in result["rows"]]
+    workload.cols = result["cols"]
+    workload.rows, workload.note = bound_rows(rows, limit, "row")
+    workload.truncated = workload.note is not None
+    workload.rows_returned = len(workload.rows)
+    return workload
