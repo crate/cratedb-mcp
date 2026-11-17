@@ -78,7 +78,8 @@ The CrateDB MCP Server provides three families of tools.
 :Health status:
 
   The tool `get_cluster_health` returns the health of each table and
-  partition from `sys.health`, most severe first.
+  partition from `sys.health`, most severe first, and `diagnose_workload` lists
+  slow, failed and running data statements and the latencies per statement type.
 :::
 
 A tool is marked as deprecated for one minor release before it is removed.

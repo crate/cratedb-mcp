@@ -27,6 +27,7 @@ CrateDB MCP Server.
       },
       "alwaysAllow": [
         "get_cluster_health",
+        "diagnose_workload",
         "list_schemas",
         "list_tables",
         "describe_table",
