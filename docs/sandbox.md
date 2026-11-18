@@ -51,6 +51,12 @@ git tag v0.0.1
 git push && git push --tags
 ```
 
+Pushing the tag sets off the rest of the release:
+
+- The Python package is published to PyPI.
+- The OCI image is published to `ghcr.io/crate/cratedb-mcp`.
+- The server is published to the MCP Registry, once the package and the image exist.
+
 
 [poethepoet]: https://pypi.org/project/poethepoet/
 [versioningit]: https://pypi.org/project/versioningit/
