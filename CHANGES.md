@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.2.0 - 2026-11-12
+
 Upgrading from 0.1.x:
 - Images: the `cratedb-mcpo` image is gone. With Open WebUI 0.6.31 or later, run the
   standard image `ghcr.io/crate/cratedb-mcp` and add it as a connection of type
