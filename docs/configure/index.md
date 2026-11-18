@@ -64,7 +64,8 @@ By default a result holds at most 1,000 rows and 50,000 characters of rows, and
 the `limit` argument, never for more. Both caps also
 bound what `list_schemas`, `list_tables`, `get_cluster_health` and
 `diagnose_workload` return. The character cap alone bounds the plans
-`explain_query` returns and the definition `describe_table` returns. When an
+`explain_query` returns and the definition `describe_table` returns. It also bounds
+the tables `analyze_table_layout` returns, besides its `max_tables` argument. When an
 answer is cut, it says so in `truncated` and explains why in `note`.
 ```shell
 export CRATEDB_MCP_MAX_ROWS=1000
@@ -140,6 +141,7 @@ user holds `DQL` on single schemas only, as in the example.
 | `fetch_cratedb_docs` | No right on the database | The documentation page |
 | `get_cluster_health` | `DQL` on `sys` | CrateDB's error `Schema 'sys' unknown` |
 | `diagnose_workload` | `DQL` on `sys` | CrateDB's error `Schema 'sys' unknown` |
+| `analyze_table_layout` | `DQL` on the tables, and on `sys` for shard counts, sizes and findings | The tables with their shard and partition settings, without shard counts, sizes and findings, and a note that says so |
 
 With `DQL`, CrateDB shows a user only its own statements, so the `slow`,
 `failed` and `running` views of `diagnose_workload` list only statements run by
