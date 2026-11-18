@@ -5,7 +5,7 @@
 [CrateDB & MCP]: https://cratedb.com/docs/guide/integrate/mcp/
 [CrateDB MCP server OCI images]: https://github.com/orgs/crate/packages?repo_name=cratedb-mcp
 [cratedb-about]: https://pypi.org/project/cratedb-about/
-[cratedb-outline.yaml]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/outline/cratedb-outline.yaml
+[cratedb-outline.yaml]: https://github.com/crate/about/blob/main/src/cratedb_about/outline/cratedb-outline.yaml
 [create a read-only database user by using "GRANT DQL"]: https://community.cratedb.com/t/create-read-only-database-user-by-using-grant-dql/2031
 [Docker Hub MCP Server]: https://www.docker.com/blog/introducing-docker-hub-mcp-server/
 [example questions]: https://github.com/crate/about/blob/v0.0.4/src/cratedb_about/query/model.py#L17-L44

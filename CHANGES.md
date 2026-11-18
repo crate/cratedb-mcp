@@ -51,6 +51,8 @@ Changes:
 - CLI: The server does not start when `CRATEDB_MCP_HTTP_TIMEOUT` is not a number above zero
 - Tests: The software tests answer requests for documentation pages and remote
   instructions from memory
+- MCP: `fetch_cratedb_docs` reads every link listed in the documentation index,
+  including pages outside the permitted hosts
 - Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28
 - Instructions: The server sends its own short instructions text and no longer adds
   the general CrateDB text of `cratedb-about`. Pass `--instructions` to send another text.
