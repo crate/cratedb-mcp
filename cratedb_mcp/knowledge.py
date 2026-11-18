@@ -1,11 +1,14 @@
 # ruff: noqa: E501
+import threading
 import typing as t
 
 import cachetools
+import httpx
 from cratedb_about import CrateDbKnowledgeOutline
-from cratedb_about.util import get_cache_client
 
 from cratedb_mcp.settings import Settings
+
+CACHED_CHARS = 16_000_000
 
 
 class Queries:
@@ -92,10 +95,36 @@ class DocumentationIndex:
     ]
 
     def __init__(self):
-        self.client = get_cache_client(ttl=self.settings.docs_cache_ttl())
+        self.pages: cachetools.TTLCache[httpx.URL, str] = cachetools.TTLCache(
+            maxsize=CACHED_CHARS, ttl=Settings.docs_cache_ttl(), getsizeof=len
+        )
+        self.pages_lock = threading.Lock()
 
         # Load documentation outline.
         self.outline = CrateDbKnowledgeOutline.load()
+
+    def fetch(self, link: str) -> str:
+        """
+        Return the text of the documentation page at `link`, kept from an earlier call or
+        fetched from its site.
+        """
+        if not self.url_permitted(link):
+            raise ValueError(f"Link is not permitted: {link}")
+        return self.download(httpx.URL(link).copy_with(fragment=None))
+
+    @cachetools.cachedmethod(lambda self: self.pages, lock=lambda self: self.pages_lock)
+    def download(self, url: httpx.URL) -> str:
+        """
+        Fetch the page at `url`, following its redirects, and keep its text for
+        `CRATEDB_MCP_DOCS_CACHE_TTL` seconds.
+        """
+        response = documentation_client.get(
+            url, timeout=Settings.http_timeout(), follow_redirects=True
+        )
+        if not self.url_permitted(str(response.url)):
+            raise ValueError(f"Link redirects to a location that is not permitted: {response.url}")
+        response.raise_for_status()
+        return response.text
 
     @cachetools.cached(cache=cachetools.TTLCache(maxsize=1, ttl=settings.docs_cache_ttl() - 5))
     def items(self):
@@ -122,3 +151,6 @@ class DocumentationIndex:
             if url.startswith(permitted_url):
                 return True
         return False
+
+
+documentation_client = httpx.Client()
