@@ -1,3 +1,4 @@
+import importlib.resources
 import os
 from unittest import mock
 
@@ -7,6 +8,8 @@ from click.testing import CliRunner
 
 from cratedb_mcp import __version__
 from cratedb_mcp.cli import cli
+
+BUILTIN = (importlib.resources.files("cratedb_mcp.prompt") / "instructions.md").read_text().strip()
 
 
 def test_cli_version():
@@ -61,8 +64,7 @@ def test_cli_show_prompt():
 
     # Verify the outcome.
     assert result.exit_code == 0, result.output
-    assert "Rules for writing SQL queries" in result.output
-    assert "Tool instructions" in result.output
+    assert result.output.strip() == BUILTIN
 
 
 def test_cli_no_command_no_option():
