@@ -67,13 +67,13 @@ def test_fetch_docs_redirect_forbidden(mocker):
 
 
 def test_query_sql_permitted():
-    assert query_sql("SELECT 42")["rows"] == [[42]]
+    assert query_sql("SELECT 42").rows == [[42]]
 
 
 def test_query_sql_trailing_slash(mocker):
     """Verify that query_sql works correctly when HTTP_URL has a trailing slash."""
     mocker.patch("cratedb_mcp.tool.HTTP_URL", "http://localhost:4200/")
-    assert query_sql("SELECT 42")["rows"] == [[42]]
+    assert query_sql("SELECT 42").rows == [[42]]
 
 
 def test_query_sql_forbidden_easy():
@@ -107,4 +107,4 @@ def test_get_table_metadata():
 
 
 def test_get_cluster_health():
-    assert "missing_shards" in str(get_cluster_health())
+    assert "missing_shards" in get_cluster_health().cols
