@@ -86,11 +86,12 @@ feature provided as-is without warranty or support guarantees. Enterprise
 customers should use this feature at their own discretion.
 :::
 
-### Errors
+### Errors and limits
 
 When a tool cannot do what it was asked, the call fails: its result carries the
 MCP error flag `isError` and a message that says why it failed, such as CrateDB's
-error message with its error code.
+error message with its error code. When a tool cuts its answer to a limit, the
+call succeeds and says so in `truncated` and `note`.
 
 
 :::{toctree}

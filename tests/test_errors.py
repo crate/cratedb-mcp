@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 import httpx
 import pytest
@@ -95,3 +96,35 @@ def test_answer_that_is_not_json_fails_with_status_and_body_only(
     response = httpx.Response(status, content=body, headers={"Content-Type": content_type})
     answer_with(lambda request: response)
     assert call("query_sql", {"query": "SELECT 1"}) == (True, message)
+
+
+def test_long_crate_error_is_cut_to_the_character_cap(mocker):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_CHARS": "100"})
+    is_error, text = call("query_sql", {"query": "SELECT CAST(repeat('x', 1000) AS INTEGER)"})
+    message, code = text.rsplit(" (error code ", 1)
+    assert is_error is True
+    assert message.startswith("SQLParseException[Cannot cast `'xxx")
+    assert len(message) == 101
+    assert message.endswith("x…")
+    assert code == "4000)"
+
+
+@pytest.mark.parametrize(
+    ("name", "arguments"),
+    [
+        ("query_sql", {"query": "SELECT x FROM generate_series(1, 150) AS t(x)"}),
+    ],
+)
+def test_cut_result_succeeds_and_says_so(mocker, name, arguments):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_ROWS": "2", "CRATEDB_MCP_MAX_CHARS": "200"})
+    is_error, text = call(name, arguments)
+    assert is_error is False
+    assert '"truncated":true' in text
+    assert '"note":' in text
+
+
+@pytest.mark.parametrize("limit", [0, -1])
+def test_query_sql_fails_a_limit_below_one(limit):
+    is_error, text = call("query_sql", {"query": "SELECT 42", "limit": limit})
+    assert is_error is True
+    assert "limit\n  Input should be greater than or equal to 1" in text
