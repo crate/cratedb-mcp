@@ -34,3 +34,11 @@ def docs_site(mocker):
     mocker.patch.object(httpx.HTTPTransport, "handle_request", sites.answer)
     mocker.patch.object(tool, "documentation_index", DocumentationIndex())
     return sites
+
+
+@pytest.fixture
+def answer_with(mocker):
+    """Answer every HTTP request with the response that `answer(request)` returns."""
+    return lambda answer: mocker.patch.object(
+        httpx.HTTPTransport, "handle_request", lambda _, request: answer(request)
+    )
