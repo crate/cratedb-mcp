@@ -9,7 +9,7 @@ from sqlparse.engine import grouping
 from sqlparse.exceptions import SQLParseError
 
 from cratedb_mcp.knowledge import DocumentationIndex, Queries
-from cratedb_mcp.settings import HTTP_URL, Settings
+from cratedb_mcp.settings import Settings
 from cratedb_mcp.util.sql import SqlStatementClassifier, sql_is_permitted
 
 
@@ -66,16 +66,21 @@ class BoundedResult(CrateResult):
 # ------------------------------------------
 #              Text-to-SQL
 # ------------------------------------------
+def sql_endpoint() -> t.Tuple[httpx.URL, t.Optional[t.Tuple[str, str]]]:
+    """Return the URL of CrateDB's SQL endpoint without the user part, and the credentials."""
+    cluster = Settings.cluster_url()
+    path = cluster.path.rstrip("/") + "/_sql"
+    url = cluster.copy_with(userinfo=b"", path=path)
+    return url, (cluster.username, cluster.password) if cluster.userinfo else None
+
+
 def query_cratedb(query: str, args: t.Optional[t.List[t.Any]] = None) -> dict:
     """Send the SQL `query` to the configured CrateDB server and return the result."""
-    url = HTTP_URL
-    if url.endswith("/"):
-        url = url.removesuffix("/")
-
+    url, auth = sql_endpoint()
     payload: t.Dict[str, t.Any] = {"stmt": query}
     if args is not None:
         payload["args"] = args
-    response = httpx.post(f"{url}/_sql", json=payload, timeout=Settings.http_timeout())
+    response = httpx.post(url, json=payload, auth=auth, timeout=Settings.http_timeout())
     try:
         return response.json()
     except ValueError as e:

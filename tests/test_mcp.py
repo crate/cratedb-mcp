@@ -6,6 +6,7 @@ from fastmcp import Client
 from fastmcp.exceptions import ToolError
 
 from cratedb_mcp.core import CrateDbMcp
+from cratedb_mcp.settings import Settings
 from cratedb_mcp.tool import (
     documentation_index,
     fetch_cratedb_docs,
@@ -70,8 +71,10 @@ def test_query_sql_permitted():
 
 
 def test_query_sql_trailing_slash(mocker):
-    """Verify that query_sql works correctly when HTTP_URL has a trailing slash."""
-    mocker.patch("cratedb_mcp.tool.HTTP_URL", "http://localhost:4200/")
+    """Verify that query_sql works correctly when the cluster address has a trailing slash."""
+    cluster = Settings.cluster_url()
+    address = cluster.copy_with(path=cluster.path.rstrip("/") + "/")
+    mocker.patch.object(Settings, "cluster_url", return_value=address)
     assert query_sql("SELECT 42").rows == [[42]]
 
 
