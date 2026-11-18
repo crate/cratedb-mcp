@@ -1,3 +1,4 @@
+import json
 import os
 
 import httpx
@@ -6,6 +7,7 @@ import pytest
 from cratedb_mcp import tool
 from cratedb_mcp.tool import (
     describe_table,
+    explain_query,
     get_cluster_health,
     list_schemas,
     list_tables,
@@ -93,6 +95,61 @@ def test_query_sql_shows_no_row_when_the_first_row_alone_passes_the_character_ca
         "first row alone holds more. Filter or aggregate the query, or select fewer or "
         "shorter columns."
     )
+
+
+ANALYZED_PLAN = {"Execute": {f"{shard}-collect": {"Query": "é" * 1_900} for shard in range(48)}}
+
+
+@pytest.mark.parametrize(
+    ("analyze", "plan"),
+    [
+        (True, ANALYZED_PLAN),
+        (False, "Collect[doc.t1 | [id] | (name = '" + "é" * 60_000 + "')]"),
+    ],
+    ids=["analyzed", "multibyte"],
+)
+def test_explain_query_cuts_a_plan_above_the_character_cap(mocker, analyze, plan):
+    answer = {"cols": ["QUERY PLAN"], "rows": [[plan]], "rowcount": 1, "duration": 1.0}
+    mocker.patch.object(tool, "query_cratedb", return_value=answer)
+    text = (
+        plan
+        if isinstance(plan, str)
+        else json.dumps(plan, ensure_ascii=False, separators=(",", ":"))
+    )
+    result = explain_query("SELECT ts FROM doc.metrics", analyze=analyze)
+    ((shown,),) = result.rows
+    assert text.startswith(shown.removesuffix("…"))
+    assert tool.row_chars([shown]) <= 50_000 < tool.row_chars([text[: len(shown)] + "…"])
+    assert result.truncated is True
+
+
+def test_query_sql_cuts_an_explained_plan_as_explain_query_does(mocker):
+    answer = {"cols": ["QUERY PLAN"], "rows": [[ANALYZED_PLAN]], "rowcount": 1, "duration": 1.0}
+    mocker.patch.object(tool, "query_cratedb", return_value=answer)
+    result = query_sql("EXPLAIN ANALYZE SELECT ts FROM doc.metrics")
+    assert result.truncated is True
+    assert result == explain_query("SELECT ts FROM doc.metrics", analyze=True)
+
+
+@pytest.mark.parametrize("chars", ["250", "60"], ids=["final-step-whole", "final-step-cut"])
+def test_explain_query_keeps_the_final_step_of_a_verbose_plan_above_the_cap(mocker, chars):
+    query = "SELECT mountain FROM sys.summits WHERE height > 4000"
+    full = explain_query(query, verbose=True)
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_CHARS": chars})
+    result = explain_query(query, verbose=True)
+    ((step, shown),) = result.rows
+    final_step, final_plan = full.rows[-1]
+    assert step == final_step == "Final logical plan"
+    assert final_plan.startswith(shown.removesuffix("…"))
+    assert tool.row_chars([step, shown]) <= int(chars)
+    assert result.truncated is True
+
+
+def test_explain_query_shows_no_plan_when_the_cap_leaves_no_room_for_it(mocker):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_CHARS": "20"})
+    result = explain_query("SELECT mountain FROM sys.summits", verbose=True)
+    assert result.rows == []
+    assert result.truncated is True
 
 
 def count(query):

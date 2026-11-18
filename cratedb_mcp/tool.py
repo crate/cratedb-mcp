@@ -10,7 +10,7 @@ from sqlparse.exceptions import SQLParseError
 
 from cratedb_mcp.knowledge import DocumentationIndex, Queries
 from cratedb_mcp.settings import HTTP_URL, Settings
-from cratedb_mcp.util.sql import sql_is_permitted
+from cratedb_mcp.util.sql import SqlStatementClassifier, sql_is_permitted
 
 
 class CrateError(ToolError):
@@ -154,12 +154,15 @@ def query_sql(query: str, limit: t.Optional[t.Annotated[int, Field(ge=1)]] = Non
     """
     with read_only_check():
         permitted = sql_is_permitted(query)
+        keyword = SqlStatementClassifier(query).keyword
     if not permitted:
         raise ToolError(
             "Only one SELECT, WITH, VALUES or SHOW statement, or an EXPLAIN of a SELECT, "
             "WITH or VALUES statement, is allowed."
         )
     result = run_query(query)
+    if keyword == "EXPLAIN":
+        return BoundedResult(**bound_plan(result))
     rows, note = bound_rows(
         result["rows"],
         Settings.max_rows(),
@@ -220,6 +223,57 @@ def fit_text(text: str, fits: t.Callable[[str], bool]) -> str:
         else:
             longest = middle - 1
     return text[:kept] + "…" if kept else ""
+
+
+def bound_plan(plan: dict) -> dict:
+    """Cut a plan that passes the character cap to its final step, and that step to the cap."""
+    char_cap = Settings.max_chars()
+    if sum(row_chars(row) for row in plan["rows"]) <= char_cap:
+        return {**plan, "truncated": False}
+    final = plan["rows"][-1]
+    rows = [final]
+    if row_chars(final) > char_cap:
+        *step, cell = final
+        if not isinstance(cell, str):
+            cell = json.dumps(cell, ensure_ascii=False, separators=(",", ":"))
+        shown = fit_text(cell, lambda part: row_chars([*step, part]) <= char_cap)
+        rows = [[*step, shown]] if shown else []
+    note = (
+        f"The plan is longer than the cap of {char_cap} characters, so the answer holds as "
+        "much of its final step as fits. A narrower query, or one explained without "
+        "`analyze` or `verbose`, gives a shorter plan."
+    )
+    return {**plan, "rows": rows, "truncated": True, "note": note}
+
+
+def explain_query(
+    query: str, analyze: bool = False, verbose: bool = False, costs: bool = True
+) -> BoundedResult:
+    """
+    Show how CrateDB runs a SELECT query, to find out why it is slow.
+    `costs` adds the planner's row estimates, and `verbose` shows the plan
+    after each optimizer step. `analyze` runs the query and returns its
+    timings per shard, with the Lucene query each shard used. In that output,
+    `MatchAllDocsQuery` and `GenericFunctionQuery` mean a full table scan,
+    often a filter that is not pushed down to the index. With `analyze`,
+    CrateDB ignores `costs` and cannot show `verbose`.
+    """
+    if analyze and verbose:
+        raise ToolError("CrateDB cannot combine `analyze` and `verbose`; choose one.")
+    with read_only_check():
+        permitted = sql_is_permitted(query)
+        keyword = SqlStatementClassifier(query).keyword
+    if keyword == "EXPLAIN":
+        raise ToolError(
+            "Pass the query without EXPLAIN; `analyze`, `verbose` and `costs` set its options."
+        )
+    if keyword not in ("SELECT", "WITH", "VALUES") or not permitted:
+        raise ToolError("Only one SELECT, WITH or VALUES statement can be explained.")
+    if analyze:
+        options = "ANALYZE true"
+    else:
+        options = f"COSTS {str(costs).lower()}, VERBOSE {str(verbose).lower()}"
+    return BoundedResult(**bound_plan(run_query(f"EXPLAIN ({options}) {query}")))
 
 
 SYSTEM_SCHEMAS = ("information_schema", "pg_catalog", "sys", "blob")
