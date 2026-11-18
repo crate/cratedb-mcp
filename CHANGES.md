@@ -68,6 +68,8 @@ Changes:
 - CLI: The server does not start when `CRATEDB_MCP_HTTP_TIMEOUT` is not a number above zero
 - Tests: The software tests answer requests for documentation pages and remote
   instructions from memory
+- Shipping: Pushing a release tag creates the GitHub release, with the tag's section of
+  this file as its notes
 - MCP: `fetch_cratedb_docs` fetches the links of the documentation index and pages on
   cratedb.com and docs.cratedb.com. It checks the address of every redirect before it
   follows it, reads only uncompressed text, at most 1 MB of it, and decodes every page
