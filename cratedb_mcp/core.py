@@ -12,11 +12,12 @@ from cratedb_mcp.settings import Settings
 
 from . import __appname__, __version__
 from .tool import (
+    describe_table,
     fetch_cratedb_docs,
     get_cluster_health,
     get_cratedb_documentation_index,
-    get_table_columns,
-    get_table_metadata,
+    list_schemas,
+    list_tables,
     query_sql,
 )
 
@@ -84,18 +85,27 @@ class CrateDbMcp:
         )
         self.mcp.add_tool(
             Tool.from_function(
-                fn=get_table_columns,
-                description=get_table_columns.__doc__,
-                title="List table columns",
+                fn=list_schemas,
+                description=list_schemas.__doc__,
+                title="List schemas",
                 annotations=READ_ONLY,
                 tags={"text-to-sql"},
             )
         )
         self.mcp.add_tool(
             Tool.from_function(
-                fn=get_table_metadata,
-                description=get_table_metadata.__doc__,
-                title="Show table metadata",
+                fn=list_tables,
+                description=list_tables.__doc__,
+                title="List tables",
+                annotations=READ_ONLY,
+                tags={"text-to-sql"},
+            )
+        )
+        self.mcp.add_tool(
+            Tool.from_function(
+                fn=describe_table,
+                description=describe_table.__doc__,
+                title="Describe table",
                 annotations=READ_ONLY,
                 tags={"text-to-sql"},
             )

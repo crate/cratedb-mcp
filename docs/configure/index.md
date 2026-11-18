@@ -57,7 +57,8 @@ Every row `query_sql` returns lands in the model's context, so results are cut.
 By default a result holds at most 1,000 rows and 50,000 characters of rows, and
 `rows_returned` says how many rows it holds. The model can ask for fewer rows with
 the `limit` argument, never for more. Both caps also
-bound what `get_cluster_health` returns. When an
+bound what `list_schemas`, `list_tables` and `get_cluster_health` return. The
+character cap alone bounds the definition `describe_table` returns. When an
 answer is cut, it says so in `truncated` and explains why in `note`.
 ```shell
 export CRATEDB_MCP_MAX_ROWS=1000
@@ -119,8 +120,9 @@ user holds `DQL` on single schemas only, as in the example.
 | Tool | Needs | With `DQL` on single schemas |
 |---|---|---|
 | `query_sql` | `DQL` on the tables it queries | Rows of those tables. For any other table, CrateDB's error, such as `Schema 'sys' unknown` |
-| `get_table_columns` | `DQL` on the tables | The columns of the tables in those schemas, and empty sections for `information_schema`, `pg_catalog` and `sys` |
-| `get_table_metadata` | `DQL` on the tables, and on `sys` | CrateDB's error `Schema 'sys' unknown` |
+| `list_schemas` | `DQL` on a schema, to list it | Only those schemas, also with `include_system` |
+| `list_tables` | `DQL` on the schema | The tables and views of those schemas, and none for any other schema |
+| `describe_table` | `DQL` on the table, and on `sys` for its shard, record, size and partition counts | The definition, without the counts, and a note that says so. A table in any other schema is not found |
 | `get_cratedb_documentation_index` | No right on the database | The documentation index |
 | `fetch_cratedb_docs` | No right on the database | The documentation page |
 | `get_cluster_health` | `DQL` on `sys` | CrateDB's error `Schema 'sys' unknown` |

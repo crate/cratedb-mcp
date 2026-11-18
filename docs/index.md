@@ -56,14 +56,14 @@ interact with external systems, perform computations, and take actions in the
 real world.
 :::
 
-The CrateDB MCP Server provides two families of tools.
+The CrateDB MCP Server provides three families of tools.
 
 :::{div}
 
 :Text-to-SQL:
 
-  The tools `query_sql`, `get_table_columns`, and `get_table_metadata`
-  talk to a CrateDB database cluster to inquire database
+  The tools `list_schemas`, `list_tables`, `describe_table` and
+  `query_sql` talk to a CrateDB database cluster to inquire database
   and table metadata, and table content.
 
 :Documentation inquiry:
@@ -79,6 +79,8 @@ The CrateDB MCP Server provides two families of tools.
   The tool `get_cluster_health` returns the health of each table and
   partition from `sys.health`, most severe first.
 :::
+
+A tool is marked as deprecated for one minor release before it is removed.
 
 :::{note}
 **Experimental:** Please note that the CrateDB MCP Server is an experimental
