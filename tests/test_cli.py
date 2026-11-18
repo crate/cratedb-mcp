@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import fastmcp.server.server
@@ -113,6 +114,7 @@ def test_cli_valid_custom(mocker, capsys):
     The test needs to mock `anyio.run`, otherwise the call would block forever.
     """
     run_mock = mocker.patch.object(fastmcp.server.server.FastMCP, "run_async")
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_AUTH_TOKEN": "secret"})
 
     # Invoke the program.
     runner = CliRunner()
@@ -124,10 +126,85 @@ def test_cli_valid_custom(mocker, capsys):
 
     # Verify the outcome.
     assert run_mock.call_count == 1
+    options = {
+        "host_origin_protection": True,
+        "allowed_hosts": None,
+        "allowed_origins": None,
+    }
     assert run_mock.call_args in [
-        mock.call("http", host="127.0.0.1", port=65535, path=None),
-        mock.call("http", show_banner=mock.ANY, host="127.0.0.1", port=65535, path=None),
+        mock.call("http", host="127.0.0.1", port=65535, path=None, **options),
+        mock.call("http", show_banner=mock.ANY, host="127.0.0.1", port=65535, path=None, **options),
     ]
+
+
+def test_cli_allowed_hosts_env(mocker, capsys):
+    """
+    Verify `CRATEDB_MCP_ALLOWED_HOSTS` reaches the Host check, one name per word.
+    """
+    run_mock = mocker.patch.object(fastmcp.server.server.FastMCP, "run_async")
+    mocker.patch.dict(
+        os.environ,
+        {
+            "CRATEDB_MCP_ALLOWED_HOSTS": "mcp.example.org mcp.internal:8000",
+            "CRATEDB_MCP_AUTH_DISABLED": "true",
+        },
+    )
+
+    runner = CliRunner()
+    runner.invoke(cli, args=["serve", "--transport=http"], catch_exceptions=False)
+
+    assert run_mock.call_count == 1
+    assert run_mock.call_args.kwargs["host_origin_protection"] is True
+    assert run_mock.call_args.kwargs["allowed_hosts"] == ["mcp.example.org", "mcp.internal:8000"]
+
+
+def test_cli_http_refuses_to_start_without_token(mocker):
+    """
+    Verify `cratedb-mcp serve --transport=http` stops when no token is configured.
+    """
+    run_mock = mocker.patch.object(fastmcp.server.server.FastMCP, "run_async")
+    mocker.patch.dict(os.environ, clear=False)
+    os.environ.pop("CRATEDB_MCP_AUTH_TOKEN", None)
+    os.environ.pop("CRATEDB_MCP_AUTH_DISABLED", None)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, args=["serve", "--transport=http"])
+
+    assert result.exit_code == 2
+    assert "requires a bearer token" in result.output
+    assert run_mock.call_count == 0
+
+
+def test_cli_http_refuses_a_token_with_surrounding_whitespace(mocker):
+    """
+    Verify `cratedb-mcp serve --transport=http` stops when the token ends with a newline.
+    """
+    run_mock = mocker.patch.object(fastmcp.server.server.FastMCP, "run_async")
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_AUTH_TOKEN": "secret\n"})
+    os.environ.pop("CRATEDB_MCP_AUTH_DISABLED", None)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, args=["serve", "--transport=http"])
+
+    assert result.exit_code == 2
+    assert "begins or ends with whitespace" in result.output
+    assert run_mock.call_count == 0
+
+
+def test_cli_http_auth_disabled(mocker):
+    """
+    Verify `--auth-disabled` starts the HTTP server without a token.
+    """
+    run_mock = mocker.patch.object(fastmcp.server.server.FastMCP, "run_async")
+    mocker.patch.dict(os.environ, clear=False)
+    os.environ.pop("CRATEDB_MCP_AUTH_TOKEN", None)
+
+    runner = CliRunner()
+    runner.invoke(
+        cli, args=["serve", "--transport=http", "--auth-disabled"], catch_exceptions=False
+    )
+
+    assert run_mock.call_count == 1
 
 
 def test_serve_logs_no_request_line_of_httpx2(mocker, caplog):
