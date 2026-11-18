@@ -1,19 +1,23 @@
 import asyncio
+import gzip
 import itertools
 import time
+import zlib
 
 import httpx
 import pytest
 from fastmcp import Client
 
 from cratedb_mcp.core import CrateDbMcp
-from cratedb_mcp.knowledge import MAX_REDIRECTS
+from cratedb_mcp.knowledge import MAX_PAGE_BYTES, MAX_REDIRECTS
 
 INDEX_LINK = (
     "https://docs.cratedb.com/projects/crate-reference/en/latest/_sources/general/builtins/"
     "scalar-functions.rst.txt"
 )
 START = "https://docs.cratedb.com/projects/guide/start.html"
+CHUNK = 65_536
+TOO_LARGE = f"The page is larger than the {MAX_PAGE_BYTES:,} bytes the tool reads."
 
 
 def fetch(link):
@@ -82,6 +86,47 @@ def test_redirects_are_followed_up_to_the_limit(docs_site, steps):
     assert docs_site.requests == chain[: MAX_REDIRECTS + 1]
 
 
+class Counted:
+    """A body that counts how many of its bytes were read."""
+
+    def __init__(self, chunks) -> None:
+        self.chunks = chunks
+        self.bytes_read = 0
+
+    def __iter__(self):
+        for chunk in self.chunks:
+            self.bytes_read += len(chunk)
+            yield chunk
+
+
+def large_page():
+    """A text page of 50 MiB."""
+    return Counted(b"x" * CHUNK for _ in range(800))
+
+
+def test_page_above_the_limit_is_refused_once_the_limit_is_read(docs_site):
+    page = large_page()
+    docs_site.pages[START] = lambda: httpx.Response(
+        200, headers={"Content-Type": "text/plain"}, content=page
+    )
+    assert fetch(START) == (True, TOO_LARGE)
+    assert MAX_PAGE_BYTES < page.bytes_read <= MAX_PAGE_BYTES + CHUNK
+
+
+def test_page_announced_above_the_limit_is_refused_before_it_is_read(docs_site):
+    page = large_page()
+    headers = {"Content-Type": "text/plain", "Content-Length": str(50 * 1024 * 1024)}
+    docs_site.pages[START] = lambda: httpx.Response(200, headers=headers, content=page)
+    assert fetch(START) == (True, TOO_LARGE)
+    assert page.bytes_read == 0
+
+
+@pytest.mark.parametrize(("size", "refused"), [(MAX_PAGE_BYTES, False), (MAX_PAGE_BYTES + 1, True)])
+def test_page_of_the_limit_is_fetched_and_a_larger_one_refused(docs_site, size, refused):
+    docs_site.pages[START] = lambda: httpx.Response(200, text="x" * size)
+    assert fetch(START)[0] is refused
+
+
 @pytest.mark.parametrize(
     "content_type",
     ["application/pdf", "application/octet-stream", "image/png", "application/json", None],
@@ -106,6 +151,30 @@ def test_answer_that_is_text_is_returned(docs_site, content_type):
 def test_index_link_is_fetched_with_or_without_a_fragment(docs_site, fragment):
     assert fetch(INDEX_LINK + fragment) == (False, docs_site.page)
     assert docs_site.requests == [INDEX_LINK]
+
+
+@pytest.mark.parametrize(
+    ("encoding", "body"),
+    [
+        ("gzip", gzip.compress(b"x" * MAX_PAGE_BYTES)),
+        ("deflate", zlib.compress(b"x" * MAX_PAGE_BYTES)),
+        ("gzip, gzip", gzip.compress(gzip.compress(b"x" * MAX_PAGE_BYTES))),
+    ],
+    ids=["gzip", "deflate", "gzip-twice"],
+)
+def test_compressed_answer_is_refused_before_it_is_read(docs_site, encoding, body):
+    page = Counted([body])
+    headers = {"Content-Type": "text/plain", "Content-Encoding": encoding}
+    docs_site.pages[START] = lambda: httpx.Response(200, headers=headers, content=page)
+    assert fetch(START) == (True, "The page is compressed, so the tool does not read it.")
+    assert page.bytes_read == 0
+
+
+@pytest.mark.parametrize("encoding", ["identity", "Identity", ""])
+def test_answer_named_uncompressed_is_returned(docs_site, encoding):
+    headers = {"Content-Type": "text/plain", "Content-Encoding": encoding}
+    docs_site.pages[START] = lambda: httpx.Response(200, headers=headers, content=b"# Title")
+    assert fetch(START) == (False, "# Title")
 
 
 @pytest.mark.parametrize("charset", ["punycode", "x-unknown-to-python"])
