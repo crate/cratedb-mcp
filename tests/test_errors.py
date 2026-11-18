@@ -50,6 +50,11 @@ def call(name, arguments):
             {"schema": "doc", "table": "unknown_table"},
             "Table or view not found: doc.unknown_table",
         ),
+        (
+            "fetch_cratedb_docs",
+            {"link": "https://example.com/"},
+            "Link is not permitted: https://example.com/",
+        ),
     ],
     ids=[
         "crate-error",
@@ -57,6 +62,7 @@ def call(name, arguments):
         "refused-statement",
         "invalid-arguments",
         "unknown-table",
+        "link-not-permitted",
     ],
 )
 def test_failed_call_sets_the_error_flag_and_carries_the_message(name, arguments, message):

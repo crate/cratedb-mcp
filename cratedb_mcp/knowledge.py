@@ -1,13 +1,18 @@
 # ruff: noqa: E501
+import logging
 import threading
 import typing as t
 
 import cachetools
 import httpx
 from cratedb_about import CrateDbKnowledgeOutline
+from fastmcp.exceptions import ToolError
 
 from cratedb_mcp.settings import Settings
 
+logger = logging.getLogger(__name__)
+
+MAX_REDIRECTS = 5
 CACHED_CHARS = 16_000_000
 
 
@@ -86,12 +91,10 @@ class DocumentationIndex:
 
     settings = Settings()
 
-    # List of permitted URL prefixes to acquire resources from on demand.
+    # Sites whose pages are fetched besides the links of the documentation index.
     permitted_urls: t.List[str] = [
         "https://cratedb.com/",
         "https://docs.cratedb.com/",
-        "https://github.com/crate",
-        "https://raw.githubusercontent.com/crate",
     ]
 
     def __init__(self):
@@ -106,25 +109,43 @@ class DocumentationIndex:
     def fetch(self, link: str) -> str:
         """
         Return the text of the documentation page at `link`, kept from an earlier call or
-        fetched from its site.
+        fetched from its site. The link, and the address of every redirect, is checked before
+        it is requested.
         """
         if not self.url_permitted(link):
-            raise ValueError(f"Link is not permitted: {link}")
+            raise ToolError(f"Link is not permitted: {link}")
         return self.download(httpx.URL(link).copy_with(fragment=None))
 
     @cachetools.cachedmethod(lambda self: self.pages, lock=lambda self: self.pages_lock)
     def download(self, url: httpx.URL) -> str:
         """
         Fetch the page at `url`, following its redirects, and keep its text for
-        `CRATEDB_MCP_DOCS_CACHE_TTL` seconds.
+        `CRATEDB_MCP_DOCS_CACHE_TTL` seconds. Every failure ends the call with a sentence of
+        the tool's own, which holds nothing the site sent but the status code.
         """
-        response = documentation_client.get(
-            url, timeout=Settings.http_timeout(), follow_redirects=True
-        )
-        if not self.url_permitted(str(response.url)):
-            raise ValueError(f"Link redirects to a location that is not permitted: {response.url}")
-        response.raise_for_status()
-        return response.text
+        timeout = Settings.http_timeout()
+        try:
+            for _ in range(MAX_REDIRECTS + 1):
+                page = read_page(url, timeout)
+                if isinstance(page, str):
+                    return page
+                if not self.url_permitted(page):
+                    logger.info("%s redirects to %s, which is not fetched", url, page)
+                    raise ToolError("The page moved to an address the tool does not fetch.")
+                url = page.copy_with(fragment=None)
+        except ToolError:
+            raise
+        except httpx.TimeoutException as e:
+            raise ToolError(
+                f"The page did not arrive within the {timeout:g}-second timeout."
+            ) from e
+        except httpx.ConnectError as e:
+            logger.info("Fetching %s failed: %r", url, e)
+            raise ToolError("The site of the page cannot be reached.") from e
+        except Exception as e:
+            logger.info("Fetching %s failed: %r", url, e)
+            raise ToolError("The site of the page sent an answer the tool cannot read.") from e
+        raise ToolError(f"The page redirects more than {MAX_REDIRECTS} times.")
 
     @cachetools.cached(cache=cachetools.TTLCache(maxsize=1, ttl=settings.docs_cache_ttl() - 5))
     def items(self):
@@ -133,24 +154,45 @@ class DocumentationIndex:
         """
         return self.outline.find_items().to_list()
 
-    def url_permitted(self, url: str) -> bool:
+    def url_permitted(self, url: t.Union[str, httpx.URL]) -> bool:
         """
-        Validate if a documentation URL is listed in the documentation index or is from a permitted domain.
-
-        Only links from the documentation index, CrateDB domains, and specific GitHub repositories are allowed.
-
-        Args:
-            url: The URL to validate
-
-        Returns:
-            bool: True if the URL is permitted, False otherwise
+        Whether a page is fetched: a link of the documentation index, or an https page under
+        one of `permitted_urls`, on exactly its host and default port, without a user part.
+        The fragment does not count, because it is never sent.
         """
-        if any(item["link"] == url for item in self.items()):
+        try:
+            url = httpx.URL(url).copy_with(fragment=None)
+        except httpx.InvalidURL:
+            return False
+        if any(httpx.URL(item["link"]).copy_with(fragment=None) == url for item in self.items()):
             return True
-        for permitted_url in self.permitted_urls:
-            if url.startswith(permitted_url):
-                return True
-        return False
+        return not url.userinfo and any(
+            url.scheme == site.scheme
+            and url.netloc == site.netloc
+            and url.raw_path.startswith(site.raw_path)
+            for site in map(httpx.URL, self.permitted_urls)
+        )
 
 
 documentation_client = httpx.Client()
+
+
+def read_page(url: httpx.URL, timeout: float) -> t.Union[str, httpx.URL]:
+    """
+    Request `url` once, and return the text of the page, or the address it redirects to.
+    A page has to be text.
+    """
+    with documentation_client.stream("GET", url, timeout=timeout) as response:
+        if response.next_request is not None:
+            return response.next_request.url
+        check_page(response)
+        body = response.read()
+        return body.decode("utf-8", errors="replace")
+
+
+def check_page(response: httpx.Response) -> None:
+    """Fail unless `response` is a success that brings text."""
+    if not response.is_success:
+        raise ToolError(f"The page answered HTTP {response.status_code}.")
+    if not response.headers.get("content-type", "").lower().startswith("text/"):
+        raise ToolError("The page is not text, so the tool does not return it.")
