@@ -62,6 +62,11 @@ Changes:
   caps, and say so in `truncated` and `note`
 - MCP: In the releases after this one, a tool is marked as deprecated for one minor
   release before it is removed
+- MCP: `query_sql` runs `SHOW` and `VALUES` statements beside `SELECT` and `WITH`, and
+  an `EXPLAIN` of a `SELECT`, `WITH` or `VALUES` statement
+- MCP: A statement the read-only check cannot analyze, because it has more than 10,000
+  tokens or nests more than 100 levels, fails with the limit it passed and what to do
+- Dependencies: Updated to `sqlparse>=0.6.1`, earlier versions had vulnerabilities
 - Security: Over HTTP, the server requires the bearer token from
   `CRATEDB_MCP_AUTH_TOKEN` and refuses to start without one, unless
   `CRATEDB_MCP_AUTH_DISABLED=true` is set

@@ -51,17 +51,64 @@ def test_sql_insert_rejected():
     assert sql_is_permitted("INSERT INTO foobar") is False
 
 
-def test_sql_select_into_rejected():
-    """SELECT+DML statements are rejected"""
-    assert sql_is_permitted("SELECT * INTO foobar FROM bazqux") is False
-    assert sql_is_permitted("SELECT * FROM bazqux INTO foobar") is False
-    assert sql_is_permitted("WITH FOO AS (SELECT * FROM (SELECT * bazqux INTO foobar))") is False
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "WITH foo AS (SELECT 42) SELECT * FROM foo",
+        "VALUES (1, 'a'), (2, 'b')",
+        "SHOW TABLES",
+        "show create table doc.foobar",
+        "SHOW search_path",
+        "EXPLAIN SELECT 42",
+        "EXPLAIN ANALYZE SELECT 42",
+        "EXPLAIN VERBOSE SELECT 42",
+        "explain (costs false, verbose true) select 42",
+        "EXPLAIN /* plan */ WITH foo AS (SELECT 42) SELECT * FROM foo",
+        "EXPLAIN VALUES (1)",
+        "SELECT 42;",
+    ],
+)
+def test_sql_read_statement_permitted(expression):
+    assert sql_is_permitted(expression) is True
 
 
-def test_sql_select_into_permitted():
-    """Forbidden keywords do not contribute to classification when used as labels"""
-    assert sql_is_permitted('SELECT * FROM "into"') is True
-    assert sql_is_permitted('SELECT * FROM "INTO"') is True
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "EXPLAIN INSERT INTO foobar (id) VALUES (42)",
+        "EXPLAIN ANALYZE DELETE FROM foobar",
+        "EXPLAIN (ANALYZE true) UPDATE foobar SET id = 42",
+        "EXPLAIN COPY foobar FROM 'file:///tmp/foobar.json'",
+        "EXPLAIN EXPLAIN SELECT 42",
+        "EXPLAIN SHOW TABLES",
+        "EXPLAIN (ANALYZE true)",
+        "EXPLAIN",
+        "COPY foobar TO DIRECTORY '/tmp'",
+        "COPY foobar FROM 'file:///tmp/foobar.json'",
+        "DECLARE foo CURSOR WITH HOLD FOR SELECT 42",
+        "FETCH 1 FROM foo",
+        "(SELECT 42)",
+        "WITH foo AS (SELECT 42) DELETE FROM foobar",
+        "REFRESH TABLE foobar",
+        "SET search_path TO foobar",
+        "-- SELECT 42",
+    ],
+)
+def test_sql_statement_other_than_read_rejected(expression):
+    assert sql_is_permitted(expression) is False
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        r"SELECT E'a\''; DROP TABLE foobar; --'",
+        r"SELECT $$a\$$; UPDATE foobar SET id = 42; --$$",
+        r"SELECT $tag$a$tag$; DELETE FROM foobar --",
+        r"SELECT 'a\'; INSERT INTO foobar (id) VALUES (42)",
+    ],
+)
+def test_sql_string_followed_by_second_statement_rejected(expression):
+    assert sql_is_permitted(expression) is False
 
 
 def test_sql_empty_rejected():

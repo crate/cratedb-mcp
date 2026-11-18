@@ -133,10 +133,14 @@ export CRATEDB_CLUSTER_URL="https://mcp:YOUR_PASSWORD@example.aks1.westeurope.az
 ```
 When the MCP server is reachable from outside, put it behind a reverse proxy.
 
-The MCP Server also prohibits non-SELECT statements on the application level.
-A call with any other statement fails, unless the
-`CRATEDB_MCP_PERMIT_ALL_STATEMENTS` environment variable is set to a
-truthy value.
+The MCP Server also permits only read statements on the application level:
+one `SELECT`, `WITH`, `VALUES` or `SHOW` statement per call, or an `EXPLAIN`
+of a `SELECT`, `WITH` or `VALUES` statement. A call with any other statement,
+`COPY` included, fails, unless the `CRATEDB_MCP_PERMIT_ALL_STATEMENTS`
+environment variable is set to a truthy value. The check also fails a statement
+it cannot analyze: one with more than 10,000 tokens in a list or clause, such as a
+very long `IN (...)` list, or nested more than 100 levels deep. The error names the
+limit, and the server sends no such statement to CrateDB.
 
 ## System prompt customizations
 
