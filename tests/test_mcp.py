@@ -8,7 +8,6 @@ from fastmcp.exceptions import ToolError
 from cratedb_mcp.core import CrateDbMcp
 from cratedb_mcp.settings import Settings
 from cratedb_mcp.tool import (
-    documentation_index,
     fetch_cratedb_docs,
     get_cluster_health,
     get_cratedb_documentation_index,
@@ -56,13 +55,13 @@ def test_fetch_docs_missing_page(docs_site):
         fetch_cratedb_docs(link)
 
 
-def test_fetch_docs_redirect_forbidden(mocker):
-    response = httpx.Response(
-        200, text="elsewhere", request=httpx.Request("GET", "https://example.com/")
+def test_fetch_docs_redirect_forbidden(docs_site):
+    link = "https://docs.cratedb.com/projects/guide/"
+    docs_site.pages[link] = lambda: httpx.Response(
+        302, headers={"Location": "https://example.com/"}
     )
-    mocker.patch.object(documentation_index.client, "get", return_value=response)
     with pytest.raises(ValueError) as ex:
-        fetch_cratedb_docs("https://docs.cratedb.com/projects/guide/")
+        fetch_cratedb_docs(link)
     assert ex.match("Link redirects to a location that is not permitted: https://example.com/")
 
 
