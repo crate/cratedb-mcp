@@ -5,6 +5,7 @@ import typing as t
 import httpx
 from fastmcp.exceptions import ToolError
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from sqlparse.engine import grouping
 from sqlparse.exceptions import SQLParseError
 
 from cratedb_mcp.knowledge import DocumentationIndex, Queries
@@ -114,6 +115,23 @@ def run_query(query: str) -> dict:
         ) from e
 
 
+def parser_limit_advice(error: SQLParseError) -> str:
+    """Name the `sqlparse` limit a statement passed, in the words a model can act on."""
+    message = str(error)
+    if message.startswith("Maximum grouping depth"):
+        return (
+            f"it nests parentheses or subqueries more than {grouping.MAX_GROUPING_DEPTH} levels "
+            "deep. Flatten the nesting, or split it into smaller queries."
+        )
+    if message.startswith("Maximum number of tokens"):
+        return (
+            f"it holds more than {grouping.MAX_GROUPING_TOKENS:,} tokens in one list or clause, "
+            "and every value, name, operator and comma counts. For a long list of values, "
+            "filter by a range, join against a table, or run several smaller queries."
+        )
+    return f"{message.rstrip('.')}. Shorten it, or split it into smaller queries."
+
+
 @contextlib.contextmanager
 def read_only_check() -> t.Iterator[None]:
     """Fail the call when the read-only check cannot analyze a statement."""
@@ -121,8 +139,7 @@ def read_only_check() -> t.Iterator[None]:
         yield
     except SQLParseError as e:
         raise ToolError(
-            f"The read-only check cannot analyze this statement: {str(e).rstrip('.')}. "
-            "Shorten it, or split it into smaller queries."
+            f"The read-only check cannot analyze this statement: {parser_limit_advice(e)}"
         ) from e
 
 
@@ -138,7 +155,10 @@ def query_sql(query: str, limit: t.Optional[t.Annotated[int, Field(ge=1)]] = Non
     with read_only_check():
         permitted = sql_is_permitted(query)
     if not permitted:
-        raise ToolError("Only queries that have a SELECT statement are allowed.")
+        raise ToolError(
+            "Only one SELECT, WITH, VALUES or SHOW statement, or an EXPLAIN of a SELECT, "
+            "WITH or VALUES statement, is allowed."
+        )
     result = run_query(query)
     rows, note = bound_rows(
         result["rows"],
