@@ -4,6 +4,7 @@ from unittest import mock
 import fastmcp.server.server
 import httpx2
 from click.testing import CliRunner
+from starlette.testclient import TestClient
 
 from cratedb_mcp import __version__
 from cratedb_mcp.cli import cli
@@ -156,6 +157,24 @@ def test_cli_allowed_hosts_env(mocker, capsys):
     assert run_mock.call_count == 1
     assert run_mock.call_args.kwargs["host_origin_protection"] is True
     assert run_mock.call_args.kwargs["allowed_hosts"] == ["mcp.example.org", "mcp.internal:8000"]
+
+
+def test_cli_http_requires_the_configured_token(mocker):
+    """
+    Verify `cratedb-mcp serve --transport=http` answers only requests that carry the token
+    from `CRATEDB_MCP_AUTH_TOKEN`.
+    """
+    run_mock = mocker.patch.object(fastmcp.server.server.FastMCP, "run_async", autospec=True)
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_AUTH_TOKEN": "secret"})
+    os.environ.pop("CRATEDB_MCP_AUTH_DISABLED", None)
+
+    CliRunner().invoke(cli, args=["serve", "--transport=http"], catch_exceptions=False)
+
+    server = run_mock.call_args.args[0]
+    with TestClient(server.http_app(), base_url="http://127.0.0.1:8000") as client:
+        assert client.post("/mcp", json={}).status_code == 401
+        response = client.post("/mcp", headers={"Authorization": "Bearer secret"}, json={})
+    assert response.status_code not in (401, 403)
 
 
 def test_cli_http_refuses_to_start_without_token(mocker):
