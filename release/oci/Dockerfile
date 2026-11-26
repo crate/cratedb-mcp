@@ -95,6 +95,7 @@ FROM standard AS mcpo
 # MCP support for Open WebUI.
 # https://docs.openwebui.com/openapi-servers/mcp/
 # https://github.com/open-webui/mcpo
-RUN uv pip install mcpo
+# mcpo 0.0.21 requires an MCP SDK below 2, which the server cannot run with.
+RUN uv pip install "mcpo<0.0.21"
 ENTRYPOINT []
 CMD ["mcpo", "--host", "0.0.0.0", "--port", "8000", "--", "cratedb-mcp", "serve", "--transport=stdio"]
