@@ -31,6 +31,7 @@ CrateDB MCP Server.
         "list_schemas",
         "list_tables",
         "describe_table",
+        "analyze_table_layout",
         "query_sql",
         "explain_query",
         "get_cratedb_documentation_index",
