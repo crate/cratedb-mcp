@@ -21,7 +21,7 @@ def tool_hints():
 
 def test_tools_declare_title_and_read_only_hints():
     tools = tool_hints()
-    assert len(tools) == 7
+    assert len(tools) == 8
     for name, (title, hints) in tools.items():
         assert title, name
         assert hints["readOnlyHint"] is True, name
@@ -59,6 +59,7 @@ def test_query_sql_description_leaves_out_the_statement_rule_when_all_are_permit
 
 CALLS = {
     "query_sql": {"query": "SELECT x FROM generate_series(1, 3) AS t(x)"},
+    "explain_query": {"query": "SELECT 42", "analyze": True},
     "list_schemas": {},
     "list_tables": {"schema": "sys"},
     "describe_table": {"schema": "sys", "table": "summits"},
@@ -70,6 +71,7 @@ CALLS = {
 CRATE_RESULT = {"cols", "rows", "rowcount", "duration"}
 RESULT_FIELDS = {
     "query_sql": CRATE_RESULT | {"truncated", "rows_returned", "note"},
+    "explain_query": CRATE_RESULT | {"truncated", "rows_returned", "note"},
     "list_schemas": {"schemas", "truncated", "note"},
     "list_tables": {"tables", "truncated", "note"},
     "describe_table": {
