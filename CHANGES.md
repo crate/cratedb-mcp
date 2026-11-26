@@ -34,6 +34,8 @@ Changes:
 - MCP: Every tool fails a call it cannot complete with the MCP error flag `isError` and
   a message that says why it failed. CrateDB's errors are no longer returned as results
 - MCP: A query that times out tells the model to narrow it instead of retrying
+- MCP: `query_sql`, `get_cluster_health` and `get_cratedb_documentation_index` declare
+  the fields of their results
 - Security: Over HTTP, the server requires the bearer token from
   `CRATEDB_MCP_AUTH_TOKEN` and refuses to start without one, unless
   `CRATEDB_MCP_AUTH_DISABLED=true` is set

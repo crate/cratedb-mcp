@@ -1,6 +1,7 @@
 import asyncio
 import os
 
+import jsonschema
 import pytest
 from fastmcp import Client
 
@@ -36,3 +37,47 @@ def test_query_sql_hints_follow_permit_all_statements(mocker):
     assert hints["readOnlyHint"] is False
     assert hints["destructiveHint"] is True
     assert hints["idempotentHint"] is False
+
+
+CALLS = {
+    "query_sql": {"query": "SELECT x FROM generate_series(1, 3) AS t(x)"},
+    "get_cratedb_documentation_index": {},
+    "get_cluster_health": {},
+}
+
+
+CRATE_RESULT = {"cols", "rows", "rowcount", "duration"}
+RESULT_FIELDS = {
+    "query_sql": CRATE_RESULT,
+    "get_cratedb_documentation_index": {"result"},
+    "get_cluster_health": CRATE_RESULT,
+    "fetch_cratedb_docs": {"result"},
+}
+
+
+def declared_fields(schema):
+    return set(schema.get("properties", {}))
+
+
+def test_tools_declare_named_result_fields():
+    async def fetch():
+        async with Client(CrateDbMcp().mcp) as client:
+            return await client.list_tools()
+
+    for tool in asyncio.run(fetch()):
+        assert declared_fields(tool.output_schema) == RESULT_FIELDS.get(tool.name, set()), tool.name
+
+
+@pytest.mark.parametrize(
+    ("name", "arguments"),
+    CALLS.items(),
+)
+def test_results_validate_against_declared_schema(name, arguments):
+    async def call():
+        async with Client(CrateDbMcp().mcp) as client:
+            tool = next(tool for tool in await client.list_tools() if tool.name == name)
+            result = await client.call_tool(name, arguments)
+            return tool.output_schema, result.structured_content
+
+    schema, content = asyncio.run(call())
+    jsonschema.validate(content, schema)
