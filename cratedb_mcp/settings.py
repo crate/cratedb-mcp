@@ -74,3 +74,35 @@ class Settings:
                 stacklevel=2,
             )
             return ttl
+
+    @staticmethod
+    def max_rows(rows: int = 1000) -> int:
+        """
+        Return the row cap of the tools that cut their answers by rows.
+        """
+        try:
+            return int(os.getenv("CRATEDB_MCP_MAX_ROWS", rows))
+        except ValueError as e:
+            warnings.warn(
+                f"Environment variable `CRATEDB_MCP_MAX_ROWS` invalid: {e}. "
+                f"Using default value: {rows}.",
+                category=UserWarning,
+                stacklevel=2,
+            )
+            return rows
+
+    @staticmethod
+    def max_chars(chars: int = 50_000) -> int:
+        """
+        Return the character cap of the tools that cut their answers.
+        """
+        try:
+            return int(os.getenv("CRATEDB_MCP_MAX_CHARS", chars))
+        except ValueError as e:
+            warnings.warn(
+                f"Environment variable `CRATEDB_MCP_MAX_CHARS` invalid: {e}. "
+                f"Using default value: {chars}.",
+                category=UserWarning,
+                stacklevel=2,
+            )
+            return chars

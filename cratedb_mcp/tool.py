@@ -1,9 +1,10 @@
 import contextlib
+import json
 import typing as t
 
 import httpx
 from fastmcp.exceptions import ToolError
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlparse.exceptions import SQLParseError
 
 from cratedb_mcp.knowledge import DocumentationIndex, Queries
@@ -50,6 +51,17 @@ class CrateResult(BaseModel):
     duration: t.Optional[float] = absent()
 
 
+class BoundedResult(CrateResult):
+    truncated: t.Optional[bool] = absent()
+    rows_returned: t.Optional[int] = absent()
+    note: t.Optional[str] = absent()
+
+    @model_validator(mode="after")
+    def count_rows(self) -> "BoundedResult":
+        self.rows_returned = None if self.rows is None else len(self.rows)
+        return self
+
+
 # ------------------------------------------
 #              Text-to-SQL
 # ------------------------------------------
@@ -78,7 +90,8 @@ def query_result(query: str) -> dict:
             f"CrateDB did not answer within the {Settings.http_timeout():g}-second timeout."
         ) from e
     if "error" in result:
-        raise CrateError(f"{result['error']['message']} (error code {result['error']['code']})")
+        message = shorten(result["error"]["message"], Settings.max_chars())
+        raise CrateError(f"{message} (error code {result['error']['code']})")
     return result
 
 
@@ -105,17 +118,68 @@ def read_only_check() -> t.Iterator[None]:
         ) from e
 
 
-def query_sql(query: str) -> CrateResult:
+def query_sql(query: str, limit: t.Optional[t.Annotated[int, Field(ge=1)]] = None) -> BoundedResult:
     """
     Execute an SQL query on CrateDB and return the results.
     Select only the columns you need (avoid `SELECT *`) and,
     where appropriate, add a `LIMIT` clause to keep result sets concise.
+    The result holds at most as many rows as the server's row cap, 1000 by
+    default, or as `limit` when it is lower. `rows_returned` counts its
+    rows. When rows are cut, `truncated` is true and `note` says why.
     """
     with read_only_check():
         permitted = sql_is_permitted(query)
     if not permitted:
         raise ToolError("Only queries that have a SELECT statement are allowed.")
-    return CrateResult(**run_query(query))
+    result = run_query(query)
+    rows, note = bound_rows(
+        result["rows"],
+        Settings.max_rows(),
+        "row",
+        "Narrow the query with a WHERE clause or an aggregation, or read the rows in parts "
+        "with LIMIT and OFFSET in the query.",
+        "Filter or aggregate the query, or select fewer or shorter columns.",
+        limit,
+    )
+    return BoundedResult(**{**result, "rows": rows, "truncated": note is not None, "note": note})
+
+
+def row_chars(row: t.Any) -> int:
+    """Count the characters of `row` as the server sends it: compact JSON with unescaped text."""
+    return len(json.dumps(row, default=str, ensure_ascii=False, separators=(",", ":")))
+
+
+def bound_rows(
+    rows: t.List[t.Any],
+    row_cap: int,
+    noun: str,
+    advice: str = "",
+    char_advice: str = "",
+    limit: t.Optional[int] = None,
+) -> t.Tuple[t.List[t.Any], t.Optional[str]]:
+    """
+    Keep the first rows, at most `row_cap`, or `limit` when it is lower, and no more than fit
+    in the character cap. Say which cut them, with `char_advice` in place of `advice` for the
+    character cap and no advice for `limit`.
+    """
+    row_cap, char_cap = max(1, row_cap), Settings.max_chars()
+    reason = f"an answer holds at most {row_cap} of them"
+    if limit is not None and limit <= row_cap:
+        row_cap, advice, reason = limit, "", f"`limit` asks for {limit} of them"
+    kept = rows[:row_cap]
+    size = 0
+    for count, row in enumerate(kept):
+        size += row_chars(row)
+        if size > char_cap:
+            kept, advice = kept[:count], char_advice or advice
+            reason = f"an answer holds at most {char_cap} characters"
+            if not kept:
+                reason += f", and the first {noun} alone holds more"
+            break
+    if len(kept) == len(rows):
+        return kept, None
+    note = f"Only {len(kept)} of {len(rows)} {noun}s are shown, because {reason}."
+    return kept, " ".join(filter(None, [note, advice]))
 
 
 def get_table_columns() -> dict:
@@ -206,6 +270,14 @@ def fetch_cratedb_docs(link: str) -> str:
 # ------------------------------------------
 #            Health / Status
 # ------------------------------------------
-def get_cluster_health() -> CrateResult:
+def get_cluster_health() -> BoundedResult:
     """Return the health of each table and partition from `sys.health`, most severe first."""
-    return CrateResult(**query_result(Queries.HEALTH))
+    result = query_result(Queries.HEALTH)
+    rows, note = bound_rows(
+        result["rows"],
+        Settings.max_rows(),
+        "row",
+        "Query sys.health with query_sql, filtered by table_schema, table_name or health, "
+        "for the others.",
+    )
+    return BoundedResult(**{**result, "rows": rows, "truncated": note is not None, "note": note})
