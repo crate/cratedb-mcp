@@ -39,3 +39,6 @@ the `--transport` option.
 
 When the server starts, FastMCP asks PyPI for a newer FastMCP release, and
 `FASTMCP_CHECK_FOR_UPDATES=off` turns that off.
+
+With `cratedb-mcp --debug serve`, or with `CRATEDB_MCP_DEBUG=true` set, the log also shows the debug lines, among them the
+first 50 characters of each statement the model sends.

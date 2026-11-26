@@ -15,8 +15,15 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option()
+@click.option(
+    "--debug",
+    envvar="CRATEDB_MCP_DEBUG",
+    is_flag=True,
+    default=False,
+    help="Log at debug level, with the first 50 characters of each statement",
+)
 @click.pass_context
-def cli(ctx: click.Context) -> None:
+def cli(ctx: click.Context, debug: bool) -> None:
     """
     CrateDB MCP server.
 
@@ -26,11 +33,16 @@ def cli(ctx: click.Context) -> None:
     # Tame logging of HTTPX to not reveal credentials.
     # https://github.com/encode/httpx/pull/3513#issuecomment-3360536080
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("httpcore2").setLevel(logging.WARNING)
     # FastMCP asks PyPI for a newer release through httpx2 at start.
     logging.getLogger("httpx2").setLevel(logging.WARNING)
+    # The sse transport logs every message it receives and sends at debug level.
+    logging.getLogger("mcp.server.sse").setLevel(logging.INFO)
+    logging.getLogger("sse_starlette.sse").setLevel(logging.INFO)
 
     # Set up logger.
-    boot_click(ctx=ctx)
+    boot_click(ctx=ctx, debug=debug)
 
 
 transport_types = t.Literal["stdio", "sse", "http", "streamable-http"]
