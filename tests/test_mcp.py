@@ -22,23 +22,25 @@ def test_fetch_docs_forbidden():
     assert ex.match("Link is not permitted: https://example.com")
 
 
-def test_fetch_docs_permitted_github():
+def test_fetch_docs_permitted_github(docs_site):
     response = fetch_cratedb_docs(
         "https://raw.githubusercontent.com/crate/crate/refs/heads/5.10/docs/general/builtins/scalar-functions.rst"
     )
     assert "initcap" in response
 
 
-def test_fetch_docs_permitted_docs_cratedb_com():
+def test_fetch_docs_permitted_docs_cratedb_com(docs_site):
     response = fetch_cratedb_docs(
         "https://docs.cratedb.com/projects/crate-reference/en/latest/_sources/general/builtins/scalar-functions.rst.txt"
     )
     assert "initcap" in response
 
 
-def test_fetch_docs_missing_page():
+def test_fetch_docs_missing_page(docs_site):
+    link = "https://docs.cratedb.com/projects/guide/_sources/does-not-exist.md.txt"
+    docs_site.pages[link] = lambda: httpx.Response(404)
     with pytest.raises(httpx.HTTPStatusError):
-        fetch_cratedb_docs("https://docs.cratedb.com/projects/guide/_sources/does-not-exist.md.txt")
+        fetch_cratedb_docs(link)
 
 
 def test_fetch_docs_redirect_forbidden(mocker):
