@@ -130,7 +130,7 @@ class CrateDbMcp:
             Tool.from_function(
                 fn=get_cluster_health,
                 description=get_cluster_health.__doc__,
-                title="Show table health",
+                title="Show cluster health",
                 annotations=READ_ONLY,
                 tags={"health", "monitoring", "status"},
             )
