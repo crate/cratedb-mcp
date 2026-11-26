@@ -23,6 +23,8 @@ def cli(ctx: click.Context) -> None:
     # Tame logging of HTTPX to not reveal credentials.
     # https://github.com/encode/httpx/pull/3513#issuecomment-3360536080
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    # FastMCP asks PyPI for a newer release through httpx2 at start.
+    logging.getLogger("httpx2").setLevel(logging.WARNING)
 
     # Set up logger.
     boot_click(ctx=ctx)
