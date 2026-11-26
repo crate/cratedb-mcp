@@ -5,6 +5,14 @@
 Upgrading from 0.1.x:
 - Packaging: the server needs version 2 of the MCP SDK. Where an environment holds
   `mcp<2`, install the server apart from it, for example with `uv tool install cratedb-mcp`.
+- HTTP: set `CRATEDB_MCP_AUTH_TOKEN` and send it as `Authorization: Bearer <token>`, or set
+  `CRATEDB_MCP_AUTH_DISABLED=true` for local work. Without either, the server does not
+  start. stdio is unchanged.
+- HTTP: when clients reach the server by a name or IP address other than localhost, such
+  as a Compose service name, a public host name or the IP address of a Docker host, list
+  it in `CRATEDB_MCP_ALLOWED_HOSTS`. Others get 421.
+- HTTP: a browser page from another origin gets 403, unless `CRATEDB_MCP_ALLOWED_ORIGINS`
+  lists that origin.
 
 Changes:
 - Tests: The software tests answer requests for documentation pages and remote
@@ -12,6 +20,13 @@ Changes:
 - Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28
 - MCP: Added a title and annotations to every tool, marking them read-only. `query_sql`
   loses its read-only mark when `CRATEDB_MCP_PERMIT_ALL_STATEMENTS` is set
+- Security: Over HTTP, the server requires the bearer token from
+  `CRATEDB_MCP_AUTH_TOKEN` and refuses to start without one, unless
+  `CRATEDB_MCP_AUTH_DISABLED=true` is set
+- Security: Over HTTP, the server answers only requests addressed to localhost, its
+  listening address or a host named in `CRATEDB_MCP_ALLOWED_HOSTS` (else 421), and
+  refuses foreign browser origins (403) unless named in `CRATEDB_MCP_ALLOWED_ORIGINS`
+- HTTP: Added `GET /health` for liveness probes
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of

@@ -42,13 +42,20 @@ Configure and run CrateDB MCP server.
 export CRATEDB_MCP_TRANSPORT=streamable-http
 export CRATEDB_MCP_HOST=0.0.0.0
 export CRATEDB_MCP_PORT=8000
-export CRATEDB_CLUSTER_URL=http://crate:crate@testcluster.cratedb.net:4200/
+export CRATEDB_MCP_AUTH_TOKEN="$(openssl rand -hex 32)"
+export CRATEDB_CLUSTER_URL=http://crate:crate@cratedb:4200/
 ```
 ```shell
 docker run --rm --name=cratedb-mcp --network=demo \
   -p 8000:8000 \
-  -e CRATEDB_MCP_TRANSPORT -e CRATEDB_MCP_HOST -e CRATEDB_MCP_PORT -e CRATEDB_CLUSTER_URL \
+  -e CRATEDB_MCP_TRANSPORT -e CRATEDB_MCP_HOST -e CRATEDB_MCP_PORT \
+  -e CRATEDB_MCP_AUTH_TOKEN -e CRATEDB_CLUSTER_URL \
   ghcr.io/crate/cratedb-mcp:latest
+```
+Clients connect to `http://localhost:8000/mcp` and send the token as
+`Authorization: Bearer <token>`. Print it to configure them.
+```shell
+echo "$CRATEDB_MCP_AUTH_TOKEN"
 ```
 
 ## GitHub Actions
@@ -75,5 +82,7 @@ services:
       CRATEDB_MCP_TRANSPORT: streamable-http
       CRATEDB_MCP_HOST: 0.0.0.0
       CRATEDB_MCP_PORT: 8000
-      CRATEDB_CLUSTER_URL: http://crate:crate@testcluster.cratedb.net:4200/
+      CRATEDB_MCP_AUTH_DISABLED: "true"
+      CRATEDB_CLUSTER_URL: http://crate:crate@cratedb:4200/
 ```
+Job steps reach the MCP server at `http://localhost:8000/mcp`.
