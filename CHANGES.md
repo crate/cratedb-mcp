@@ -27,6 +27,7 @@ Changes:
   listening address or a host named in `CRATEDB_MCP_ALLOWED_HOSTS` (else 421), and
   refuses foreign browser origins (403) unless named in `CRATEDB_MCP_ALLOWED_ORIGINS`
 - HTTP: Added `GET /health` for liveness probes
+- CLI: Deprecated the `sse` transport, as the MCP specification does
 
 ## v0.1.3 - 2026-11-12
 - MCP: Permitted `fetch_cratedb_docs` to read from docs.cratedb.com, the new home of

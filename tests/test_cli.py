@@ -226,6 +226,23 @@ def test_cli_http_auth_disabled(mocker):
     assert run_mock.call_count == 1
 
 
+def test_cli_marks_sse_deprecated(mocker, caplog):
+    """
+    Verify `cratedb-mcp serve` marks the sse transport as deprecated, in its help and at start.
+    """
+    run_mock = mocker.patch.object(fastmcp.server.server.FastMCP, "run_async")
+
+    runner = CliRunner()
+    runner.invoke(cli, args=["serve", "--transport=sse", "--auth-disabled"], catch_exceptions=False)
+
+    assert run_mock.call_count == 1
+    assert "The sse transport is deprecated" in caplog.text
+
+    help_text = " ".join(runner.invoke(cli, args=["serve", "--help"]).output.split())
+    assert "or the deprecated sse" in help_text
+    assert "for sse" not in help_text
+
+
 def test_serve_logs_no_request_line_of_httpx2(mocker, caplog):
     """
     Verify `cratedb-mcp serve` logs no request line of httpx2, the HTTP library through

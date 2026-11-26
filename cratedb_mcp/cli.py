@@ -81,28 +81,28 @@ def http_auth(auth_disabled: bool) -> t.Optional[BearerTokenVerifier]:
     envvar="CRATEDB_MCP_TRANSPORT",
     type=click.Choice(transport_choices),
     default="stdio",
-    help="The transport protocol (stdio, sse, http, ex. streamable-http)",
+    help="The transport protocol: stdio, http (also called streamable-http), or the deprecated sse",
 )
 @click.option(
     "--host",
     envvar="CRATEDB_MCP_HOST",
     type=str,
     default="127.0.0.1",
-    help="The host to listen on (for sse, http)",
+    help="The host to listen on (over HTTP)",
 )
 @click.option(
     "--port",
     envvar="CRATEDB_MCP_PORT",
     type=int,
     default=8000,
-    help="The port to listen on (for sse, http)",
+    help="The port to listen on (over HTTP)",
 )
 @click.option(
     "--path",
     envvar="CRATEDB_MCP_PATH",
     type=str,
     required=False,
-    help="The URL path to serve on (for sse, http)",
+    help="The URL path to serve on (over HTTP)",
 )
 @click.option(
     "--allowed-host",
@@ -110,7 +110,7 @@ def http_auth(auth_disabled: bool) -> t.Optional[BearerTokenVerifier]:
     envvar="CRATEDB_MCP_ALLOWED_HOSTS",
     type=str,
     multiple=True,
-    help="A host name clients may use to reach the server, besides localhost (for sse, http)",
+    help="A host name clients may use to reach the server, besides localhost (over HTTP)",
 )
 @click.option(
     "--allowed-origin",
@@ -118,14 +118,14 @@ def http_auth(auth_disabled: bool) -> t.Optional[BearerTokenVerifier]:
     envvar="CRATEDB_MCP_ALLOWED_ORIGINS",
     type=str,
     multiple=True,
-    help="A browser origin permitted to call the server (for sse, http)",
+    help="A browser origin permitted to call the server (over HTTP)",
 )
 @click.option(
     "--auth-disabled",
     envvar="CRATEDB_MCP_AUTH_DISABLED",
     is_flag=True,
     default=False,
-    help="Serve without a bearer token, for local work only (for sse, http)",
+    help="Serve without a bearer token, for local work only (over HTTP)",
 )
 @click.option(
     "--instructions",
@@ -158,6 +158,11 @@ def serve(
     Start MCP server.
     """
     logger.info(f"CrateDB MCP server starting with transport: {transport}")
+    if transport == "sse":
+        logger.warning(
+            "The sse transport is deprecated, as it is in the MCP specification. "
+            "Use the http transport instead."
+        )
     transport_kwargs: t.Dict[str, t.Any] = {}
     auth = None
     if transport in {"sse", "http", "streamable-http"}:
