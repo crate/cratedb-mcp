@@ -1,9 +1,12 @@
 import importlib.resources
 import os
+import runpy
+import sys
 from unittest import mock
 
 import fastmcp.server.server
 import httpx2
+import pytest
 from click.testing import CliRunner
 from starlette.testclient import TestClient
 
@@ -194,6 +197,24 @@ def test_cli_http_refuses_to_start_without_token(mocker):
     assert result.exit_code == 2
     assert "requires a bearer token" in result.output
     assert run_mock.call_count == 0
+
+
+def run_as_module(mocker, *args):
+    """Run `python -m cratedb_mcp` and return its exit code."""
+    mocker.patch.object(sys, "argv", ["cratedb_mcp", *args])
+    mocker.patch.dict(sys.modules)
+    sys.modules.pop("cratedb_mcp.__main__", None)
+    with pytest.raises(SystemExit) as ex:
+        runpy.run_module("cratedb_mcp", run_name="__main__")
+    return ex.value.code
+
+
+def test_module_runs_the_cli_with_its_subcommands(mocker, capsys):
+    """
+    Verify `python -m cratedb_mcp show-prompt` prints what `cratedb-mcp show-prompt` prints.
+    """
+    assert run_as_module(mocker, "show-prompt") == 0
+    assert capsys.readouterr().out.strip() == BUILTIN
 
 
 def test_cli_http_refuses_a_token_with_surrounding_whitespace(mocker):

@@ -1,4 +1,4 @@
-from cratedb_mcp.core import CrateDbMcp
+from cratedb_mcp.cli import cli
 
-# Is that a standard entrypoint that should be kept alive?
-mcp = CrateDbMcp().mcp
+if __name__ == "__main__":
+    cli()
