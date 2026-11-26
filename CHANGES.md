@@ -34,6 +34,9 @@ Upgrading from 0.1.x:
   `CRATEDB_MCP_MAX_ROWS` changes the cap. Check `truncated` when every row matters.
 - Tools: an answer from CrateDB larger than 5 MB fails the call. Where a query returned
   more, add a `LIMIT`, select fewer columns or aggregate.
+- Tools: a TIMESTAMP or DATE value comes back as ISO 8601 text instead of milliseconds
+  since 1970, and a NUMERIC value as text instead of a number. Clients that read times or
+  dates as numbers, or calculate with NUMERIC values, parse the text first.
 - Tools: `get_table_columns` and `get_table_metadata` are gone. Use `list_schemas`,
   `list_tables` and `describe_table`, and update prompts and allow-lists that name the
   old tools.
@@ -84,6 +87,9 @@ Changes:
 - MCP: The server reads at most 5 MB of CrateDB's answer to a statement. A larger answer
   fails the call, and for `query_sql` tells the model to add a `LIMIT`, select fewer
   columns or aggregate
+- MCP: Tools return TIMESTAMP and DATE values as ISO 8601 text, such as
+  `2025-02-06T05:15:36.123Z` and `2025-07-01`, with a signed year such as `+10000`
+  outside the years 1 to 9999, and NUMERIC values as text with every digit CrateDB sends
 - MCP: Added `list_schemas`, `list_tables` and `describe_table`, which find tables
   step by step and return typed results. Removed `get_table_columns` and
   `get_table_metadata`, which returned every table at once

@@ -1,4 +1,5 @@
 import contextlib
+import datetime
 import json
 import typing as t
 
@@ -74,11 +75,91 @@ class BoundedResult(CrateResult):
 # ------------------------------------------
 #              Text-to-SQL
 # ------------------------------------------
+TIMESTAMP_WITH_TIME_ZONE = 11
+TIMESTAMP_WITHOUT_TIME_ZONE = 15
+NUMERIC = 22
+DATE = 24
+RETURNED_AS_TEXT = (TIMESTAMP_WITH_TIME_ZONE, TIMESTAMP_WITHOUT_TIME_ZONE, NUMERIC, DATE)
+EPOCH = datetime.datetime(1970, 1, 1)
+YEAR_2000_MS = 946_684_800_000
+GREGORIAN_CYCLE_MS = 146_097 * 86_400_000
+
+
+class Digits(float):
+    """A number from CrateDB's answer that keeps the digits CrateDB sent."""
+
+    __slots__ = ("text",)
+    text: str
+
+    def __new__(cls, text: str) -> "Digits":
+        number = super().__new__(cls, text)
+        number.text = text
+        return number
+
+
+def element_type(column_type: t.Any) -> t.Any:
+    """Return the type of a column, or of the innermost elements of an array column."""
+    while isinstance(column_type, list):
+        column_type = column_type[1]
+    return column_type
+
+
+def as_text(value: t.Any, column_type: t.Any) -> t.Any:
+    """Return a time or date as ISO 8601 text, and a NUMERIC value as the digits CrateDB sent."""
+    if value is None:
+        return None
+    if isinstance(column_type, list):
+        return [as_text(item, column_type[1]) for item in value]
+    if column_type == NUMERIC:
+        return value.text if isinstance(value, Digits) else str(value)
+    years = 0
+    try:
+        moment = EPOCH + datetime.timedelta(milliseconds=value)
+    except OverflowError:
+        # Shift by whole 400-year cycles, which keep every date, into the years datetime holds.
+        cycles, rest = divmod(value - YEAR_2000_MS, GREGORIAN_CYCLE_MS)
+        moment = EPOCH + datetime.timedelta(milliseconds=YEAR_2000_MS + rest)
+        years = 400 * cycles
+    if column_type == DATE and moment.time() == datetime.time():
+        text = moment.date().isoformat()
+    else:
+        timespec = "milliseconds" if moment.microsecond else "seconds"
+        zone = "" if column_type == TIMESTAMP_WITHOUT_TIME_ZONE else "Z"
+        text = moment.isoformat(timespec=timespec) + zone
+    if not years:
+        return text
+    year = moment.year + years
+    return f"{'+' if year >= 0 else '-'}{abs(year):05d}{text[4:]}"
+
+
+def parse_answer(body: t.Union[bytes, bytearray]) -> t.Any:
+    """Parse CrateDB's answer, keeping the digits CrateDB sent only when a column is NUMERIC."""
+    answer = json.loads(body)
+    if NUMERIC not in map(element_type, answer.get("col_types", [])):
+        return answer
+    del answer
+    return json.loads(body, parse_float=Digits)
+
+
+def typed_answer(answer: dict) -> dict:
+    """Replace the values of time, date and NUMERIC columns with text, by the column types."""
+    columns = [
+        (index, column_type)
+        for index, column_type in enumerate(answer.pop("col_types", []))
+        if element_type(column_type) in RETURNED_AS_TEXT
+    ]
+    if columns:
+        for row in answer["rows"]:
+            for index, column_type in columns:
+                row[index] = as_text(row[index], column_type)
+    return answer
+
+
 def sql_endpoint() -> t.Tuple[httpx.URL, t.Optional[t.Tuple[str, str]]]:
     """Return the URL of CrateDB's SQL endpoint without the user part, and the credentials."""
     cluster = Settings.cluster_url()
     path = cluster.path.rstrip("/") + "/_sql"
-    url = cluster.copy_with(userinfo=b"", path=path)
+    url = cluster.copy_with(userinfo=b"", path=path, query=b"types")
     return url, (cluster.username, cluster.password) if cluster.userinfo else None
 
 
@@ -97,12 +178,13 @@ def query_cratedb(query: str, args: t.Optional[t.List[t.Any]] = None) -> dict:
                 "the server reads."
             )
         try:
-            return json.loads(body)
+            answer = parse_answer(body)
         except ValueError as e:
             text = shorten(body.decode(errors="replace").strip(), 200)
             raise ToolError(
                 f"CrateDB answered HTTP {response.status_code}" + (f": {text}" if text else ".")
             ) from e
+        return typed_answer(answer)
 
 
 def query_result(query: str, args: t.Optional[t.List[t.Any]] = None) -> dict:
