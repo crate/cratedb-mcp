@@ -19,6 +19,9 @@ Upgrading from 0.1.x:
   matters.
 - Tools: `get_cluster_health` returns at most 1,000 rows, the most severe first.
   `CRATEDB_MCP_MAX_ROWS` changes the cap. Check `truncated` when every row matters.
+- Tools: `get_table_columns` and `get_table_metadata` are gone. Use `list_schemas`,
+  `list_tables` and `describe_table`, and update prompts and allow-lists that name the
+  old tools.
 - HTTP: set `CRATEDB_MCP_AUTH_TOKEN` and send it as `Authorization: Bearer <token>`, or set
   `CRATEDB_MCP_AUTH_DISABLED=true` for local work. Without either, the server does not
   start. stdio is unchanged.
@@ -40,14 +43,20 @@ Changes:
 - MCP: Every tool fails a call it cannot complete with the MCP error flag `isError` and
   a message that says why it failed. CrateDB's errors are no longer returned as results
 - MCP: A query that times out tells the model to narrow it instead of retrying
-- MCP: `query_sql`, `get_cluster_health` and `get_cratedb_documentation_index` declare
-  the fields of their results
+- MCP: Every tool declares the fields of its result
 - MCP: `query_sql` returns at most 1,000 rows and 50,000 characters of rows, counts its
   rows in `rows_returned`, marks a cut result with `truncated` and a `note`, and takes
   `limit` for fewer rows. `CRATEDB_MCP_MAX_ROWS` and `CRATEDB_MCP_MAX_CHARS` change the
   defaults
 - MCP: `get_cluster_health` cuts its answer to the result caps, says so in `truncated`
   and `note`, and counts its rows in `rows_returned`
+- MCP: Added `list_schemas`, `list_tables` and `describe_table`, which find tables
+  step by step and return typed results. Removed `get_table_columns` and
+  `get_table_metadata`, which returned every table at once
+- MCP: `list_schemas`, `list_tables` and `describe_table` cut their answers to the result
+  caps, and say so in `truncated` and `note`
+- MCP: In the releases after this one, a tool is marked as deprecated for one minor
+  release before it is removed
 - Security: Over HTTP, the server requires the bearer token from
   `CRATEDB_MCP_AUTH_TOKEN` and refuses to start without one, unless
   `CRATEDB_MCP_AUTH_DISABLED=true` is set

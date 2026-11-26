@@ -27,7 +27,9 @@ CrateDB MCP Server.
       },
       "alwaysAllow": [
         "get_cluster_health",
-        "get_table_metadata",
+        "list_schemas",
+        "list_tables",
+        "describe_table",
         "query_sql",
         "get_cratedb_documentation_index",
         "fetch_cratedb_docs"

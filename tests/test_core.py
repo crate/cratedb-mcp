@@ -21,7 +21,7 @@ def tool_hints():
 
 def test_tools_declare_title_and_read_only_hints():
     tools = tool_hints()
-    assert len(tools) == 6
+    assert len(tools) == 7
     for name, (title, hints) in tools.items():
         assert title, name
         assert hints["readOnlyHint"] is True, name
@@ -41,6 +41,9 @@ def test_query_sql_hints_follow_permit_all_statements(mocker):
 
 CALLS = {
     "query_sql": {"query": "SELECT x FROM generate_series(1, 3) AS t(x)"},
+    "list_schemas": {},
+    "list_tables": {"schema": "sys"},
+    "describe_table": {"schema": "sys", "table": "summits"},
     "get_cratedb_documentation_index": {},
     "get_cluster_health": {},
 }
@@ -49,6 +52,20 @@ CALLS = {
 CRATE_RESULT = {"cols", "rows", "rowcount", "duration"}
 RESULT_FIELDS = {
     "query_sql": CRATE_RESULT | {"truncated", "rows_returned", "note"},
+    "list_schemas": {"schemas", "truncated", "note"},
+    "list_tables": {"tables", "truncated", "note"},
+    "describe_table": {
+        "schema_name",
+        "name",
+        "kind",
+        "definition",
+        "primary_shards",
+        "records",
+        "size_bytes",
+        "partitions",
+        "truncated",
+        "note",
+    },
     "get_cratedb_documentation_index": {"result"},
     "get_cluster_health": CRATE_RESULT | {"truncated", "rows_returned", "note"},
     "fetch_cratedb_docs": {"result"},
