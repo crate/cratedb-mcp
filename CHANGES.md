@@ -8,6 +8,11 @@ Upgrading from 0.1.x:
   MCP (Streamable HTTP). Start the image with `CRATEDB_MCP_TRANSPORT=http`,
   `CRATEDB_MCP_HOST=0.0.0.0` and a bearer token in `CRATEDB_MCP_AUTH_TOKEN`, and list
   the host name Open WebUI connects to in `CRATEDB_MCP_ALLOWED_HOSTS`.
+- Settings: the server does not start when `CRATEDB_CLUSTER_URL` is not an http or https
+  URL with a host. Percent-encode `/`, `#`, `?` and `@` in a user name or password, such
+  as `/` as `%2F`.
+- Settings: the server does not start when `CRATEDB_MCP_HTTP_TIMEOUT` is not a number of
+  seconds above zero. Remove the setting or correct it.
 - Packaging: the server needs version 2 of the MCP SDK. Where an environment holds
   `mcp<2`, install the server apart from it, for example with `uv tool install cratedb-mcp`.
 - Instructions: the text sent to clients is new and much shorter, and it sets no
@@ -38,6 +43,9 @@ Changes:
 - OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
   MCP servers directly, so use the standard image `ghcr.io/crate/cratedb-mcp`
   with `--transport=streamable-http`.
+- CLI: The server reads `CRATEDB_CLUSTER_URL` when it starts, and does not start when it
+  is not an http or https URL with a host
+- CLI: The server does not start when `CRATEDB_MCP_HTTP_TIMEOUT` is not a number above zero
 - Tests: The software tests answer requests for documentation pages and remote
   instructions from memory
 - Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28
@@ -53,6 +61,8 @@ Changes:
   rows in `rows_returned`, marks a cut result with `truncated` and a `note`, and takes
   `limit` for fewer rows. `CRATEDB_MCP_MAX_ROWS` and `CRATEDB_MCP_MAX_CHARS` change the
   defaults
+- CLI: The server does not start when `CRATEDB_MCP_MAX_ROWS` or `CRATEDB_MCP_MAX_CHARS` is
+  not a whole number above zero
 - MCP: `get_cluster_health` cuts its answer to the result caps, says so in `truncated`
   and `note`, and counts its rows in `rows_returned`
 - MCP: Added `list_schemas`, `list_tables` and `describe_table`, which find tables
