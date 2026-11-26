@@ -16,6 +16,8 @@ Upgrading from 0.1.x:
   as `/` as `%2F`.
 - Settings: the server does not start when `CRATEDB_MCP_HTTP_TIMEOUT` is not a number of
   seconds above zero. Remove the setting or correct it.
+- Tools: `fetch_cratedb_docs` no longer fetches a GitHub page that is not a link of the
+  documentation index.
 - Packaging: the server needs version 2 of the MCP SDK. Where an environment holds
   `mcp<2`, install the server apart from it, for example with `uv tool install cratedb-mcp`.
 - Instructions: the text sent to clients is new and much shorter, and it sets no
@@ -56,8 +58,9 @@ Changes:
 - CLI: The server does not start when `CRATEDB_MCP_HTTP_TIMEOUT` is not a number above zero
 - Tests: The software tests answer requests for documentation pages and remote
   instructions from memory
-- MCP: `fetch_cratedb_docs` reads every link listed in the documentation index,
-  including pages outside the permitted hosts
+- MCP: `fetch_cratedb_docs` fetches the links of the documentation index and pages on
+  cratedb.com and docs.cratedb.com. It checks the address of every redirect before it
+  follows it, reads only text, and decodes every page as UTF-8
 - Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28
 - Instructions: The server sends its own short instructions text and no longer adds
   the general CrateDB text of `cratedb-about`. Pass `--instructions` to send another text.
