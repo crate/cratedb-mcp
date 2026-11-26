@@ -3,6 +3,11 @@
 ## Unreleased
 
 Upgrading from 0.1.x:
+- Images: the `cratedb-mcpo` image is gone. With Open WebUI 0.6.31 or later, run the
+  standard image `ghcr.io/crate/cratedb-mcp` and add it as a connection of type
+  MCP (Streamable HTTP). Start the image with `CRATEDB_MCP_TRANSPORT=http`,
+  `CRATEDB_MCP_HOST=0.0.0.0` and a bearer token in `CRATEDB_MCP_AUTH_TOKEN`, and list
+  the host name Open WebUI connects to in `CRATEDB_MCP_ALLOWED_HOSTS`.
 - Packaging: the server needs version 2 of the MCP SDK. Where an environment holds
   `mcp<2`, install the server apart from it, for example with `uv tool install cratedb-mcp`.
 - HTTP: set `CRATEDB_MCP_AUTH_TOKEN` and send it as `Authorization: Bearer <token>`, or set
@@ -15,6 +20,9 @@ Upgrading from 0.1.x:
   lists that origin.
 
 Changes:
+- OCI: Removed the `cratedb-mcpo` image. Open WebUI 0.6.31 and later connect to
+  MCP servers directly, so use the standard image `ghcr.io/crate/cratedb-mcp`
+  with `--transport=streamable-http`.
 - Tests: The software tests answer requests for documentation pages and remote
   instructions from memory
 - Dependencies: Updated to FastMCP 4.1, which speaks MCP protocol 2026-07-28
