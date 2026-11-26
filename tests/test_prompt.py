@@ -1,25 +1,38 @@
+import asyncio
+import importlib.resources
 import io
+import re
 
 import httpx
 import pytest
+from fastmcp import Client
 
 from cratedb_mcp.__main__ import mcp
+from cratedb_mcp.core import CrateDbMcp
 from cratedb_mcp.prompt import InstructionsPrompt
+
+BUILTIN = (importlib.resources.files("cratedb_mcp.prompt") / "instructions.md").read_text().strip()
 
 
 def test_default():
     """
-    The default instructions are bundled from general and MCP-related instructions.
+    The default instructions are the text of the bundled file and nothing else.
     """
-    instructions_text = mcp.instructions
+    assert mcp.instructions == BUILTIN
 
-    # MCP instructions.
-    assert "Tool instructions" in instructions_text
 
-    # General instructions.
-    assert "Things to remember when working with CrateDB" in instructions_text
-    assert "Rules for writing SQL queries" in instructions_text
-    assert "Core writing principles" in instructions_text
+def test_default_names_registered_tools():
+    """
+    Every tool the default instructions name in backticks is registered by the server.
+    """
+
+    async def fetch():
+        async with Client(CrateDbMcp().mcp) as client:
+            return {tool.name for tool in await client.list_tools()}
+
+    mentioned = set(re.findall(r"`([a-z]+(?:_[a-z]+)+)`", BUILTIN))
+    assert mentioned
+    assert mentioned <= asyncio.run(fetch())
 
 
 def test_custom_instructions():
@@ -36,8 +49,7 @@ def test_custom_conventions():
     """
     instructions = InstructionsPrompt(conventions="custom-convention")
     prompt = instructions.render()
-    assert "custom-convention" in prompt
-    assert "Core writing principles" in prompt
+    assert prompt == f"{BUILTIN}\n\ncustom-convention"
 
 
 def test_fragment_local(tmp_path):

@@ -4,15 +4,12 @@ from pathlib import Path
 from typing import List, Optional
 
 import httpx
-from cratedb_about.prompt import GeneralInstructions
 
 
 class InstructionsPrompt:
     """
-    Bundle instructions how to use MCP tools with general instructions how to work with CrateDB.
-
-    - MCP: https://github.com/crate/cratedb-examples/blob/7f1bc0f94d/topic/chatbot/table-augmented-generation/aws/cratedb_tag_inline_agent.ipynb?short_path=00988ad#L776-L794
-    - General: https://github.com/crate/about
+    The instructions the server sends to clients: the built-in text, or the text given
+    with `instructions`, followed by the optional `conventions`.
     """
 
     def __init__(self, instructions: Optional[str] = None, conventions: Optional[str] = None):
@@ -20,15 +17,12 @@ class InstructionsPrompt:
         if instructions:
             fragments.append(self.load_fragment(instructions))
         else:
-            instructions_general = GeneralInstructions().render()
             mcp_instructions_file = (
                 importlib.resources.files("cratedb_mcp.prompt") / "instructions.md"
             )
             if not mcp_instructions_file.is_file():  # pragma: no cover
                 raise FileNotFoundError(f"MCP instructions file not found: {mcp_instructions_file}")
-            instructions_mcp = mcp_instructions_file.read_text()
-            fragments.append(instructions_general)
-            fragments.append(instructions_mcp)
+            fragments.append(mcp_instructions_file.read_text())
         if conventions:
             fragments.append(self.load_fragment(conventions))
         self.fragments = fragments
