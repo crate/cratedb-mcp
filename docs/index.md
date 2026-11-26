@@ -73,7 +73,7 @@ The CrateDB MCP Server provides three families of tools.
   to provide the most accurate information possible.
   They use the documentation index of the [cratedb-about] package, curated per
   [cratedb-outline.yaml]. `fetch_cratedb_docs` fetches the links of that index and
-  other pages on `cratedb.com` and `docs.cratedb.com`, as text.
+  other pages on `cratedb.com` and `docs.cratedb.com`, as text of at most 1 MB.
 
 :Health status:
 

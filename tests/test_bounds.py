@@ -3,6 +3,7 @@ import os
 
 import httpx
 import pytest
+from fastmcp.exceptions import ToolError
 
 from cratedb_mcp import tool
 from cratedb_mcp.tool import (
@@ -209,3 +210,50 @@ def test_describe_table_cuts_a_definition_above_the_character_cap(mocker, chars)
     assert full.startswith(description.definition.removesuffix("…"))
     assert tool.row_chars(description.definition) <= int(chars)
     assert description.truncated is True
+
+
+def test_reading_stops_past_the_byte_ceiling(mocker, answer_with):
+    mocker.patch.object(tool, "MAX_RESPONSE_BYTES", 10_000)
+    sent = []
+
+    def endless_answer():
+        while True:
+            sent.append(1_000)
+            yield b"x" * 1_000
+
+    answer_with(lambda request: httpx.Response(200, content=endless_answer()))
+    with pytest.raises(ToolError) as ex:
+        query_sql("SELECT 42")
+    assert ex.match("The result is larger than the 10,000 bytes the server reads.")
+    assert ex.match("Add a LIMIT, select fewer columns, or aggregate the query.")
+    assert sum(sent) <= 11_000
+
+
+def test_answer_announced_above_the_byte_ceiling_is_refused_unread(answer_with):
+    sent = []
+
+    def answer_body():
+        sent.append(1_000)
+        yield b"x" * 1_000
+
+    headers = {"Content-Length": str(tool.MAX_RESPONSE_BYTES + 1)}
+    answer_with(lambda request: httpx.Response(200, content=answer_body(), headers=headers))
+    with pytest.raises(ToolError) as ex:
+        query_sql("SELECT 42")
+    assert ex.match("The result is larger than the 5,000,000 bytes the server reads.")
+    assert sent == []
+
+
+def test_analyzed_plan_of_2000_shard_scans_passes_the_byte_ceiling(answer_with):
+    plan = {"Execute": {f"{shard}-collect": {"Breakdown": "x" * 1_700} for shard in range(2_000)}}
+    answer = json.dumps({"cols": ["QUERY PLAN"], "rows": [[plan]], "rowcount": 1}).encode()
+    assert 3_400_000 < len(answer) < tool.MAX_RESPONSE_BYTES
+    answer_with(lambda request: httpx.Response(200, content=answer))
+    assert explain_query("SELECT 1", analyze=True).truncated is True
+
+
+def test_largest_result_the_limits_allow_passes_the_byte_ceiling(mocker):
+    mocker.patch.dict(os.environ, {"CRATEDB_MCP_MAX_CHARS": "1000000"})
+    result = query_sql("SELECT repeat('x', 990) FROM generate_series(1, 1000)")
+    assert len(result.rows) == 1000
+    assert result.truncated is False

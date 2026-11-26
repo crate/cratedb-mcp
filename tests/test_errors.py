@@ -94,6 +94,27 @@ def test_timeout_fails_the_call_with_advice_only_for_the_model_query(
 
 
 @pytest.mark.parametrize(
+    ("name", "arguments", "message"),
+    [
+        (
+            "query_sql",
+            {"query": "SELECT x FROM generate_series(1, 1000) AS t(x)"},
+            "The result is larger than the 1,000 bytes the server reads. Add a LIMIT, select "
+            "fewer columns, or aggregate the query.",
+        ),
+        (
+            "describe_table",
+            {"schema": "sys", "table": "nodes"},
+            "The answer from CrateDB is larger than the 1,000 bytes the server reads.",
+        ),
+    ],
+)
+def test_answer_above_the_byte_ceiling_fails_the_call(mocker, name, arguments, message):
+    mocker.patch.object(tool, "MAX_RESPONSE_BYTES", 1_000)
+    assert call(name, arguments) == (True, message)
+
+
+@pytest.mark.parametrize(
     ("status", "body", "content_type", "message"),
     [
         (
